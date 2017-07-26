@@ -224,6 +224,16 @@ process.on('message', function (parameters) {
                 });
             }
         );
+    } else if (parameters.command === CONSTANTS.workerCommands.renameMetaPointerTarget) {
+        wr.renameMetaPointerTarget(parameters.webgmeToken, parameters, function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            }
+        );
     } else {
         safeSend({
             pid: process.pid,

@@ -42,14 +42,12 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 deferred = Q.defer();
 
             if (parameters.excludeOriginNode === true && core.getPath(visited) === core.getPath(node)) {
-                deferred.resolve(null);
-                return;
+                return Q.resolve(null).nodeify(next);
             }
 
             if (core.getValidPointerNames(visited).indexOf(parameters.newName) === -1 ||
                 core.getOwnPointerPath(visited, parameters.oldName) === undefined) {
-                deferred.resolve(null);
-                return;
+                return Q.resolve(null).nodeify(next);
             }
 
             core.loadPointer(visited, parameters.oldName)
@@ -60,13 +58,12 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                         core.renamePointer(visited, parameters.oldName, parameters.newName);
                     }
                     deferred.resolve(null);
-                    return;
                 })
                 .catch(function (err) {
                     deferred.resolve(null);
                 });
 
-            return deferred.promise.nodeify(next)
+            return deferred.promise.nodeify(next);
         }
 
         function visitForSet(visited, next) {
@@ -74,22 +71,24 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 deferred = Q.defer();
 
             if (parameters.excludeOriginNode === true && core.getPath(visited) === core.getPath(node)) {
-                deferred.resolve(null);
-                return;
+                return Q.resolve(null).nodeify(next);
             }
 
-            if (core.getValidPointerNames(visited).indexOf(parameters.newName) === -1 ||
-                core.getOwnPointerPath(visited, parameters.oldName) === undefined) {
-                deferred.resolve(null);
-                return;
+            if (core.getValidSetNames(visited).indexOf(parameters.newName) === -1 ||
+                core.getOwnSetNames(visited, parameters.oldName).indexOf(parameters.oldName) === -1) {
+                return Q.resolve(null).nodeify(next);
             }
 
             core.loadMembers(visited, parameters.oldName)
-                .then(function (target) {
-                    definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, target);
-                    if (definitionInfo.sourcePath === core.getPath(node)
-                        && definitionInfo.targetPath === parameters.targetPath) {
-                        core.renamePointer(visited, parameters.oldName, parameters.newName);
+                .then(function (members) {
+                    var i;
+
+                    for (i = 0; i < members.length; i += 1) {
+                        definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, members[i]);
+                        if (definitionInfo.sourcePath === core.getPath(node) &&
+                            definitionInfo.targetPath === parameters.targetPath) {
+                            core.moveMember(visited, core.getPath(members[i]), parameters.oldName, parameters.newName);
+                        }
                     }
                     deferred.resolve(null);
                     return;
@@ -98,7 +97,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     deferred.resolve(null);
                 });
 
-            return deferred.promise.nodeify(next)
+            return deferred.promise.nodeify(next);
         }
 
         var deferred = Q.defer(),
@@ -110,6 +109,9 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 break;
             case 'pointer':
                 visitFn = visitForPointer;
+                break;
+            case 'set':
+                visitFn = visitForSet;
                 break;
             default:
                 return Q.reject(new Error('Invalid parameter misses a correct type for renaming.')).nodeify(callback);

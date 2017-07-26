@@ -1056,12 +1056,14 @@ define(['js/logger',
                                                                                                       mousePos) {
         var menuItems = {},
             MENU_RENAME_CONCEPT = 'conceptRename',
+            MENU_RENAME_DEFINITION = 'definitionRename',
             node,
             i,
             paths,
             libraryContentSelected = false,
             self = this,
             srcPath,
+            dstPath,
             oldName,
             type;
 
@@ -1071,19 +1073,30 @@ define(['js/logger',
                     self._connectionListByID[selectedIds[0]].type === 'set')) {
                 type = self._connectionListByID[selectedIds[0]].type;
                 srcPath = self._connectionListByID[selectedIds[0]].GMESrcId;
+                dstPath = self._connectionListByID[selectedIds[0]].GMEDstId;
                 oldName = self._connectionListByID[selectedIds[0]].name;
 
                 menuItems[MENU_RENAME_CONCEPT] = {
-                    name: 'Rename concept',
-                    icon: 'glyphicon glyphicon-ok-sign'
+                    name: 'Rename concept'//,
+                    // icon: 'glyphicon glyphicon-ok-sign'
+                };
+                menuItems[MENU_RENAME_DEFINITION] = {
+                    name: 'Rename definition'//,
+                    // icon: 'glyphicon glyphicon-ok-sign'
                 };
 
                 this.diagramDesigner.createMenu(menuItems, function (key) {
                         if (key === MENU_RENAME_CONCEPT) {
-                            console.log('rename concept', selectedIds);
                             self._client.renameConcept(srcPath, type, oldName, 'new_' + oldName, function (err) {
                                 console.log('finished propagation:', err);
                             });
+                        } else if (key === MENU_RENAME_DEFINITION) {
+                            self._client.renamePointerTargetDefinition(srcPath, dstPath, oldName,
+                                'newer_' + oldName, type === 'set',
+                                function (err) {
+                                    console.log('finished propagation _ :', err);
+                                }
+                            );
                         }
                     },
                     this.diagramDesigner.posToPageXY(mousePos.mX,

@@ -1451,7 +1451,8 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, parameters.branchName, parameters.tagName);
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash,
+                    parameters.branchName, parameters.tagName);
             })
             .then(function (context_) {
                 context = context_;
@@ -1488,6 +1489,63 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    function renameMetaPointerTarget(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('changeAttributeMeta failed with error', err);
+                } else {
+                    logger.debug('changeAttributeMeta completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash,
+                    parameters.branchName, parameters.tagName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return Q.all([context.core.loadByPath(context.rootNode, parameters.nodePath),
+                    context.core.loadByPath(context.rootNode, parameters.targetPath)]);
+            })
+            .then(function (nodes) {
+                context.core.movePointerMetaTarget(nodes[0], nodes[1], parameters.oldName, parameters.newName);
+                parameters.excludeOriginNode = true;
+                return metaRename.propagateMetaDefinitionRename(context.core, nodes[0], parameters);
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'rename pointer definition [' + parameters.oldName + '->' +
+                    parameters.newName + '] of [' + parameters.nodePath + '] regarding target [' +
+                    parameters.targetPath + ']', function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    });
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
@@ -1505,7 +1563,8 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
         updateLibrary: updateLibrary,
         updateProjectFromFile: updateProjectFromFile,
         renameConcept: renameConcept,
-        changeAttributeMeta: changeAttributeMeta
+        changeAttributeMeta: changeAttributeMeta,
+        renameMetaPointerTarget: renameMetaPointerTarget
     };
 }
 

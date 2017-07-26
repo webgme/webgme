@@ -45,9 +45,30 @@ define(['js/Constants'], function (CONSTANTS) {
             });
         }
 
+        function renamePointerTargetDefinition(nodePath, targetPath, oldName, newName, isSet, callback) {
+            var parameters = {
+                command: 'renameMetaPointerTarget',
+                projectId: state.project.projectId,
+                nodePath: nodePath,
+                targetPath: targetPath,
+                type: isSet ? 'set' : 'pointer',
+                oldName: oldName,
+                newName: newName,
+                branchName: state.branchName
+            };
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        }
+
         return {
             renameConcept: renameConcept,
-            renameAttributeDefinition: renameAttributeDefinition
+            renameAttributeDefinition: renameAttributeDefinition,
+            renamePointerTargetDefinition: renamePointerTargetDefinition
         };
     }
 

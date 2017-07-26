@@ -50,6 +50,7 @@ module.exports = {
 
         //Rename
         renameConcept: 'renameConcept',
-        changeAttributeMeta: 'changeAttributeMeta'
+        changeAttributeMeta: 'changeAttributeMeta',
+        renameMetaPointerTarget: 'renameMetaPointerTarget'
     }
 };
