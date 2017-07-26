@@ -5,6 +5,7 @@
  */
 define([], function () {
     'use strict';
+
     function gmeNodeSetter(logger, state, saveRoot, storeNode, printCoreError) {
 
         function _logDeprecated(oldFn, newFn, isGetter, comment) {
@@ -838,6 +839,23 @@ define([], function () {
             }
         }
 
+        function movePointerMetaTarget(path, targetPath, oldName, newName, msg) {
+            var node = _getNode(path),
+                targetNode = _getNode(targetPath);
+
+            if (node && targetNode) {
+                try {
+                    state.core.movePointerMetaTarget(node, targetNode, oldName, newName);
+                } catch (err) {
+                    printCoreError(err);
+                    return;
+                }
+
+                saveRoot(typeof msg === 'string' ? msg : 'movePointerMetaTarget(' + path + ', ' + targetPath + ',' +
+                    oldName + ',' + newName);
+            }
+        }
+
         function delPointerMetaTarget(path, name, targetPath, msg) {
             var node = _getNode(path),
                 error;
@@ -1429,6 +1447,7 @@ define([], function () {
             // pointer
             setPointerMeta: setPointerMeta,
             setPointerMetaTarget: setPointerMetaTarget,
+            movePointerMetaTarget: movePointerMetaTarget,
             updateValidTargetItem: function (path, name, targetObj, msg) {
                 _logDeprecated('updateValidTargetItem(path, name, targetObj, msg)',
                     'setPointerMetaTarget(path, name, targetPath, childPath, min, max, msg)');

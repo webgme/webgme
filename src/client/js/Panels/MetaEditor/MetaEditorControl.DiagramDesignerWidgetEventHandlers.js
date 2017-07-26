@@ -15,7 +15,8 @@ define(['js/logger',
     './MetaEditorConstants',
     './MetaDocItem',
     'js/DragDrop/DragHelper',
-    'js/Dialogs/Confirm/ConfirmDialog'
+    'js/Dialogs/Confirm/ConfirmDialog',
+    'js/Widgets/MetaEditor/MetaEditorPointerNamesDialog'
 ], function (Logger,
              util,
              generateGuid,
@@ -27,7 +28,8 @@ define(['js/logger',
              MetaEditorConstants,
              MetaDocItem,
              DragHelper,
-             ConfirmDialog) {
+             ConfirmDialog,
+             MetaEditorPointerNamesDialog) {
 
     'use strict';
 
@@ -1052,6 +1054,61 @@ define(['js/logger',
         WebGMEGlobal.State.registerActiveSelection([gmeId]);
     };
 
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getNewNameAndPropagationConsent = function
+        (srcPath, dstPath, type, currentName, callback) {
+        var self = this,
+            renameDialog = new MetaEditorPointerNamesDialog(),
+            confirmDialog = new ConfirmDialog(),
+            srcNode = self._client.getNode(srcPath),
+            headerLabel,
+            existingNames = [],
+            notAllowedNames = [];
+
+        if (srcNode === null) {
+            callback(false, null, false);
+            return;
+        }
+        switch (type) {
+            case 'pointer':
+                existingNames = srcNode.getValidSetNames();
+                notAllowedNames = _.union(srcNode.getValidPointerNames(), srcNode.getValidAspectNames(), [currentName]);
+                headerLabel = 'Rename pointer [' + currentName + ']';
+                break;
+            case 'set':
+                existingNames = srcNode.getValidSetNames();
+                notAllowedNames = _.union(srcNode.getValidPointerNames(), srcNode.getValidAspectNames(), [currentName]);
+                headerLabel = 'Rename set [' + currentName + ']';
+                break;
+            default:
+                callback(false, null, false);
+                return;
+        }
+
+        renameDialog.show({
+            existingNames: existingNames,
+            notAllowedNames: notAllowedNames,
+            header: headerLabel,
+            newBtnLabel: 'Rename',
+            onHideFn: function (newName) {
+                if (newName === null) {
+                    callback(false, null, false);
+                } else {
+                    confirmDialog.show({
+                        title: 'Propagate rename',
+                        question: 'Would you like to propagate the renaming throughout the whole project?',
+                        okLabel: 'Propagate',
+                        cancelLabel: 'Don\'t propagate',
+                        onHideFn: function (oked) {
+                            callback(true, newName, oked);
+                        }
+                    }, function () {
+                    });
+                }
+            }
+        }, function () {
+        });
+    };
+
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds,
                                                                                                       mousePos) {
         var menuItems = {},
@@ -1086,18 +1143,38 @@ define(['js/logger',
                 };
 
                 this.diagramDesigner.createMenu(menuItems, function (key) {
-                        if (key === MENU_RENAME_CONCEPT) {
-                            self._client.renameConcept(srcPath, type, oldName, 'new_' + oldName, function (err) {
-                                console.log('finished propagation:', err);
-                            });
-                        } else if (key === MENU_RENAME_DEFINITION) {
-                            self._client.renamePointerTargetDefinition(srcPath, dstPath, oldName,
-                                'newer_' + oldName, type === 'set',
-                                function (err) {
-                                    console.log('finished propagation _ :', err);
+                        if (key === MENU_RENAME_DEFINITION || key === MENU_RENAME_CONCEPT) {
+                            self._getNewNameAndPropagationConsent(srcPath, dstPath, type, oldName,
+                                function (approved, newName, shouldPropagate) {
+
+                                    if (approved !== true) {
+                                        return;
+                                    }
+
+                                    if (key === MENU_RENAME_CONCEPT) {
+                                        if (shouldPropagate) {
+                                            self._client.renameConcept(srcPath, type, oldName, newName, function (err) {
+                                                console.log('finished propagation:', err);
+                                            });
+                                        } else {
+                                            self._client.movePointerMetaTarget(srcPath, dstPath, oldName, newName);
+                                        }
+                                    } else if (key === MENU_RENAME_DEFINITION) {
+                                        if (shouldPropagate) {
+                                            self._client.renamePointerTargetDefinition(srcPath, dstPath, oldName,
+                                                newName, type === 'set',
+                                                function (err) {
+                                                    console.log('finished propagation _ :', err);
+                                                }
+                                            );
+                                        } else {
+                                            self._client.movePointerMetaTarget(srcPath, dstPath, oldName, newName);
+                                        }
+                                    }
                                 }
                             );
                         }
+
                     },
                     this.diagramDesigner.posToPageXY(mousePos.mX,
                         mousePos.mY));

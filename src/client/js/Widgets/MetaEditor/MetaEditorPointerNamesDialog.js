@@ -25,16 +25,16 @@ define([
 
     };
 
-    MetaEditorPointerNamesDialog.prototype.show = function (existingPointerNames, notAllowedPointerNames,
-                                                            isSet, callback) {
+    MetaEditorPointerNamesDialog.prototype.show = function (parameters, callback) {
         var self = this;
 
-        this._initDialog(existingPointerNames, notAllowedPointerNames, isSet, callback);
+        this._initDialog(parameters, callback);
 
         this._dialog.modal('show');
 
+        this._selectedName = null;
         this._dialog.on('shown.bs.modal', function () {
-            if (existingPointerNames.length === 0) {
+            if (parameters.existingNames.length === 0) {
                 self._txtNewPointerName.focus();
             }
         });
@@ -43,18 +43,22 @@ define([
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
+
+            if (parameters.onHideFn) {
+                parameters.onHideFn(self._selectedName);
+            }
         });
     };
 
-    MetaEditorPointerNamesDialog.prototype._initDialog = function (existingPointerNames, notAllowedPointerNames,
-                                                                   isSet, callback) {
+    MetaEditorPointerNamesDialog.prototype._initDialog = function (parameters, callback) {
         var self = this,
             i,
-            len = existingPointerNames.length,
+            len = parameters.existingNames.length,
             closeAndCallback,
             popularsAdded;
 
         closeAndCallback = function (selectedName) {
+            self._selectedName = selectedName;
             self._dialog.modal('hide');
 
             if (callback) {
@@ -75,11 +79,11 @@ define([
 
             if (name === '') {
                 result.hasViolation = true;
-                result.message = (isSet ? 'Set' : 'Pointer') + ' must have a non-empty name.';
-            } else if (notAllowedPointerNames.indexOf(name) > -1) {
+                result.message = (parameters.isSet ? 'Set' : 'Pointer') + ' must have a non-empty name.';
+            } else if (parameters.notAllowedNames.indexOf(name) > -1) {
                 result.hasViolation = true;
-                result.message = 'Name "' + name + '" is already used for a ' + (isSet ? 'pointer' : 'set') + ' or ' +
-                'an aspect.';
+                result.message = 'Name "' + name + '" is already used for a ' +
+                    (parameters.isSet ? 'pointer' : 'set') + ' or ' + 'an aspect.';
             } else if (REGEXP.DOCUMENT_KEY.test(name) === false) {
                 result.hasViolation = true;
                 result.message = 'Name "' + name + '" contains illegal characters, it may not contain "." ' +
@@ -91,18 +95,18 @@ define([
                         'which could lead to collisions with data stored for inverse pointers.';
                 } else if (name === CONSTANTS.CORE.BASE_POINTER) {
                     result.hasViolation = true;
-                    result.message = 'Name "' + CONSTANTS.CORE.BASE_POINTER  + '" is reserved for base/instance ' +
+                    result.message = 'Name "' + CONSTANTS.CORE.BASE_POINTER + '" is reserved for base/instance ' +
                         'relationship.';
                 } else if (name === CONSTANTS.CORE.MEMBER_RELATION) {
                     result.hasViolation = true;
-                    result.message = 'Name "' + CONSTANTS.CORE.MEMBER_RELATION  + '" is reserved for ' +
+                    result.message = 'Name "' + CONSTANTS.CORE.MEMBER_RELATION + '" is reserved for ' +
                         'set membership.';
                 } else if (name === CONSTANTS.CORE.OVERLAYS_PROPERTY) {
                     result.hasViolation = true;
                     result.message = 'Name "' + name + '" is a reserved key word.';
                 }
 
-                if (isSet && name === 'src' || name === 'dst') {
+                if (parameters.isSet && name === 'src' || name === 'dst') {
                     result.hasViolation = true;
                     result.message = 'Name "' + name + '" can only be used for pointer names and not for sets.';
                 }
@@ -115,11 +119,23 @@ define([
 
         //by default the template is for single pointer
         //in case of pointer list, update labels in the dialog
-        if (isSet === true) {
+        if (parameters.isSet === true) {
             this._dialog.find('.modal-header > h3').text('Create new set');
             this._dialog.find('.pick-existing-label').text('Pick one of the existing sets:');
             this._dialog.find('.create-new-label').text('Or create a new set:');
             this._dialog.find('.txt-pointer-name').attr('placeholder', 'New set name...');
+        }
+
+        if (typeof parameters.header === 'string') {
+            this._dialog.find('.modal-header > h3').text(parameters.header);
+        }
+
+        if (typeof parameters.existringLabel === 'string') {
+            this._dialog.find('.pick-existing-label').text(parameters.existringLabel);
+        }
+
+        if (typeof parameters.newLabel === 'string') {
+            this._dialog.find('.create-new-label').text(parameters.newLabel);
         }
 
         //get controls
@@ -130,34 +146,38 @@ define([
         this._hideAlert();
 
         //fill pointer names
-        existingPointerNames.sort();
+        parameters.existingNames.sort();
 
         if (len) {
 
             this._btnGroup.empty();
 
             for (i = 0; i < len; i += 1) {
-                if (existingPointerNames[i] !== CONSTANTS.CORE.BASE_POINTER) {
+                if (parameters.existingNames[i] !== CONSTANTS.CORE.BASE_POINTER) {
                     this._btnGroup.append($('<button class="btn btn-default">' +
-                        util.toSafeString(existingPointerNames[i]) + '</button>'));
+                        util.toSafeString(parameters.existingNames[i]) + '</button>'));
                 }
             }
         } else {
 
-            if (isSet === true) {
+            if (parameters.isSet === true) {
                 this._btnGroup.html('<span class="empty-message">No existing sets defined yet...</i>');
             } else {
                 this._btnGroup.html('<span class="empty-message">No existing pointers defined yet...</i>');
+            }
+
+            if (typeof parameters.emptyMessage === 'string') {
+                this._btnGroup.html('<span class="empty-message">' + parameters.emptyMessage + '</i>');
             }
         }
 
         //add most popular ones
         popularsAdded = false;
-        if (isSet !== true) {
+        if (parameters.isSet !== true && parameters.addPopularPointerNames) {
             len = POPULAR_POINTER_NAMES.length;
 
             for (i = 0; i < len; i += 1) {
-                if (existingPointerNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
+                if (parameters.existingNames.indexOf(POPULAR_POINTER_NAMES[i]) === -1) {
                     this._btnGroupPopular.append($('<button class="btn btn-default">' +
                         POPULAR_POINTER_NAMES[i] + '</button>'));
                     popularsAdded = true;
@@ -174,6 +194,10 @@ define([
         this._txtNewPointerName = this._dialog.find('.txt-pointer-name');
         this._btnCreateNew = this._dialog.find('.btn-create').disable(true);
         this._panelCreateNew = this._dialog.find('.panel-create-new');
+
+        if (typeof parameters.newBtnLabel === 'string') {
+            $(this._btnCreateNew).text(parameters.newBtnLabel);
+        }
 
         //hook up event handlers
         this._btnGroup.on('click', '.btn', function (event) {
