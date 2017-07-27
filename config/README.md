@@ -64,7 +64,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.authentication.logInUrl = '/profile/login'`
  - Where clients are redirected if not authenticated.
 - `config.authentication.logOutUrl = '/profile/login'`
- - Where clients are redirected after logout.
+ - Where clients are redirected after logout. Leave this empty to logout to the referrer (if none it will fall back on `config.authentication.logInUrl`).
 - `config.authentication.userManagementPage = 'webgme-user-management-page'`
  - Replaceable user-management page to use (use this if you have a fork of [webgme-user-management-page](https://github.com/webgme/user-management-page)).
  Given router will be mounted at `/profile`.
