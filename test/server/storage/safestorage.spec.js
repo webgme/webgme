@@ -418,20 +418,33 @@ describe('SafeStorage', function () {
         });
     });
 
-    describe('Default webhooks', function () {
+    describe('webhooks defaults', function () {
         var safeStorage,
             projectName = 'seedForHook';
 
         before(function (done) {
             var configWithDefaults = JSON.parse(JSON.stringify(gmeConfig));
             configWithDefaults.webhooks.defaults = {
+                'myHook': {
+                    options: {
+                        only: 'options'
+                    }
+                },
                 'myHook1': {
                     url: 'localhost:9001',
                     events: 'all'
                 },
                 'myHook2': {
                     url: 'localhost:9002',
-                    events: 'all'
+                    events: 'all',
+                    options: {
+                        myLittle: 'options'
+                    }
+                },
+                'myHook3': {
+                    options: {
+                        only: 'options'
+                    }
                 }
             };
 
@@ -466,6 +479,9 @@ describe('SafeStorage', function () {
                     expect(Object.keys(hooks).length).to.equal(2);
                     expect(hooks.myHook1.url).to.equal('localhost:9001');
                     expect(hooks.myHook2.url).to.equal('localhost:9002');
+                    expect(hooks.myHook2.options).to.equal(undefined);
+                    expect(safeStorage.gmeConfig.webhooks.defaults.myHook2.options.myLittle).to.equal('options');
+                    expect(safeStorage.gmeConfig.webhooks.defaults.myHook3.options.only).to.equal('options');
                 })
                 .nodeify(done);
         });

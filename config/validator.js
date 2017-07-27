@@ -84,10 +84,12 @@ function assertBooleanOrString(name, value, orFalsy) {
 
 // We will fail as early as possible
 function validateConfig(configOrFileName) {
-    var config,
+    var expectedKeys = [],
+        mountPoints = {},
+        mountPoint,
+        config,
         errMsg,
-        key,
-        expectedKeys = [];
+        key;
 
     if (typeof configOrFileName === 'string') {
         configFileName = configOrFileName;
@@ -194,6 +196,27 @@ function validateConfig(configOrFileName) {
     expectedKeys.push('rest');
     assertObject('config.rest', config.rest);
     assertObject('config.rest.components', config.rest.components);
+
+    for (key in config.rest.components) {
+        if (typeof config.rest.components[key] === 'string') {
+            mountPoint = key;
+            // TODO: Add this warn when the cli tool has been updated.
+            // console.warn('config.rest.components[' + key + '] is a string a not an object. ' +
+            // 'It is recommended to change to the format described in #xxxx');
+        } else {
+            assertObject('config.rest.components[' + key + ']', config.rest.components[key]);
+            assertString('config.rest.components[' + key + '].mount', config.rest.components[key].mount);
+            assertString('config.rest.components[' + key + '].src', config.rest.components[key].src);
+            assertObject('config.rest.components[' + key + '].options', config.rest.components[key].options, true);
+            mountPoint = config.rest.components[key].mount;
+        }
+
+        if (mountPoints[mountPoint] === true) {
+            throw new Error('Same mount point [' + mountPoint + '] specified more than once in config.rest.components.');
+        } else {
+            mountPoints[mountPoint] = true;
+        }
+    }
 
     //seedProjects
     expectedKeys.push('seedProjects');

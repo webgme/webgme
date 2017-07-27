@@ -178,7 +178,9 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 
 ##### rest
 - `config.rest.components = {}`
- - Routing path (keys) from `origin` and file-path (values) to custom REST components. Use the `RestRouterGenerator` plugin to generate a template router (see the generated file for more info).
+ - Collection of external rest routes index by their (unique) ids. The value is an object with keys; `src` file-path (or name) 
+ to the module defining the router, `mount` where the router will be mounted relative the <host>, `options` an object with setting for the specific router.
+ Use the `RestRouterGenerator` plugin to generate a template router (see the generated file for more info).
 
 ##### seedProjects
 - `config.seedProjects.enable = true`
@@ -267,4 +269,5 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Type of webhook-manager for detecting events, can be `'memory'`, `'redis'`. Memory runs in the server process, whereas redis
  is running in a sub-process. Redis requires the socket.io adapter to be of type redis. (It is also possible to run the redis manager separately from the webgme server.)
 - `config.webhooks.defaults = {}`
- - Collection of hooks that should be added to every new project. Keys are webhook-ids and values are object with at least `url` and `events` defined, see [wiki](https://github.com/webgme/webgme/wiki/GME-WebHooks) for available fields. 
+ - Collection of hooks that should be added to every new project. Keys are webhook-ids and values are object with at least `url` and `events` defined, see [wiki](https://github.com/webgme/webgme/wiki/GME-WebHooks) for available fields.
+ Optionally an `options` object can be passed to be used by the specific webhook (to disable automatic addition leave out the `url` field).
