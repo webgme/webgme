@@ -57,6 +57,12 @@ require(
             WebGMEGlobal.GitHubVersion = npmJSONFromSplit[npmJSONFromSplit.length - 1];
         }
 
+        // Set the referrer in the session store (if not already set)
+        if (typeof window.sessionStorage.getItem('originalReferrer') !== 'string') {
+            // Use top in case embedded in iframe.
+            window.sessionStorage.setItem('originalReferrer', window.top.document.referrer);
+        }
+
         // domDeferred will be resolved (with gmeApp) when the dom is ready (i.e. $ function invoked).
         $(function () {
             var d,

@@ -489,4 +489,109 @@ describe('standalone server', function () {
             }
         );
     });
+
+    describe('http server with authentication', function () {
+        describe('logOutUrl set', function () {
+            var server;
+
+            before(function (done) {
+                // we have to set the config here
+                var gmeConfig = testFixture.getGmeConfig();
+                gmeConfig.authentication.enable = true;
+                gmeConfig.authentication.logOutUrl = '/profile/login';
+
+                server = WebGME.standaloneServer(gmeConfig);
+                serverBaseUrl = server.getUrl();
+                server.start(done);
+            });
+
+            after(function (done) {
+                server.stop(done);
+            });
+
+            it('should redirect to given logOutUrl when no referrer set', function (done) {
+                agent.get(serverBaseUrl + '/logout').end(function (err, res) {
+                    try {
+                        expect(err).to.equal(null);
+                        expect(res.status).to.equal(200);
+                        expect(res.redirects.length).to.equal(1);
+                        expect(res.redirects[0]).to.equal(serverBaseUrl + '/profile/login');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
+            });
+
+            it('should redirect to logOutUrl even when redirectUrl set', function (done) {
+                agent.get(serverBaseUrl + '/logout')
+                    .query({
+                        redirectUrl: '/gmeConfig.json'
+                    })
+                    .end(function (err, res) {
+                    try {
+                        expect(err).to.equal(null);
+                        expect(res.status).to.equal(200);
+                        expect(res.redirects.length).to.equal(1);
+                        expect(res.redirects[0]).to.equal(serverBaseUrl + '/profile/login');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
+            });
+        });
+
+        describe('logOutUrl not set', function () {
+            var server;
+
+            before(function (done) {
+                // we have to set the config here
+                var gmeConfig = testFixture.getGmeConfig();
+                gmeConfig.authentication.enable = true;
+                gmeConfig.authentication.logOutUrl = '';
+                gmeConfig.authentication.logInUrl = '/profile/login';
+
+                server = WebGME.standaloneServer(gmeConfig);
+                serverBaseUrl = server.getUrl();
+                server.start(done);
+            });
+
+            after(function (done) {
+                server.stop(done);
+            });
+
+            it('should redirect to given logInUrl when no referrer set', function (done) {
+                agent.get(serverBaseUrl + '/logout').end(function (err, res) {
+                    try {
+                        expect(err).to.equal(null);
+                        expect(res.status).to.equal(200);
+                        expect(res.redirects.length).to.equal(1);
+                        expect(res.redirects[0]).to.equal(serverBaseUrl + '/profile/login');
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                });
+            });
+
+            it('should redirect to redirectUrl when query set', function (done) {
+                agent.get(serverBaseUrl + '/logout')
+                    .query({
+                        redirectUrl: '/gmeConfig.json'
+                    })
+                    .end(function (err, res) {
+                        try {
+                            expect(err).to.equal(null);
+                            expect(res.status).to.equal(200);
+                            expect(res.redirects.length).to.equal(1);
+                            expect(res.redirects[0]).to.equal(serverBaseUrl + '/gmeConfig.json');
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    });
+            });
+        });
+    });
 });

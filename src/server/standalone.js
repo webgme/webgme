@@ -701,10 +701,10 @@ function StandAloneServer(gmeConfig) {
         if (gmeConfig.authentication.enable === false) {
             res.sendStatus(404);
         } else {
-            redirectUrl = req.query('redirect');
+            redirectUrl = req.query.redirectUrl;
 
             res.clearCookie(gmeConfig.authentication.jwt.cookieId);
-            res.redirect(redirectUrl || gmeConfig.authentication.logOutUrl || '/');
+            res.redirect(gmeConfig.authentication.logOutUrl || redirectUrl || gmeConfig.authentication.logInUrl || '/');
         }
     });
 
