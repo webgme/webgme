@@ -1137,8 +1137,6 @@ define([
 
         this.moveNode = function (node, parent, takenRelids, relidLength, newRelid) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
-            ASSERT(typeof newRelid !== 'string' ||
-                ((takenRelids || {})[newRelid] !== true && newRelid.length > 0));
 
             var ancestor,
                 base,

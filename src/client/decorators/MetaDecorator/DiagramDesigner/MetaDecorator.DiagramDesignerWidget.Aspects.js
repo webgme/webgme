@@ -9,8 +9,9 @@ define([
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     './AspectDetailsDialog',
-    './Aspect'
-], function (CONSTANTS, GMEConcepts, nodePropertyNames, AspectDetailsDialog, Aspect) {
+    './Aspect',
+    'js/Dialogs/Confirm/ConfirmDialog'
+], function (CONSTANTS, GMEConcepts, nodePropertyNames, AspectDetailsDialog, Aspect, ConfirmDialog) {
 
     'use strict';
 
@@ -88,7 +89,7 @@ define([
         var client = this._control._client,
             objId = this._metaInfo[CONSTANTS.GME_ID],
             nodeObj = client.getNode(objId),
-            newAspects = nodeObj? nodeObj.getOwnValidAspectNames() : [],
+            newAspects = nodeObj ? nodeObj.getOwnValidAspectNames() : [],
             len,
             displayedAspects = this._aspectNames.slice(0),
             diff,
@@ -243,21 +244,50 @@ define([
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype.saveAspectDescriptor = function (cName, cDesc) {
         var client = this._control._client,
-            objID = this._metaInfo[CONSTANTS.GME_ID];
-
-        client.startTransaction();
+            objID = this._metaInfo[CONSTANTS.GME_ID],
+            confirmDialog = new ConfirmDialog();
 
         if (cName !== cDesc.name) {
-            //name has changed --> delete the descriptor with the old name
-            client.delAspectMeta(objID, cName);
-            client.deleteSet(objID, cName);
+            confirmDialog.show({
+                title: 'Propagate Meta aspect name change',
+                question: 'Do you wish to propagate the aspect name change throughout the project?',
+                okLabel: 'Propagate',
+                cancelLabel: 'Don\'t propagate',
+                onHideFn: function (oked) {
+                    if (oked) {
+
+                        client.renameAspectDefinition(objID, cDesc.items || [], cName, cDesc.name, function (err) {
+                            var errorDialog;
+
+                            if (err) {
+                                errorDialog = new ConfirmDialog();
+                                errorDialog.show({
+                                    title: 'Meta aspect change propagation failed',
+                                    question: err,
+                                    noCancelButton: true
+                                }, function () {
+                                });
+                            }
+                        });
+                    } else {
+                        client.startTransaction();
+                        client.delAspectMeta(objID, cName);
+                        client.deleteSet(objID, cName);
+                        client.setAspectMetaTargets(objID, cDesc.name, cDesc.items || []);
+                        client.createSet(objID, cDesc.name);
+                        client.completeTransaction();
+                    }
+                }
+            }, function () {
+            });
+            return;
+        } else {
+            client.startTransaction();
+            client.setAspectMetaTargets(objID, cDesc.name, cDesc.items || []);
+            client.createSet(objID, cDesc.name);
+            client.completeTransaction();
         }
 
-        //set meta aspect first
-        client.setAspectMetaTargets(objID, cDesc.name, cDesc.items || []);
-        client.createSet(objID, cDesc.name);
-
-        client.completeTransaction();
     };
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype.deleteAspectDescriptor = function (cName) {

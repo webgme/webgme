@@ -65,10 +65,31 @@ define(['js/Constants'], function (CONSTANTS) {
             });
         }
 
+        function renameAspectDefinition(nodePath, meta, oldName, newName, callback) {
+            var parameters = {
+                command: 'changeAspectMeta',
+                projectId: state.project.projectId,
+                nodePath: nodePath,
+                meta: meta,
+                type: 'aspect',
+                oldName: oldName,
+                newName: newName,
+                branchName: state.branchName
+            };
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        }
+
         return {
             renameConcept: renameConcept,
             renameAttributeDefinition: renameAttributeDefinition,
-            renamePointerTargetDefinition: renamePointerTargetDefinition
+            renamePointerTargetDefinition: renamePointerTargetDefinition,
+            renameAspectDefinition: renameAspectDefinition
         };
     }
 

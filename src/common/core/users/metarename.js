@@ -20,7 +20,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
      */
     function propagateMetaDefinitionRename(core, node, parameters, callback) {
         function visitForAttribute(visited, next) {
-            if (parameters.excludeOriginNode === true && core.getPath(visited) === core.getPath(node)) {
+            if (parameters.excludeOriginNode === true && core.getPath(visited) === nodePath) {
                 next(null);
                 return;
             }
@@ -31,7 +31,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 return;
             }
 
-            if (core.getPath(core.getAttributeDefinitionOwner(visited, parameters.newName)) === core.getPath(node)) {
+            if (core.getPath(core.getAttributeDefinitionOwner(visited, parameters.newName)) === nodePath) {
                 core.renameAttribute(visited, parameters.oldName, parameters.newName);
             }
             next(null);
@@ -41,7 +41,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             var definitionInfo,
                 deferred = Q.defer();
 
-            if (parameters.excludeOriginNode === true && core.getPath(visited) === core.getPath(node)) {
+            if (parameters.excludeOriginNode === true && core.getPath(visited) === nodePath) {
                 return Q.resolve(null).nodeify(next);
             }
 
@@ -53,8 +53,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             core.loadPointer(visited, parameters.oldName)
                 .then(function (target) {
                     definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, target);
-                    if (definitionInfo.sourcePath === core.getPath(node)
-                        && definitionInfo.targetPath === parameters.targetPath) {
+                    if (definitionInfo.sourcePath === nodePath &&
+                        definitionInfo.targetPath === parameters.targetPath) {
                         core.renamePointer(visited, parameters.oldName, parameters.newName);
                     }
                     deferred.resolve(null);
@@ -70,7 +70,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             var definitionInfo,
                 deferred = Q.defer();
 
-            if (parameters.excludeOriginNode === true && core.getPath(visited) === core.getPath(node)) {
+            if (parameters.excludeOriginNode === true && core.getPath(visited) === nodePath) {
                 return Q.resolve(null).nodeify(next);
             }
 
@@ -85,7 +85,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
                     for (i = 0; i < members.length; i += 1) {
                         definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, members[i]);
-                        if (definitionInfo.sourcePath === core.getPath(node) &&
+                        if (definitionInfo.sourcePath === nodePath &&
                             definitionInfo.targetPath === parameters.targetPath) {
                             core.moveMember(visited, core.getPath(members[i]), parameters.oldName, parameters.newName);
                         }
@@ -100,7 +100,27 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             return deferred.promise.nodeify(next);
         }
 
+        function visitForAspect(visited, next) {
+            if (parameters.excludeOriginNode === true && core.getPath(visited) === nodePath) {
+                next(null);
+                return;
+            }
+
+            if (core.getValidAspectNames(visited).indexOf(parameters.newName) === -1 ||
+                core.getOwnSetNames(visited).indexOf(parameters.oldName) === -1) {
+                next(null);
+                return;
+            }
+
+            if (core.getPath(core.getAspectDefinitionOwner(visited, parameters.newName)) === nodePath) {
+                core.renameSet(visited, parameters.oldName, parameters.newName);
+            }
+
+            next(null);
+        }
+
         var deferred = Q.defer(),
+            nodePath = core.getPath(node),
             visitFn;
 
         switch (parameters.type) {
@@ -112,6 +132,9 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 break;
             case 'set':
                 visitFn = visitForSet;
+                break;
+            case 'aspect':
+                visitFn = visitForAspect;
                 break;
             default:
                 return Q.reject(new Error('Invalid parameter misses a correct type for renaming.')).nodeify(callback);
@@ -208,7 +231,6 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 toArrayFunc = core.getOwnValidAttributeNames;
                 break;
             case 'pointer':
-                console.log('we are here:', core.getOwnValidPointerNames(node));
                 toArrayFunc = core.getOwnValidPointerNames;
                 break;
             case 'set':

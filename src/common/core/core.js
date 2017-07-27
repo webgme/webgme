@@ -4015,6 +4015,10 @@ define([
             ensureNode(node, 'node');
             ensureType(oldName, 'oldName', 'string');
             ensureType(newName, 'newName', 'string');
+
+            if (core.getOwnSetNames(node).indexOf(oldName) === -1) {
+                throw new CoreIllegalOperationError('Cannot rename nonexistent set [' + oldName + ']');
+            }
             return core.renameSet(node, oldName, newName);
         };
 

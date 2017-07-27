@@ -17,6 +17,7 @@ var Core = requireJS('common/core/coreQ'),
     storageUtils = requireJS('common/storage/util'),
     commonUtils = requireJS('common/util/util'),
     metaRename = requireJS('common/core/users/metarename'),
+    _ = require('underscore'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -1546,6 +1547,96 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    function changeAspectMeta(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            node,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('changeAspectMeta failed with error', err);
+                } else {
+                    logger.debug('changeAspectMeta completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash,
+                    parameters.branchName, parameters.tagName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return context.core.loadByPath(context.rootNode, parameters.nodePath);
+            })
+            .then(function (node_) {
+                var promises = [],
+                    i;
+                node = node_;
+
+                for (i = 0; i < parameters.meta.length; i += 1) {
+                    promises.push(context.core.loadByPath(context.rootNode, parameters.meta[i]));
+                }
+                return Q.all(promises);
+            })
+            .then(function (members) {
+                var oldMembers = context.core.getAspectMeta(node, parameters.oldName),
+                    sameMembers = _.intersection(oldMembers, parameters.meta),
+                    newMembers = _.difference(parameters.meta, oldMembers),
+                    nodes = {},
+                    i;
+
+                for (i = 0; i < members.length; i += 1) {
+                    nodes[context.core.getPath(members[i])] = members[i];
+                }
+
+                for (i = 0; i < sameMembers.length; i += 1) {
+                    context.core.moveAspectMetaTarget(node, nodes[sameMembers[i]],
+                        parameters.oldName, parameters.newName);
+                }
+
+                for (i = 0; i < newMembers.length; i += 1) {
+                    context.core.setAspectMetaTarget(node,parameters.newName,nodes[newMembers[i]]);
+                }
+
+                context.core.renameSet(node,parameters.oldName,parameters.newName);
+                context.core.delAspectMeta(node, parameters.oldName);
+                return metaRename.propagateMetaDefinitionRename(context.core, node,{
+                    excludeOriginNode:true,
+                    type:'aspect',
+                    oldName: parameters.oldName,
+                    newName: parameters.newName
+                });
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'rename aspect definition [' + parameters.oldName +
+                    '->' + parameters.newName + '] of [' + parameters.nodePath + ']', function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    });
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
@@ -1564,7 +1655,8 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
         updateProjectFromFile: updateProjectFromFile,
         renameConcept: renameConcept,
         changeAttributeMeta: changeAttributeMeta,
-        renameMetaPointerTarget: renameMetaPointerTarget
+        renameMetaPointerTarget: renameMetaPointerTarget,
+        changeAspectMeta: changeAspectMeta
     };
 }
 
