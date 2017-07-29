@@ -11,6 +11,7 @@ describe('core', function () {
     var gmeConfig = testFixture.getGmeConfig(),
         projectName = 'core',
         Core = testFixture.requirejs('common/core/core'),
+        _ = require('underscore'),
         project,
         core,
         rootNode,
@@ -121,9 +122,13 @@ describe('core', function () {
                 'getMetaType', 'loadMembers', 'loadOwnMembers', 'renamePointer', 'renameAttribute',
                 'renameRegistry', 'renameSet', 'getAttributeDefinitionOwner', 'getAspectDefinitionOwner',
                 'getPointerDefinitionInfo', 'getAspectDefinitionInfo', 'getSetDefinitionInfo',
-                'getChildDefinitionInfo'
+                'getChildDefinitionInfo', 'getValidTargetPaths', 'getOwnValidTargetPaths',
+                'isValidAspectMemberOf', 'moveAspectMetaTarget', 'movePointerMetaTarget',
+                'renameAttributeMeta', 'moveMember', 'getOwnValidPointerNames', 'getOwnValidSetNames',
+                'getValidAspectTargetPaths', 'getOwnValidAspectTargetPaths'
             ];
 
+        // console.log(_.difference(functions,Matches));
         expect(functions).to.have.members(Matches);
         console.error(Matches.length);
 

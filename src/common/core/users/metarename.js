@@ -19,6 +19,10 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
      * @returns {Q.Promise}
      */
     function propagateMetaDefinitionRename(core, node, parameters, callback) {
+        var deferred = Q.defer(),
+            nodePath = core.getPath(node),
+            visitFn;
+
         function visitForAttribute(visited, next) {
             if (parameters.excludeOriginNode === true && core.getPath(visited) === nodePath) {
                 next(null);
@@ -52,9 +56,13 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
             core.loadPointer(visited, parameters.oldName)
                 .then(function (target) {
-                    definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, target);
-                    if (definitionInfo.sourcePath === nodePath &&
-                        definitionInfo.targetPath === parameters.targetPath) {
+                    if (target !== null) {
+                        definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, target);
+                        if (definitionInfo.sourcePath === nodePath &&
+                            definitionInfo.targetPath === parameters.targetPath) {
+                            core.renamePointer(visited, parameters.oldName, parameters.newName);
+                        }
+                    } else if (core.getPath(visited) === nodePath) {
                         core.renamePointer(visited, parameters.oldName, parameters.newName);
                     }
                     deferred.resolve(null);
@@ -84,7 +92,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     var i;
 
                     for (i = 0; i < members.length; i += 1) {
-                        definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, members[i]);
+                        definitionInfo = core.getSetDefinitionInfo(visited, parameters.newName, members[i]);
                         if (definitionInfo.sourcePath === nodePath &&
                             definitionInfo.targetPath === parameters.targetPath) {
                             core.moveMember(visited, core.getPath(members[i]), parameters.oldName, parameters.newName);
@@ -101,6 +109,9 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         }
 
         function visitForAspect(visited, next) {
+            var definitionInfo,
+                deferred = Q.defer();
+
             if (parameters.excludeOriginNode === true && core.getPath(visited) === nodePath) {
                 next(null);
                 return;
@@ -112,16 +123,26 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 return;
             }
 
-            if (core.getPath(core.getAspectDefinitionOwner(visited, parameters.newName)) === nodePath) {
-                core.renameSet(visited, parameters.oldName, parameters.newName);
-            }
+            core.loadMembers(visited, parameters.oldName)
+                .then(function (members) {
+                    var i;
 
-            next(null);
+                    for (i = 0; i < members.length; i += 1) {
+                        definitionInfo = core.getAspectDefinitionInfo(visited, parameters.newName, members[i]);
+                        if (definitionInfo.sourcePath === nodePath &&
+                            definitionInfo.targetPath === parameters.targetPath) {
+                            core.moveMember(visited, core.getPath(members[i]), parameters.oldName, parameters.newName);
+                        }
+                    }
+                    deferred.resolve(null);
+                    return;
+                })
+                .catch(function (err) {
+                    deferred.resolve(null);
+                });
+
+            return deferred.promise.nodeify(next);
         }
-
-        var deferred = Q.defer(),
-            nodePath = core.getPath(node),
-            visitFn;
 
         switch (parameters.type) {
             case 'attribute':
@@ -297,12 +318,9 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 hasDataFn = core.getOwnPointerNames;
                 break;
             case 'set':
+            case 'aspect':
                 renameFn = core.renameSet;
                 hasDataFn = core.getOwnSetNames;
-                break;
-            case 'aspect':
-                renameFn = core.renameAspect;
-                hasDataFn = core.getOwnAspectNames;
                 break;
             default:
                 return Q.reject(new Error('Unkown rule type [' + type + ']')).nodeify(callback);

@@ -534,7 +534,9 @@ define([
         this.renameAttributeMeta = function (node, oldName, newName) {
             self.setAttributeMeta(node, newName, self.getAttributeMeta(node, oldName));
             self.delAttributeMeta(node, oldName);
-            self.renameAttribute(node, oldName, newName);
+            if (self.getOwnAttributeNames(node).indexOf(oldName) !== -1) {
+                self.renameAttribute(node, oldName, newName);
+            }
         };
 
         this.delAttributeMeta = function (node, name) {
@@ -833,8 +835,10 @@ define([
                             result.targetNode = definedTarget;
                             return result;
                         }
+                        definedTarget = self.getBase(definedTarget);
                     }
                 }
+                node = self.getBase(node);
             }
             return null;
         };

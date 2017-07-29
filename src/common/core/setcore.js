@@ -671,7 +671,10 @@ define([
                 newSetNode;
 
             ASSERT(oldMemberRelid !== null, 'Only own member can be moved!');
-            ASSERT(setNames.indexOf(newSetName) !== -1, 'Can only move to existing set');
+
+            if (setNames.indexOf(newSetName) === -1) {
+                self.createSet(node, newSetName);
+            }
 
             oldMemberNode = self.getChild(oldSetNode, oldMemberRelid);
             newSetNode = getSetNodeByName(node, newSetName);
@@ -681,6 +684,10 @@ define([
             }
 
             self.moveNode(oldMemberNode, newSetNode);
+
+            if (self.getOwnMemberPaths(node, oldSetName).length === 0) {
+                self.deleteSet(node, oldSetName);
+            }
         };
         //</editor-fold>
     }

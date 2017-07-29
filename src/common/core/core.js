@@ -4150,6 +4150,18 @@ define([
             return core.getAspectDefinitionInfo(node, name, member);
         };
 
+        this.getValidAspectTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            return core.getValidAspectTargetPaths(node, name);
+        }
+
+        this.getOwnValidAspectTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            return core.getOwnValidAspectTargetPaths(node, name);
+        }
+
         /**
          * Returns the meta concept that defines the given aspect.
          * @param {module:Core~Node} node - the node in question.
@@ -4192,10 +4204,6 @@ define([
 
             if (core.getSetNames(node).indexOf(oldSetName) === -1) {
                 throw new CoreIllegalOperationError('Source set [' + oldSetName + '] does not exists.');
-            }
-
-            if (core.getSetNames(node).indexOf(newSetName) === -1) {
-                throw new CoreIllegalOperationError('Target set [' + newSetName + '] does not exists.');
             }
 
             if (core.getOwnMemberPaths(node, oldSetName).indexOf(memberPath) === -1) {

@@ -781,7 +781,6 @@ define([
         };
 
         this.renameProperty = function (node, oldName, newName) {
-            console.log(self.getPath(node), oldName, newName);
             self.setProperty(node, newName, self.getProperty(node, oldName));
             self.deleteProperty(node, oldName);
         };

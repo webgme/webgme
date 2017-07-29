@@ -641,7 +641,7 @@ define([
         };
 
         this.getAspectDefinitionInfo = function (node, name, member) {
-            return getFirstMatchingRuleInfo(node, name, member, self.getValidAspectTargetPaths, {});
+            return getFirstMatchingRuleInfo(node, name, member, self.getOwnValidAspectTargetPaths, {});
         };
 
         this.getPointerDefinitionInfo = function (node, name, target) {

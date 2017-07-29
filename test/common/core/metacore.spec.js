@@ -275,12 +275,8 @@ describe('meta core', function () {
 
         core.delAspectMetaTarget(aspectNode, 'aspect', core.getPath(base));
 
-        core.getValidAspectNames(aspectNode).should.have.length(1);
-        core.getValidAspectNames(aspectNode).should.include.members(['aspect']);
-
-        core.delAspectMeta(aspectNode, 'aspect');
-
-        core.getValidAspectNames(aspectNode).should.be.empty;
+        core.getValidAspectNames(aspectNode).should.have.length(0);
+        core.getValidAspectNames(aspectNode).should.have.members([]);
     });
 
     it('checks MetaSheet based type query', function () {
@@ -330,7 +326,7 @@ describe('meta core', function () {
             pointerMeta = core.getPointerMeta(setNode, 'set');
 
         expect(pointerMeta.max).to.equal(2);
-        expect(pointerMeta.min).to.equal(-1);
+        expect(pointerMeta.min).to.equal(0);
 
         delete pointerMeta.min;
         delete pointerMeta.max;
