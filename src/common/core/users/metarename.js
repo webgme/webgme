@@ -67,9 +67,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     }
                     deferred.resolve(null);
                 })
-                .catch(function (err) {
-                    deferred.resolve(null);
-                });
+                .catch(deferred.reject);
 
             return deferred.promise.nodeify(next);
         }
@@ -101,9 +99,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     deferred.resolve(null);
                     return;
                 })
-                .catch(function (err) {
-                    deferred.resolve(null);
-                });
+                .catch(deferred.reject);
 
             return deferred.promise.nodeify(next);
         }
@@ -137,9 +133,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     deferred.resolve(null);
                     return;
                 })
-                .catch(function (err) {
-                    deferred.resolve(null);
-                });
+                .catch(deferred.reject);
 
             return deferred.promise.nodeify(next);
         }
@@ -161,7 +155,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 return Q.reject(new Error('Invalid parameter misses a correct type for renaming.')).nodeify(callback);
         }
 
-        core.traverse(core.getRoot(node), {excludeRoot: true}, visitFn)
+        core.traverse(core.getRoot(node), {excludeRoot: true, stopOnError: true}, visitFn)
             .then(deferred.resolve)
             .catch(deferred.reject);
 
@@ -333,7 +327,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                     .nodeify(callback);
             }
         }
-        core.traverse(core.getRoot(typeNodes[0]), {excludeRoot: true}, visitFn)
+        core.traverse(core.getRoot(typeNodes[0]), {excludeRoot: true, stopOnError: true}, visitFn)
             .then(deferred.resolve)
             .catch(deferred.reject);
 
