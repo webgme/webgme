@@ -1888,6 +1888,169 @@ declare namespace GmeClasses {
             (node: Core.Node, name: GmeCommon.Name, libraryRootHash: GmeCommon.MetadataHash,
                 libraryInfo: LibraryInfo): Promise<Core.DataObject>;
         }
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} oldName
+         * @param {GmeCommon.Name} newName
+         * @return {Error}
+         */
+        renamePointer(node: Core.Node, oldName: GmeCommon.Name, newName: GmeCommon.Name): undefined | Error;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} oldName
+         * @param {GmeCommon.Name} newName
+         * @return {Error}
+         */
+        renameAttribute(node: Core.Node, oldName: GmeCommon.Name, newName: GmeCommon.Name): undefined | Error;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} oldName
+         * @param {GmeCommon.Name} newName
+         * @return {Error}
+         */
+        renameRegistry(node: Core.Node, oldName: GmeCommon.Name, newName: GmeCommon.Name): undefined | Error;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} oldName
+         * @param {GmeCommon.Name} newName
+         * @return {Error}
+         */
+        renameSet(node: Core.Node, oldName: GmeCommon.Name, newName: GmeCommon.Name): undefined | Error;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @return {Core.Node}
+         */
+        getAttributeDefinitionOwner(node: Core.Node, name: GmeCommon.Name): Core.Node;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @return {Core.Node}
+         */
+        getAspectDefinitionOwner(node: Core.Node, name: GmeCommon.Name): Core.Node;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {Core.Node} parent
+         * @param {GmeCommon.Name} name
+         * @return {boolean}
+         */
+        isValidAspectMemberOf(node: Core.Node, parent:Core.Node, name: GmeCommon.Name) : boolean;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Path} memberPath
+         * @param {GmeCommon.Name} oldSetName
+         * @param {GmeCommon.Name} newSetName
+         * @return {Error}
+         */
+        moveMember(node: Core.Node, memberPath: GmeCommon.Path,
+                   oldSetName: GmeCommon.Name, newSetName: GmeCommon.Name ) : undefined | Error;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @return {GmeCommon.Name[]}
+         */
+        getOwnValidPointerNames(node: Core.Node): GmeCommon.Name[];
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @return {GmeCommon.Name[]}
+         */
+        getOwnValidSetNames(node: Core.Node): GmeCommon.Name[];
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @return {GmeCommon.Path[]}
+         */
+        getValidTargetPaths(node: Core.Node, name: GmeCommon.Name) : GmeCommon.Path[];
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @return {GmeCommon.Path[]}
+         */
+        getOwnValidTargetPaths(node: Core.Node, name: GmeCommon.Name) : GmeCommon.Path[];
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @return {GmeCommon.Path[]}
+         */
+        getValidAspectTargetPaths(node: Core.Node, name: GmeCommon.Name) : GmeCommon.Path[];
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @return {GmeCommon.Path[]}
+         */
+        getOwnValidAspectTargetPaths(node: Core.Node, name: GmeCommon.Name) : GmeCommon.Path[];
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @param {Core.Node} target
+         * @return {GmeCommon.MetaInfo}
+         */
+        getPointerDefinitionInfo(node: Core.Node, name: GmeCommon.Name, target: Core.Node) : GmeCommon.MetaInfo;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @param {Core.Node} target
+         * @return {GmeCommon.MetaInfo}
+         */
+        getAspectDefinitionInfo(node: Core.Node, name: GmeCommon.Name, target: Core.Node) : GmeCommon.MetaInfo;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} name
+         * @param {Core.Node} target
+         * @return {GmeCommon.MetaInfo}
+         */
+        getSetDefinitionInfo(node: Core.Node, name: GmeCommon.Name, target: Core.Node) : GmeCommon.MetaInfo;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {Core.Node} target
+         * @return {GmeCommon.MetaInfo}
+         */
+        getChildDefinitionInfo(node: Core.Node, target: Core.Node) : GmeCommon.MetaInfo;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {GmeCommon.Name} oldName
+         * @param {GmeCommon.Name} newName
+         * @return {Error}
+         */
+        renameAttributeMeta(node: Core.Node, oldName: GmeCommon.Name, newName: GmeCommon.Name) : undefined | Error;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {Core.Node} target
+         * @param {GmeCommon.Name} oldName
+         * @param {GmeCommon.Name} newName
+         * @return {Error}
+         */
+        moveAspectMetaTarget(node: Core.Node, target: Core.Node,
+                             oldName: GmeCommon.Name, newName: GmeCommon.Name) : undefined | Error;
+        /**
+         * TODO
+         * @param {Core.Node} node
+         * @param {Core.Node} target
+         * @param {GmeCommon.Name} oldName
+         * @param {GmeCommon.Name} newName
+         * @return {Error}
+         */
+        movePointerMetaTarget(node: Core.Node, target: Core.Node,
+                              oldName: GmeCommon.Name, newName: GmeCommon.Name) : undefined | Error;
     }
 
 
@@ -2667,6 +2830,12 @@ declare namespace GmeCommon {
     export type CrosscutsInfo = Registry;
 
     export type Metadata = { [key: string]: any };
+    export type MetaInfo = {
+        owner: Core.Node,
+        ownerPath: GmeCommon.Path,
+        target: Core.Node,
+        targetPath: GmeCommon.Path
+    };
     export type Constraint = string;
     export type AttrMeta = any;
     export type Aspect = string;
