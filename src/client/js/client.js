@@ -18,7 +18,7 @@ define([
     'js/client/gmeNodeGetter',
     'js/client/gmeNodeSetter',
     'js/client/libraries',
-    'js/client/rename',
+    'js/client/gmeServerRequests',
     'blob/BlobClient',
     'js/client/stateloghelpers',
     'js/client/pluginmanager',
@@ -36,7 +36,7 @@ define([
              getNode,
              getNodeSetters,
              getLibraryFunctions,
-             getRenameFunctions,
+             getServerRequests,
              BlobClient,
              stateLogHelpers,
              PluginManager,
@@ -93,7 +93,7 @@ define([
             pluginManager,
             nodeSetterFunctions,
             coreLibraryFunctions,
-            metaRenameFunctions,
+            serverRequests,
             ROOT_PATH = '',
             //addOnFunctions = new AddOn(state, storage, logger, gmeConfig),
             loadPatternThrottled;
@@ -744,11 +744,11 @@ define([
             }
         }
 
-        metaRenameFunctions = getRenameFunctions(logger, state, storage, saveRoot);
+        serverRequests = getServerRequests(self, logger, state, storage);
 
-        for (monkeyPatchKey in metaRenameFunctions) {
-            if (metaRenameFunctions.hasOwnProperty(monkeyPatchKey)) {
-                self[monkeyPatchKey] = metaRenameFunctions[monkeyPatchKey];
+        for (monkeyPatchKey in serverRequests) {
+            if (serverRequests.hasOwnProperty(monkeyPatchKey)) {
+                self[monkeyPatchKey] = serverRequests[monkeyPatchKey];
             }
         }
 
@@ -1882,129 +1882,6 @@ define([
 
         };
 
-        this.importProjectFromFile = function (projectName, branchName, blobHash, ownerId, url, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.IMPORT_PROJECT_FROM_FILE,
-                projectName: projectName,
-                blobHash: blobHash,
-                branchName: branchName,
-                ownerId: ownerId,
-                url: url
-            };
-
-            logger.debug('creating project from package', parameters);
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-                callback(err, result);
-            });
-        };
-
-        this.updateProjectFromFile = function (projectId, branchName, blobHash, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.UPDATE_PROJECT_FROM_FILE,
-                blobHash: blobHash,
-                projectId: projectId,
-                branchName: branchName
-            };
-
-            logger.debug('updating project from package', parameters);
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-                callback(err, result);
-            });
-        };
-
-        //meta rules checking
-        /**
-         *
-         * @param {string[]} nodePaths - Paths to nodes of which to check.
-         * @param includeChildren
-         * @param callback
-         */
-        this.checkMetaRules = function (nodePaths, includeChildren, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.CHECK_CONSTRAINTS,
-                checkType: 'META', //TODO this should come from a constant
-                includeChildren: includeChildren,
-                nodePaths: nodePaths,
-                commitHash: state.commitHash,
-                projectId: state.project.projectId
-            };
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-
-                if (result) {
-                    self.dispatchEvent(CONSTANTS.CLIENT.META_RULES_RESULT, result);
-                } else {
-                    self.notifyUser({
-                        severity: 'error',
-                        message: 'Evaluating Meta rules failed with error.'
-                    });
-                }
-
-                if (callback) {
-                    callback(err, result);
-                }
-            });
-        };
-
-        /**
-         *
-         * @param {string[]} nodePaths - Paths to nodes of which to check.
-         * @param {boolean} includeChildren - If true will recursively check the children of the nodes to check.
-         * @param {function(Error, Object)} callback
-         */
-        this.checkCustomConstraints = function (nodePaths, includeChildren, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.CHECK_CONSTRAINTS,
-                checkType: 'CUSTOM', //TODO this should come from a constant
-                includeChildren: includeChildren,
-                nodePaths: nodePaths,
-                commitHash: state.commitHash,
-                projectId: state.project.projectId
-            };
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-
-                if (result) {
-                    self.dispatchEvent(CONSTANTS.CLIENT.CONSTRAINT_RESULT, result);
-                } else {
-                    self.notifyUser({
-                        severity: 'error',
-                        message: 'Evaluating custom constraints failed with error.'
-                    });
-                }
-
-                if (callback) {
-                    callback(err, result);
-                }
-            });
-        };
-
-        //seed
-        this.seedProject = function (parameters, callback) {
-            logger.debug('seeding project', parameters);
-            parameters.command = CONSTANTS.SERVER_WORKER_REQUESTS.SEED_PROJECT;
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-                callback(err, result);
-            });
-        };
-
         this.dispatchAddOnNotification = function (data) {
             var notification = {
                 severity: data.notification.severity || 'info',
@@ -2029,109 +1906,6 @@ define([
                 state.core.delConstraint(state.nodes[path].node, name);
                 saveRoot('delConstraint(' + path + 'name' + ')');
             }
-        };
-
-        //automerge
-        this.autoMerge = function (projectId, mine, theirs, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.AUTO_MERGE,
-                projectId: projectId,
-                mine: mine,
-                theirs: theirs
-            };
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error('autoMerge failed with error', err);
-                    callback(err);
-                } else {
-                    callback(null, result);
-                }
-            });
-        };
-
-        this.resolve = function (mergeResult, callback) {
-            var command = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.RESOLVE,
-                partial: mergeResult
-            };
-
-            storage.simpleRequest(command, function (err, result) {
-                if (err) {
-                    logger.error('resolve failed with error', err);
-                    callback(err);
-                } else {
-                    callback(null, result);
-                }
-            });
-        };
-
-        //package save
-        this.exportProjectToFile = function (projectId, branchName, commitHash, withAssets, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.EXPORT_PROJECT_TO_FILE,
-                projectId: projectId,
-                branchName: branchName,
-                commitHash: commitHash,
-                withAssets: withAssets
-            };
-
-            logger.debug('exportProjectToFile, parameters', parameters);
-            if (parameters.projectId && (parameters.branchName || commitHash)) {
-                storage.simpleRequest(parameters, function (err, result) {
-                    if (err && !result) {
-                        logger.error('exportProjectToFile failed with error', err);
-                        callback(err);
-                    } else {
-                        callback(err, result);
-                    }
-                });
-            } else {
-                callback(new Error('invalid parameters!'));
-            }
-        };
-
-        this.exportSelectionToFile = function (projectId, commitHash, selectedIds, withAssets, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.EXPORT_SELECTION_TO_FILE,
-                projectId: projectId,
-                commitHash: commitHash,
-                withAssets: withAssets,
-                paths: selectedIds
-            };
-
-            logger.debug('exportSelectionToFile, parameters', parameters);
-            if (parameters.projectId && commitHash && selectedIds && selectedIds.length > 0) {
-                storage.simpleRequest(parameters, function (err, result) {
-                    if (err && !result) {
-                        logger.error('exportSelectionToFile failed with error', err);
-                        callback(err);
-                    } else {
-                        callback(err, result);
-                    }
-                });
-            } else {
-                callback(new Error('invalid parameters!'));
-            }
-        };
-
-        this.importSelectionFromFile = function (projectId, branchName, parentId, blobHash, callback) {
-            var parameters = {
-                command: CONSTANTS.SERVER_WORKER_REQUESTS.IMPORT_SELECTION_FROM_FILE,
-                projectId: projectId,
-                blobHash: blobHash,
-                parentPath: parentId,
-                branchName: branchName
-            };
-
-            logger.debug('import selection from package', parameters);
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-                callback(err, result);
-            });
         };
 
         this.emitStateNotification = function () {

@@ -2357,7 +2357,7 @@ define([
         };
 
         /**
-         * Returns the list of the META defined pointer names of the node introduced by the nide.
+         * Returns the list of the META defined pointer names of the node that were specifically defined for the node.
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {string[]} The function returns all the pointer names that are defined among the META rules of the node.
@@ -2387,7 +2387,7 @@ define([
         };
 
         /**
-         * Returns the list of the META defined set names of the node introduced by its rules.
+         * Returns the list of the META defined set names of the node that were specifically defined for the node.
          * @param {module:Core~Node} node - the node in question.
          *
          * @return {string[]} The function returns all the set names that are defined among the META rules of the node.
@@ -3944,7 +3944,7 @@ define([
         };
 
         /**
-         * Renames the given pointer of the node.
+         * Renames the given pointer of the node if its target is not inherited.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} oldName - the current name of the pointer in question.
          * @param {string} newName - the new name of the pointer.
@@ -3966,7 +3966,7 @@ define([
         };
 
         /**
-         * Renames the given attribute of the node.
+         * Renames the given attribute of the node if its value is not inherited.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} oldName - the current name of the attribute in question.
          * @param {string} newName - the new name of the attribute.
@@ -3980,11 +3980,14 @@ define([
             ensureType(oldName, 'oldName', 'string');
             ensureType(newName, 'newName', 'string');
 
+            if(core.getOwnAttribute(node,oldName) === undefined){
+                throw new CoreIllegalOperationError('Only attributes with own values can be renamed.');
+            }
             return core.renameAttribute(node, oldName, newName);
         };
 
         /**
-         * Renames the given registry of the node.
+         * Renames the given registry of the node if its value is not inherited.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} oldName - the current name of the registry in question.
          * @param {string} newName - the new name of the registry.
@@ -3998,11 +4001,15 @@ define([
             ensureType(oldName, 'oldName', 'string');
             ensureType(newName, 'newName', 'string');
 
+            if(core.getOwnRegistry(node,oldName) === undefined){
+                throw new CoreIllegalOperationError('Only registry entries with own values can be renamed.');
+            }
+
             return core.renameRegistry(node, oldName, newName);
         };
 
         /**
-         * Renames the given set of the node.
+         * Renames the given set of the node if its is not inherited.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} oldName - the current name of the set in question.
          * @param {string} newName - the new name of the set.
@@ -4017,13 +4024,13 @@ define([
             ensureType(newName, 'newName', 'string');
 
             if (core.getOwnSetNames(node).indexOf(oldName) === -1) {
-                throw new CoreIllegalOperationError('Cannot rename nonexistent set [' + oldName + ']');
+                throw new CoreIllegalOperationError('Cannot rename nonexistent/inherited set [' + oldName + ']');
             }
             return core.renameSet(node, oldName, newName);
         };
 
         /**
-         * Returns the meta concept that defines the given attribute.
+         * Returns the meta node that introduces the given attribute.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the attribute in question.
          *
@@ -4045,7 +4052,7 @@ define([
         };
 
         /**
-         * Returns the meta concept that defines the given pointer relationship.
+         * Returns the meta nodes that introduce the given pointer relationship.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the pointer in question.
          * @param {module:Core~Node} target - the target node.
@@ -4073,7 +4080,7 @@ define([
         };
 
         /**
-         * Returns the meta concept that defines the given set relationship.
+         * Returns the meta nodes that introduce the given set relationship.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the set in question.
          * @param {module:Core~Node} member - the member.
@@ -4101,7 +4108,7 @@ define([
         };
 
         /**
-         * Returns the meta concept that defines the given containment relationship.
+         * Returns the meta nodes that introduce the given containment relationship.
          * @param {module:Core~Node} node - the node in question.
          * @param {module:Core~Node} child - the child.
          *
@@ -4123,7 +4130,7 @@ define([
         };
 
         /**
-         * Returns the meta concept that defines the given aspect relationship.
+         * Returns the meta nodes that introduce the given aspect relationship.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the set in question.
          * @param {module:Core~Node} member - the child.
@@ -4163,7 +4170,7 @@ define([
         }
 
         /**
-         * Returns the meta concept that defines the given aspect.
+         * Returns the meta node that introduces the given aspect.
          * @param {module:Core~Node} node - the node in question.
          * @param {string} name - the name of the set in question.
          *
@@ -4215,6 +4222,8 @@ define([
 
         /**
          * Renames the given attribute definition of the node. It also renames the default value of the definition!
+         * As a result of this operation, all instances of node will have the new attribute, but if they have
+         * overriden the old attribute it will remain under that name (and become meta invalid).
          * @param {module:Core~Node} node - the node in question.
          * @param {string} oldName - the current name of the attribute definition in question.
          * @param {string} newName - the new name of the attribute.
@@ -4236,9 +4245,8 @@ define([
         };
 
         /**
-         * Moves the given target definition over to a new pointer or set. As actual values in case of
-         * relation definitions vary quite a bit from the meta-targets, this function does not deals with
-         * the actual pointer/set target/members.
+         * Moves the given target definition over to a new pointer or set.
+         * Note this does not alter the actual pointer target or set members.
          * @param {module:Core~Node} node - the node in question.
          * @param {module:Core~Node} target - the target that should be moved among definitions.
          * @param {string} oldName - the current name of the pointer/set definition in question.

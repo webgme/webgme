@@ -1381,6 +1381,20 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    /**
+     * It gathers the information on which meta nodes define / alter the given concept
+     * (pointer/set/attribute/aspect) and renames all of them. It also propagates the renaming throughout
+     * the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.type - the type of the definitions to rename ['pointer'|'set'|'attribute'|'aspect].
+     * @param {string} parameters.oldName - the current name of the concept.
+     * @param {string} parameters.newName - the new name of the concept.
+     * @param {function} callback
+     */
     function renameConcept(webgmeToken, parameters, callback) {
         var storage,
             context,
@@ -1399,7 +1413,7 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
         getConnectedStorage(webgmeToken)
             .then(function (storage_) {
                 storage = storage_;
-                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash, parameters.branchName, parameters.tagName);
+                return _getCoreAndRootNode(storage, parameters.projectId, undefined, parameters.branchName, undefined);
             })
             .then(function (context_) {
                 context = context_;
@@ -1434,6 +1448,17 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    /**
+     * Renames the given attribute definition and propagates the change throughout the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.oldName - the current name of the attribute definition.
+     * @param {string} parameters.newName - the new name of the attribute definition.
+     * @param {function} callback
+     */
     function changeAttributeMeta(webgmeToken, parameters, callback) {
         var storage,
             context,
@@ -1463,6 +1488,7 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
                 context.core.renameAttributeMeta(node, parameters.oldName, parameters.newName);
                 context.core.setAttributeMeta(node, parameters.newName, parameters.meta);
                 parameters.excludeOriginNode = true;
+                parmeters.type = 'attribute';
                 return metaRename.propagateMetaDefinitionRename(context.core, node, parameters);
             })
             .then(function () {
@@ -1490,6 +1516,20 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    /**
+     * Renames the given pointer relation definitions and propagates the change throughout the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.type - the type of the relation ['pointer'|'set'].
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.targetPath - the path of the meta node that is the target of
+     * the relationship definition.
+     * @param {string} parameters.oldName - the current name of the concept.
+     * @param {string} parameters.newName - the new name of the concept.
+     * @param {function} callback
+     */
     function renameMetaPointerTarget(webgmeToken, parameters, callback) {
         var storage,
             context,
@@ -1547,6 +1587,17 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    /**
+     * Renames the given aspect definition and propagates the change throughout the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.oldName - the current name of the aspect definition.
+     * @param {string} parameters.newName - the new name of the aspect definition.
+     * @param {function} callback
+     */
     function changeAspectMeta(webgmeToken, parameters, callback) {
         var storage,
             context,
@@ -1600,14 +1651,14 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
                 }
 
                 for (i = 0; i < newMembers.length; i += 1) {
-                    context.core.setAspectMetaTarget(node,parameters.newName,nodes[newMembers[i]]);
+                    context.core.setAspectMetaTarget(node, parameters.newName, nodes[newMembers[i]]);
                 }
 
-                context.core.renameSet(node,parameters.oldName,parameters.newName);
+                context.core.renameSet(node, parameters.oldName, parameters.newName);
                 context.core.delAspectMeta(node, parameters.oldName);
-                return metaRename.propagateMetaDefinitionRename(context.core, node,{
-                    excludeOriginNode:true,
-                    type:'aspect',
+                return metaRename.propagateMetaDefinitionRename(context.core, node, {
+                    excludeOriginNode: true,
+                    type: 'aspect',
                     oldName: parameters.oldName,
                     newName: parameters.newName
                 });
