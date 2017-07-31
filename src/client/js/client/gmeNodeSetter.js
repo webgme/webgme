@@ -1351,6 +1351,98 @@ define([], function () {
             }
         }
 
+        function renamePointer(path, oldName, newName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                try {
+                    state.core.renamePointer(node, oldName, newName);
+                } catch (e) {
+                    printCoreError(e);
+                    return;
+                }
+                saveRoot(typeof msg === 'string' ? msg : 'renamePointer(' + path + ',' +
+                    oldName + ',' + newName);
+            }
+        }
+
+        function renameAttribute(path, oldName, newName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                try {
+                    state.core.renameAttribute(node, oldName, newName);
+                } catch (e) {
+                    printCoreError(e);
+                    return;
+                }
+                saveRoot(typeof msg === 'string' ? msg : 'renameAttribute(' + path + ',' +
+                    oldName + ',' + newName);
+            }
+        }
+
+        function renameRegistry(path, oldName, newName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                try {
+                    state.core.renameRegistry(node, oldName, newName);
+                } catch (e) {
+                    printCoreError(e);
+                    return;
+                }
+                saveRoot(typeof msg === 'string' ? msg : 'renameRegistry(' + path + ',' +
+                    oldName + ',' + newName);
+            }
+        }
+
+        function renameSet(path, oldName, newName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                try {
+                    state.core.renameSet(node, oldName, newName);
+                } catch (e) {
+                    printCoreError(e);
+                    return;
+                }
+                saveRoot(typeof msg === 'string' ? msg : 'renameSet(' + path + ',' +
+                    oldName + ',' + newName);
+            }
+        }
+
+        function moveAspectMetaTarget(path, targetPath, oldName, newName, msg) {
+            var node = _getNode(path),
+                targetNode = _getNode(targetPath);
+
+            if (node && targetNode) {
+                try {
+                    state.core.moveAspectMetaTarget(node, targetNode, oldName, newName);
+                } catch (err) {
+                    printCoreError(err);
+                    return;
+                }
+
+                saveRoot(typeof msg === 'string' ? msg : 'moveAspectMetaTarget(' + path + ', ' + targetPath + ',' +
+                    oldName + ',' + newName);
+            }
+        }
+
+        function moveMember(path, memberPath, oldSetName, newSetName, msg) {
+            var node = _getNode(path);
+
+            if (node) {
+                try {
+                    state.core.moveMember(node, memberPath, oldSetName, newSetName);
+                } catch (e) {
+                    printCoreError(e);
+                    return;
+                }
+                saveRoot(typeof msg === 'string' ? msg : 'moveMember(' + path + ', ' + memberPath + ',' +
+                    oldSetName + ',' + newSetName);
+            }
+        }
+
         return {
             setAttribute: setAttribute,
             setAttributes: function () {
@@ -1397,6 +1489,7 @@ define([], function () {
 
             addMember: addMember,
             removeMember: removeMember,
+            moveMember: moveMember,
             setMemberAttribute: setMemberAttribute,
             delMemberAttribute: delMemberAttribute,
             setMemberRegistry: setMemberRegistry,
@@ -1469,6 +1562,7 @@ define([], function () {
             // aspect
             setAspectMetaTarget: setAspectMetaTarget,
             setAspectMetaTargets: setAspectMetaTargets,
+            moveAspectMetaTarget: moveAspectMetaTarget,
             setMetaAspect: function () {
                 _logDeprecated('setMetaAspect', 'setAspectMetaTargets');
                 setAspectMetaTargets.apply(null, arguments);
@@ -1483,6 +1577,12 @@ define([], function () {
             // mixin
             addMixin: addMixin,
             delMixin: delMixin,
+
+            // renames
+            renamePointer: renamePointer,
+            renameAttribute: renameAttribute,
+            renameRegistry: renameRegistry,
+            renameSet: renameSet,
 
             // Deprecated meta-getters
             // TODO: These should be moved to Util/GMEConcepts or removed.
