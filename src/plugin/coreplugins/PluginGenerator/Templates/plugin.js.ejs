@@ -59,7 +59,7 @@ define([
      *
      * @param {function(string, plugin.PluginResult)} callback - the result callback
      */
-    <%= pluginID %>.prototype.main = <%if (main){%><%-main%><%}else{%>function (callback) {
+    <%= pluginID %>.prototype.main = <%if (typeof main === 'string' && main){%><%-main%><%}else{%>function (callback) {
         // Use self to access core, project, result, logger etc from PluginBase.
         // These are all instantiated at this point.
         var self = this,
