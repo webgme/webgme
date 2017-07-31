@@ -614,9 +614,8 @@ define([
         this.movePointerMetaTarget = function (node, target, oldName, newName) {
             var targetPath = self.getPath(target),
                 min, max;
-            self.delPointerMetaTarget(node, oldName, targetPath);
 
-            if (self.getValidTargetPaths(node, newName).length === 0) {
+            if (self.getOwnValidTargetPaths(node, newName).length === 0) {
                 // The move introduces the newName relation
                 min = self.getAttribute(metaPointerNode(node, oldName), CONSTANTS.SET_ITEMS_MIN);
                 max = self.getAttribute(metaPointerNode(node, oldName), CONSTANTS.SET_ITEMS_MAX);
@@ -628,8 +627,8 @@ define([
             max = self.getMemberAttribute(metaPointerNode(node, oldName),
                 CONSTANTS.SET_ITEMS, targetPath, CONSTANTS.SET_ITEMS_MAX);
             self.setPointerMetaTarget(node, newName, target, min, max);
+            self.delPointerMetaTarget(node, oldName, targetPath);
 
-            // setPointerMetaLimits
             if (self.getOwnValidTargetPaths(node, oldName).length === 0) {
                 self.delPointerMeta(node, oldName);
             }
