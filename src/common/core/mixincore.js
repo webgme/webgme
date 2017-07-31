@@ -938,10 +938,17 @@ define([
         this.getMixinPaths = function (node) {
             var paths = [],
                 nodes = getOrderedMixinList(node),
+                raw = innerCore.getOwnMemberPaths(node, CONSTANTS.MIXINS_SET),
                 i;
 
             for (i = 0; i < nodes.length; i += 1) {
                 paths.push(self.getPath(nodes[i]));
+            }
+
+            for (i = 0; i < raw.length; i += 1) {
+                if (paths.indexOf(raw[i]) === -1) {
+                    paths.push(raw[i]);
+                }
             }
 
             return paths;

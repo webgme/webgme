@@ -405,25 +405,25 @@ describe('mixin core', function () {
 
         it('should return pointer rule combined from all sources', function () {
             expect(core.getPointerMeta(A, 'Ms')).to.eql({
-                min: -1,
+                min: 0,
                 max: 1,
-                '/M2': {min: -1, max: 1},
-                '/M3': {min: -1, max: 1},
-                '/M4': {min: -1, max: 1},
-                '/M1': {min: -1, max: 1}
+                '/M2': {min: 0, max: 1},
+                '/M3': {min: 0, max: 1},
+                '/M4': {min: 0, max: 1},
+                '/M1': {min: 0, max: 1}
             });
 
             expect(core.getPointerMeta(A, 'FCO')).to.eql({
-                min: -1,
+                min: 0,
                 max: 1,
-                '/1': {min: -1, max: 1}
+                '/1': {min: 0, max: 1}
             });
 
             expect(core.getPointerMeta(A, 'MEs')).to.eql({
-                min: -1,
+                min: 0,
                 max: 1,
-                '/M2': {min: -1, max: 1},
-                '/M4': {min: -1, max: 1}
+                '/M2': {min: 0, max: 1},
+                '/M4': {min: 0, max: 1}
             });
 
             expect(core.getPointerMeta(A, 'unknown')).to.eql(undefined);
@@ -435,7 +435,7 @@ describe('mixin core', function () {
                 max: -1,
                 '/M2': {min: -1, max: -1},
                 '/M3': {min: -1, max: -1},
-                '/M4': {min: -1, max: 10}
+                '/M4': {min: 0, max: 10}
             });
 
             expect(core.getPointerMeta(M4, 'sMs')).to.eql({
