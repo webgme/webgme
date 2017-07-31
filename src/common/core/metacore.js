@@ -110,8 +110,8 @@ define([
 
             while (node) {
                 if (self.isValidTargetOf(target, node, name)) {
-                    result.sourceNode = node;
-                    result.sourcePath = self.getPath(node);
+                    result.ownerNode = node;
+                    result.ownerPath = self.getPath(node);
                     validTargets = self.getOwnValidTargetPaths(node, name);
                     definedTarget = target;
                     while (definedTarget) {
@@ -824,8 +824,8 @@ define([
 
             while (node) {
                 if (self.getOwnValidAspectNames(node).indexOf(name) !== -1) {
-                    result.sourcePath = self.getPath(node);
-                    result.sourceNode = node;
+                    result.ownerPath = self.getPath(node);
+                    result.ownerNode = node;
                     validTargets = self.getOwnValidAspectTargetPaths(node, name);
                     definedTarget = target;
                     while (definedTarget) {
@@ -865,8 +865,8 @@ define([
             while (node) {
                 if (self.isValidChildOf(child, node)) {
                     validPaths = self.getOwnValidChildrenPaths(node);
-                    result.souceNode = node;
-                    result.soucePath = self.getPath(node);
+                    result.ownerNode = node;
+                    result.ownerPath = self.getPath(node);
                     definedChild = child;
                     while (definedChild) {
                         childPath = self.getPath(definedChild);

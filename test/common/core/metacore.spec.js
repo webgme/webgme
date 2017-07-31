@@ -26,6 +26,13 @@ describe('meta core', function () {
 
         gmeAuth;
 
+    function definitionInfoToJSON(info) {
+        return {
+            ownerPath: info.ownerPath,
+            targetPath: info.targetPath
+        };
+    }
+
     before(function (done) {
         testFixture.clearDBAndGetGMEAuth(gmeConfig, projectName)
             .then(function (gmeAuth_) {
@@ -408,31 +415,23 @@ describe('meta core', function () {
         core.setPointerMetaTarget(defOwner2, 'pA', defTarget2);
         core.setPointerMetaLimits(defOwner2, 'pA', 0, 1);
 
-        expect(core.getPointerDefinitionInfo(defInst2, 'ptr', defFCO)).to.eql({
-            sourceNode: defOwner1,
-            sourcePath: '/O1',
-            targetNode: defFCO,
+        expect(definitionInfoToJSON(core.getPointerDefinitionInfo(defInst2, 'ptr', defFCO))).to.eql({
+            ownerPath: '/O1',
             targetPath: '/1'
         });
 
-        expect(core.getPointerDefinitionInfo(defInst2, 'ptr', defInstT2)).to.eql({
-            sourceNode: defOwner2,
-            sourcePath: '/O2',
-            targetNode: defTarget2,
+        expect(definitionInfoToJSON(core.getPointerDefinitionInfo(defInst2, 'ptr', defInstT2))).to.eql({
+            ownerPath: '/O2',
             targetPath: '/T2'
         });
 
-        expect(core.getPointerDefinitionInfo(defInst2, 'pA', defInstT2)).to.eql({
-            sourceNode: defOwner2,
-            sourcePath: '/O2',
-            targetNode: defTarget2,
+        expect(definitionInfoToJSON(core.getPointerDefinitionInfo(defInst2, 'pA', defInstT2))).to.eql({
+            ownerPath: '/O2',
             targetPath: '/T2'
         });
 
-        expect(core.getPointerDefinitionInfo(defInst2, 'pA', defInstT1)).to.eql({
-            sourceNode: defOwner1,
-            sourcePath: '/O1',
-            targetNode: defTarget1,
+        expect(definitionInfoToJSON(core.getPointerDefinitionInfo(defInst2, 'pA', defInstT1))).to.eql({
+            ownerPath: '/O1',
             targetPath: '/T1'
         });
     });
@@ -455,31 +454,23 @@ describe('meta core', function () {
         core.setPointerMetaTarget(defOwner1, 'pA', defTarget1);
         core.setPointerMetaTarget(defOwner2, 'pA', defTarget2);
 
-        expect(core.getSetDefinitionInfo(defInst2, 'ptr', defFCO)).to.eql({
-            sourceNode: defOwner1,
-            sourcePath: '/O1',
-            targetNode: defFCO,
+        expect(definitionInfoToJSON(core.getSetDefinitionInfo(defInst2, 'ptr', defFCO))).to.eql({
+            ownerPath: '/O1',
             targetPath: '/1'
         });
 
-        expect(core.getSetDefinitionInfo(defInst2, 'ptr', defInstT2)).to.eql({
-            sourceNode: defOwner2,
-            sourcePath: '/O2',
-            targetNode: defTarget2,
+        expect(definitionInfoToJSON(core.getSetDefinitionInfo(defInst2, 'ptr', defInstT2))).to.eql({
+            ownerPath: '/O2',
             targetPath: '/T2'
         });
 
-        expect(core.getSetDefinitionInfo(defInst2, 'pA', defInstT2)).to.eql({
-            sourceNode: defOwner2,
-            sourcePath: '/O2',
-            targetNode: defTarget2,
+        expect(definitionInfoToJSON(core.getSetDefinitionInfo(defInst2, 'pA', defInstT2))).to.eql({
+            ownerPath: '/O2',
             targetPath: '/T2'
         });
 
-        expect(core.getSetDefinitionInfo(defInst2, 'pA', defInstT1)).to.eql({
-            sourceNode: defOwner1,
-            sourcePath: '/O1',
-            targetNode: defTarget1,
+        expect(definitionInfoToJSON(core.getSetDefinitionInfo(defInst2, 'pA', defInstT1))).to.eql({
+            ownerPath: '/O1',
             targetPath: '/T1'
         });
     });
@@ -497,17 +488,13 @@ describe('meta core', function () {
         core.setChildMeta(defOwner1, defTarget1);
         core.setChildMeta(defOwner2, defTarget2);
 
-        expect(core.getChildDefinitionInfo(defInst2, defTarget2)).to.eql({
-            sourceNode: defOwner2,
-            sourcePath: '/O2',
-            targetNode: defTarget2,
+        expect(definitionInfoToJSON(core.getChildDefinitionInfo(defInst2, defTarget2))).to.eql({
+            ownerPath: '/O2',
             targetPath: '/T2'
         });
 
-        expect(core.getChildDefinitionInfo(defInst2, defTarget1)).to.eql({
-            sourceNode: defOwner1,
-            sourcePath: '/O1',
-            targetNode: defTarget1,
+        expect(definitionInfoToJSON(core.getChildDefinitionInfo(defInst2, defTarget1))).to.eql({
+            ownerPath: '/O1',
             targetPath: '/T1'
         });
     });
@@ -530,31 +517,23 @@ describe('meta core', function () {
         core.setAspectMetaTarget(defOwner1, 'pA', defTarget1);
         core.setAspectMetaTarget(defOwner2, 'pA', defTarget2);
 
-        expect(core.getAspectDefinitionInfo(defInst2, 'ptr', defFCO)).to.eql({
-            sourceNode: defOwner1,
-            sourcePath: '/O1',
-            targetNode: defFCO,
+        expect(definitionInfoToJSON(core.getAspectDefinitionInfo(defInst2, 'ptr', defFCO))).to.eql({
+            ownerPath: '/O1',
             targetPath: '/1'
         });
 
-        expect(core.getAspectDefinitionInfo(defInst2, 'ptr', defInstT2)).to.eql({
-            sourceNode: defOwner2,
-            sourcePath: '/O2',
-            targetNode: defTarget2,
+        expect(definitionInfoToJSON(core.getAspectDefinitionInfo(defInst2, 'ptr', defInstT2))).to.eql({
+            ownerPath: '/O2',
             targetPath: '/T2'
         });
 
-        expect(core.getAspectDefinitionInfo(defInst2, 'pA', defInstT2)).to.eql({
-            sourceNode: defOwner2,
-            sourcePath: '/O2',
-            targetNode: defTarget2,
+        expect(definitionInfoToJSON(core.getAspectDefinitionInfo(defInst2, 'pA', defInstT2))).to.eql({
+            ownerPath: '/O2',
             targetPath: '/T2'
         });
 
-        expect(core.getAspectDefinitionInfo(defInst2, 'pA', defInstT1)).to.eql({
-            sourceNode: defOwner1,
-            sourcePath: '/O1',
-            targetNode: defTarget1,
+        expect(definitionInfoToJSON(core.getAspectDefinitionInfo(defInst2, 'pA', defInstT1))).to.eql({
+            ownerPath: '/O1',
             targetPath: '/T1'
         });
     });

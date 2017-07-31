@@ -208,8 +208,8 @@ define([
 
             if (definedTarget) {
                 return {
-                    sourceNode: node,
-                    sourcePath: self.getPath(node),
+                    ownerNode: node,
+                    ownerPath: self.getPath(node),
                     targetPath: self.getPath(definedTarget),
                     targetNode: definedTarget
                 };
@@ -653,7 +653,7 @@ define([
         };
 
         this.getChildDefinitionInfo = function (node, child) {
-            return getFirstMatchingRuleInfo(node, undefined, child, self.getValidChildrenPaths, {});
+            return getFirstMatchingRuleInfo(node, undefined, child, self.getOwnValidChildrenPaths, {});
         };
         //</editor-fold>
 

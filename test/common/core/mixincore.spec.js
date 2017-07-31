@@ -12,9 +12,9 @@ describe('mixin core', function () {
 
     function definitionInfoToJSON(info) {
         return {
-            sourcePath: info.sourcePath,
+            ownerPath: info.ownerPath,
             targetPath: info.targetPath
-        }
+        };
     }
 
     var gmeConfig = testFixture.getGmeConfig(),
@@ -725,93 +725,93 @@ describe('mixin core', function () {
 
         it('should return the proper aspect definition info', function () {
             expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'A', FCO))).to.eql({
-                sourcePath: '/A',
+                ownerPath: '/A',
                 targetPath: '/1'
             });
 
             expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'conflicting', FCO))).to.eql({
-                sourcePath: '/M3',
+                ownerPath: '/M3',
                 targetPath: '/1'
             });
 
             expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'conflicting', A))).to.eql({
-                sourcePath: '/M3',
+                ownerPath: '/M3',
                 targetPath: '/1'
             });
 
             expect(definitionInfoToJSON(core.getAspectDefinitionInfo(A, 'M4', M2))).to.eql({
-                sourcePath: '/M4',
+                ownerPath: '/M4',
                 targetPath: '/1'
             });
         });
 
         it('should return the proper pointer definition info', function () {
             expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'A', FCO))).to.eql({
-                sourcePath: '/A',
+                ownerPath: '/A',
                 targetPath: '/1'
             });
 
             expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'Ms', M4))).to.eql({
-                sourcePath: '/M3',
+                ownerPath: '/M3',
                 targetPath: '/M4'
             });
 
             expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'Ms', M3))).to.eql({
-                sourcePath: '/M2',
+                ownerPath: '/M2',
                 targetPath: '/M3'
             });
 
             expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'MEs', M4))).to.eql({
-                sourcePath: '/M2',
+                ownerPath: '/M2',
                 targetPath: '/M4'
             });
 
             expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'MEs', M2))).to.eql({
-                sourcePath: '/M4',
+                ownerPath: '/M4',
                 targetPath: '/M2'
             });
 
             expect(definitionInfoToJSON(core.getPointerDefinitionInfo(A, 'MEs', A))).to.eql({
-                sourcePath: '/M2',
+                ownerPath: '/M2',
                 targetPath: '/M4'
             });
         });
 
         it('should return the proper set definition info', function () {
             expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sA', FCO))).to.eql({
-                sourcePath: '/A',
+                ownerPath: '/A',
                 targetPath: '/1'
             });
 
             expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sA', A))).to.eql({
-                sourcePath: '/A',
+                ownerPath: '/A',
                 targetPath: '/1'
             });
 
             expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', A))).to.eql({
-                sourcePath: '/M1',
+                ownerPath: '/M1',
                 targetPath: '/M2'
             });
 
             expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', M2))).to.eql({
-                sourcePath: '/M1',
+                ownerPath: '/M1',
                 targetPath: '/M2'
             });
 
             expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', M3))).to.eql({
-                sourcePath: '/M2',
+                ownerPath: '/M2',
                 targetPath: '/M3'
             });
 
             expect(definitionInfoToJSON(core.getSetDefinitionInfo(A, 'sMs', M4))).to.eql({
-                sourcePath: '/M3',
+                ownerPath: '/M3',
                 targetPath: '/M4'
             });
         });
 
         it('should return the proper containment definition info', function () {
             expect(definitionInfoToJSON(core.getChildDefinitionInfo(A, A))).to.eql({
-                sourcePath: '/A',
+                ownerPath: '/A',
                 targetPath: '/A'
             });
         });
