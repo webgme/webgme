@@ -66,10 +66,14 @@ describe('Simple worker', function () {
         constraintProjectName = 'ConstraintProject',
         constraintProjectImportResult,
         constraintProjectImportResult2,
+        renameProjectImportResult,
+
         oldSend = process.send,
         oldOn = process.on,
         socket,
         oldExit = process.exit;
+
+    // this.timeout(5000);
 
     before(function (done) {
         var project;
@@ -207,6 +211,29 @@ describe('Simple worker', function () {
             .then(function (result) {
                 constraintProjectImportResult = result[0];
                 constraintProjectImportResult2 = result[1];
+
+                return testFixture.importProject(storage, {
+                    projectSeed: './test/common/core/users/rename/propagate.webgmex',
+                    projectName: 'RenamePropagation',
+                    branchName: 'master',
+                    logger: logger,
+                    gmeConfig: gmeConfig
+                });
+            })
+            .then(function (result) {
+                renameProjectImportResult = result;
+
+                return Q.all([
+                    result.project.createBranch('renameConcept', result.commitHash),
+                    result.project.createBranch('changeAttributeMeta', result.commitHash),
+                    result.project.createBranch('changeAttributeMetaFails', result.commitHash),
+                    result.project.createBranch('renameMetaPointerTarget', result.commitHash),
+                    result.project.createBranch('renameMetaPointerTargetFails', result.commitHash),
+                    result.project.createBranch('changeAspectMeta', result.commitHash),
+                    result.project.createBranch('changeAspectMetaFails', result.commitHash),
+                ]);
+            })
+            .then(function () {
                 return Q.ninvoke(server, 'start');
             })
             .then(function () {
@@ -1961,7 +1988,7 @@ describe('Simple worker', function () {
             blobHash,
             blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
             projectName = 'badPackageImport';
-            //projectId = testFixture.projectName2Id(projectName);
+        //projectId = testFixture.projectName2Id(projectName);
 
         blobClient.putFile('bad.webgmex', fs.readFileSync('./test/server/worker/simpleworker/bad.webgmex'))
             .then(function (hash) {
@@ -1994,7 +2021,7 @@ describe('Simple worker', function () {
             blobHash,
             blobClient = new BlobClient(gmeConfig, logger.fork('BlobClient')),
             projectName = 'badPackageImport';
-            //projectId = testFixture.projectName2Id(projectName);
+        //projectId = testFixture.projectName2Id(projectName);
 
         blobClient.putFile('model.webgmexm', fs.readFileSync('./test/server/worker/simpleworker/export_v110.webgmexm'))
             .then(function (hash) {
@@ -2964,6 +2991,417 @@ describe('Simple worker', function () {
                 expect(err.message).not.to.contains('test failed');
                 // TODO: Consider a better error message here.
                 expect(err.message).to.include('404');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    // renameConcept
+    it('should propagate the rename of a concept', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameConcept,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameConcept',
+                    nodePath: '/X/7',
+                    type: 'attribute',
+                    oldName: 'some',
+                    newName: 'other'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if type is wrong', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameConcept,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameConcept',
+                    nodePath: '/X/7',
+                    type: 'whatever',
+                    oldName: 'some',
+                    newName: 'other'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Unknown rule type');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if node is wrong', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameConcept,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameConcept',
+                    nodePath: '/not/a/real/one',
+                    type: 'attribute',
+                    oldName: 'some',
+                    newName: 'other'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'node\' is not a valid node');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if oldName is missing', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameConcept,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameConcept',
+                    nodePath: '/X/7',
+                    type: 'attribute',
+                    newName: 'other'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'node\' is not a valid node');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if newName is missing', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameConcept,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameConcept',
+                    nodePath: '/X/7',
+                    type: 'attribute',
+                    oldName: 'some'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'node\' is not a valid node');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    // changeAttributeMeta
+    it('should propagate the rename of a concept', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.changeAttributeMeta,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'changeAttributeMeta',
+                    nodePath: '/X/7',
+                    oldName: 'some',
+                    newName: 'other',
+                    meta: {type: 'string'}
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if meta definition is missing', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.changeAttributeMeta,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'changeAttributeMetaFails',
+                    nodePath: '/X/7',
+                    oldName: 'some',
+                    newName: 'other'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'rule\'');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if node is wrong', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.changeAttributeMeta,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'changeAttributeMetaFails',
+                    nodePath: '/not/a/real/one',
+                    oldName: 'some',
+                    newName: 'other',
+                    meta: {type: 'string'}
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'node\' is not a valid node');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if oldName is missing', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.changeAttributeMeta,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'changeAttributeMetaFails',
+                    nodePath: '/X/7',
+                    newName: 'other',
+                    meta: {type: 'string'}
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'oldName\'');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to rename concept if newName is missing', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.changeAttributeMeta,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'changeAttributeMetaFails',
+                    nodePath: '/X/7',
+                    oldName: 'some',
+                    meta: {type: 'string'}
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'newName\'');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    // renameMetaPointerTarget
+    it('should propagate the rename of a pointer target', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameMetaPointerTarget,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameMetaPointerTargetFails',
+                    nodePath: '/X/I',
+                    targetPath: '/X/a',
+                    type: 'pointer',
+                    oldName: 'ptrOne',
+                    newName: 'pOne'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to propagate the rename of a pointer target if type is wrong', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameMetaPointerTarget,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameMetaPointerTarget',
+                    nodePath: '/X/I',
+                    targetPath: '/X/a',
+                    type: 'whaat',
+                    oldName: 'ptrOne',
+                    newName: 'pOne'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Invalid parameter misses a correct type for renaming.');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to propagate the rename of a pointer target if oldName is wrong', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.renameMetaPointerTarget,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'renameMetaPointerTarget',
+                    nodePath: '/X/I',
+                    targetPath: '/X/a',
+                    type: 'pointer',
+                    oldName: 'nope',
+                    newName: 'pOne'
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Definition [nope] does not exists for the node.');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    //changeAspectMeta
+    it('should propagate the rename of an aspect', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.changeAspectMeta,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'changeAspectMeta',
+                    nodePath: '/X/w',
+                    type: 'aspect',
+                    oldName: 'onsies',
+                    newName: 'oneSet',
+                    meta: ['/X/m','/X/w']
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to propagate the rename of an aspect if node is invalid', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.changeAspectMeta,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'changeAspectMeta',
+                    nodePath: '/not/cool',
+                    type: 'aspect',
+                    oldName: 'onsies',
+                    newName: 'oneSet',
+                    meta: ['/X/m']
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'node\'');
             })
             .finally(restoreProcessFunctions)
             .nodeify(done);

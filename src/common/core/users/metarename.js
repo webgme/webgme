@@ -349,7 +349,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
             i;
 
         if (affectedTypes === null) {
-            return Q.reject(new Error('Unkown rule type [' + type + ']')).nodeify(callback);
+            return Q.reject(new Error('Unknown rule type [' + type + ']')).nodeify(callback);
         }
 
         // check if the affected types are in some library as they cannot be changed...

@@ -4264,7 +4264,7 @@ define([
 
             if (core.getOwnValidPointerNames(node).indexOf(oldName) === -1 &&
                 core.getOwnValidSetNames(node).indexOf(oldName) === -1) {
-                throw new CoreIllegalOperationError('Definition [' + oldName + '] doesn\'t exists for the node.');
+                throw new CoreIllegalOperationError('Definition [' + oldName + '] does not exists for the node.');
             }
 
             if (core.getOwnValidTargetPaths(node, oldName).indexOf(core.getPath(target)) === -1) {
