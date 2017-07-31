@@ -93,10 +93,10 @@ define([
                 }
 
                 //adding range
-                if (getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type)) {
+                if (typeof getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type) === 'number') {
                     attrDesc.max = getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type);
                 }
-                if (getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type)) {
+                if (typeof getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type) === 'number') {
                     attrDesc.min = getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type);
                 }
             } else if (attrDesc.type === 'boolean') {
@@ -193,9 +193,9 @@ define([
 
         isValidAttributeName = function (name) {
             return !(name === '' ||
-            name === 'name' ||
-            attributeNames.indexOf(name) !== -1 ||
-            REGEXP.DOCUMENT_KEY.test(name) === false);
+                name === 'name' ||
+                attributeNames.indexOf(name) !== -1 ||
+                REGEXP.DOCUMENT_KEY.test(name) === false);
         };
 
         this._dialog = $(attributeDetailsDialogTemplate);

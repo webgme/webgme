@@ -256,7 +256,7 @@ define([
                 onHideFn: function (oked) {
                     if (oked) {
 
-                        client.renameAspectDefinition(objID, cDesc.items || [], cName, cDesc.name, function (err) {
+                        client.workerRequests.renameAspectDefinition(objID, cDesc.items || [], cName, cDesc.name, function (err) {
                             var errorDialog;
 
                             if (err) {

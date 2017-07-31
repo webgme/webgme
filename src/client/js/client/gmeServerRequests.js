@@ -358,7 +358,7 @@ define(['js/Constants'], function (CONSTANTS) {
         }
 
         return {
-            workerRequests:{
+            workerRequests: {
                 importProjectFromFile: importProjectFromFile,
                 updateProjectFromFile: updateProjectFromFile,
                 addLibrary: addLibrary,

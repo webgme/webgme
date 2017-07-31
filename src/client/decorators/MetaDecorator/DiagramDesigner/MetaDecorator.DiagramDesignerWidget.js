@@ -572,7 +572,7 @@ define([
                 cancelLabel: 'Don\'t propagate',
                 onHideFn: function (oked) {
                     if (oked) {
-                        client.renameAttributeDefinition(objID, attrSchema, attrName, attrDesc.name, function (err) {
+                        client.workerRequests.renameAttributeDefinition(objID, attrSchema, attrName, attrDesc.name, function (err) {
                             var errorDialog;
 
                             if (err) {

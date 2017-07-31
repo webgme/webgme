@@ -1153,18 +1153,44 @@ define(['js/logger',
 
                                     if (key === MENU_RENAME_CONCEPT) {
                                         if (shouldPropagate) {
-                                            self._client.renameConcept(srcPath, type, oldName, newName, function (err) {
-                                                console.log('finished propagation:', err);
-                                            });
+                                            self.diagramDesigner.showProgressbar();
+                                            self._client.workerRequests.renameConcept(srcPath, type, oldName, newName,
+                                                function (err) {
+                                                    var errorDialog;
+
+                                                    if (err) {
+                                                        errorDialog = new ConfirmDialog();
+                                                        errorDialog.show({
+                                                            title: 'Meta concept rename failed',
+                                                            question: err,
+                                                            noCancelButton: true
+                                                        }, function () {
+                                                        });
+                                                    }
+                                                    self.diagramDesigner.hideProgressbar();
+                                                }
+                                            );
                                         } else {
                                             self._client.movePointerMetaTarget(srcPath, dstPath, oldName, newName);
                                         }
                                     } else if (key === MENU_RENAME_DEFINITION) {
                                         if (shouldPropagate) {
-                                            self._client.renamePointerTargetDefinition(srcPath, dstPath, oldName,
-                                                newName, type === 'set',
+                                            self.diagramDesigner.showProgressbar();
+                                            self._client.workerRequests.renamePointerTargetDefinition(srcPath, dstPath,
+                                                oldName, newName, type === 'set',
                                                 function (err) {
-                                                    console.log('finished propagation _ :', err);
+                                                    var errorDialog;
+
+                                                    if (err) {
+                                                        errorDialog = new ConfirmDialog();
+                                                        errorDialog.show({
+                                                            title: 'Meta defintion rename failed',
+                                                            question: err,
+                                                            noCancelButton: true
+                                                        }, function () {
+                                                        });
+                                                    }
+                                                    self.diagramDesigner.hideProgressbar();
                                                 }
                                             );
                                         } else {
