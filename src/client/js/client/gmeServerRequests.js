@@ -358,14 +358,29 @@ define(['js/Constants'], function (CONSTANTS) {
         }
 
         return {
+            workerRequests:{
+                importProjectFromFile: importProjectFromFile,
+                updateProjectFromFile: updateProjectFromFile,
+                addLibrary: addLibrary,
+                updateLibrary: updateLibrary,
+                renameConcept: renameConcept,
+                renameAttributeDefinition: renameAttributeDefinition,
+                renamePointerTargetDefinition: renamePointerTargetDefinition,
+                renameAspectDefinition: renameAspectDefinition,
+                checkMetaRules: checkMetaRules,
+                checkCustomConstraints: checkCustomConstraints,
+                seedProject: seedProject,
+                autoMerge: autoMerge,
+                resolve: resolve,
+                exportProjectToFile: exportProjectToFile,
+                exportSelectionToFile: exportSelectionToFile,
+                importSelectionFromFile: importSelectionFromFile
+            },
+            // To keep the client API intact we still provide the old functions directly as well
             importProjectFromFile: importProjectFromFile,
             updateProjectFromFile: updateProjectFromFile,
             addLibrary: addLibrary,
             updateLibrary: updateLibrary,
-            renameConcept: renameConcept,
-            renameAttributeDefinition: renameAttributeDefinition,
-            renamePointerTargetDefinition: renamePointerTargetDefinition,
-            renameAspectDefinition: renameAspectDefinition,
             checkMetaRules: checkMetaRules,
             checkCustomConstraints: checkCustomConstraints,
             seedProject: seedProject,
