@@ -603,10 +603,10 @@ define([
 
         this.setPointerMetaTarget = function (node, name, target, min, max) {
             self.addMember(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, target);
-            min = min === 0 ? 0 : min || -1;
+            min = min === 0 ? 0 : (min || -1);
             self.setMemberAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, self.getPath(target),
                 CONSTANTS.SET_ITEMS_MIN, min);
-            max = max === 0 ? 0 : max || -1;
+            max = max === 0 ? 0 : (max || -1);
             self.setMemberAttribute(metaPointerNode(node, name), CONSTANTS.SET_ITEMS, self.getPath(target),
                 CONSTANTS.SET_ITEMS_MAX, max);
         };

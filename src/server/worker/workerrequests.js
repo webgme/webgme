@@ -1488,7 +1488,7 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
                 context.core.renameAttributeMeta(node, parameters.oldName, parameters.newName);
                 context.core.setAttributeMeta(node, parameters.newName, parameters.meta);
                 parameters.excludeOriginNode = true;
-                parmeters.type = 'attribute';
+                parameters.type = 'attribute';
                 return metaRename.propagateMetaDefinitionRename(context.core, node, parameters);
             })
             .then(function () {
