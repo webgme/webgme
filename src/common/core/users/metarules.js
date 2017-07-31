@@ -349,7 +349,6 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
      * - Invalid set/pointer/attribute/aspect/constraint names
      * @param core
      * @param node - any node in tree to be checked
-     * @param callback
      */
     function checkMetaConsistency(core, node) {
         var metaNodes = core.getAllMetaNodes(node),

@@ -16,6 +16,8 @@ var Core = requireJS('common/core/coreQ'),
     webgmeUtils = require('../../utils'),
     storageUtils = requireJS('common/storage/util'),
     commonUtils = requireJS('common/util/util'),
+    metaRename = requireJS('common/core/users/metarename'),
+    _ = require('underscore'),
 
 // JsZip can't for some reason extract the exported files..
     AdmZip = require('adm-zip'),
@@ -1379,6 +1381,312 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    /**
+     * It gathers the information on which meta nodes define / alter the given concept
+     * (pointer/set/attribute/aspect) and renames all of them. It also propagates the renaming throughout
+     * the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.type - the type of the definitions to rename ['pointer'|'set'|'attribute'|'aspect].
+     * @param {string} parameters.oldName - the current name of the concept.
+     * @param {string} parameters.newName - the new name of the concept.
+     * @param {function} callback
+     */
+    function renameConcept(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('renameConcept failed with error', err);
+                } else {
+                    logger.debug('renameConcept completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, undefined, parameters.branchName, undefined);
+            })
+            .then(function (context_) {
+                context = context_;
+                return context.core.loadByPath(context.rootNode, parameters.nodePath);
+            })
+            .then(function (node) {
+                return metaRename.metaConceptRename(context.core, node, parameters.type,
+                    parameters.oldName, parameters.newName);
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'rename concept [' + parameters.oldName +
+                    '->' + parameters.newName + '] of [' + parameters.nodePath + ']', function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    });
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
+    /**
+     * Renames the given attribute definition and propagates the change throughout the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.oldName - the current name of the attribute definition.
+     * @param {string} parameters.newName - the new name of the attribute definition.
+     * @param {function} callback
+     */
+    function changeAttributeMeta(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('changeAttributeMeta failed with error', err);
+                } else {
+                    logger.debug('changeAttributeMeta completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash,
+                    parameters.branchName, parameters.tagName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return context.core.loadByPath(context.rootNode, parameters.nodePath);
+            })
+            .then(function (node) {
+                context.core.renameAttributeMeta(node, parameters.oldName, parameters.newName);
+                context.core.setAttributeMeta(node, parameters.newName, parameters.meta);
+                parameters.excludeOriginNode = true;
+                parameters.type = 'attribute';
+                return metaRename.propagateMetaDefinitionRename(context.core, node, parameters);
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'rename attribute definition [' + parameters.oldName +
+                    '->' + parameters.newName + '] of [' + parameters.nodePath + ']', function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    });
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
+    /**
+     * Renames the given pointer relation definitions and propagates the change throughout the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.type - the type of the relation ['pointer'|'set'].
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.targetPath - the path of the meta node that is the target of
+     * the relationship definition.
+     * @param {string} parameters.oldName - the current name of the concept.
+     * @param {string} parameters.newName - the new name of the concept.
+     * @param {function} callback
+     */
+    function renameMetaPointerTarget(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('changeAttributeMeta failed with error', err);
+                } else {
+                    logger.debug('changeAttributeMeta completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash,
+                    parameters.branchName, parameters.tagName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return Q.all([context.core.loadByPath(context.rootNode, parameters.nodePath),
+                    context.core.loadByPath(context.rootNode, parameters.targetPath)]);
+            })
+            .then(function (nodes) {
+                context.core.movePointerMetaTarget(nodes[0], nodes[1], parameters.oldName, parameters.newName);
+                return metaRename.propagateMetaDefinitionRename(context.core, nodes[0], parameters);
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'rename pointer definition [' + parameters.oldName + '->' +
+                    parameters.newName + '] of [' + parameters.nodePath + '] regarding target [' +
+                    parameters.targetPath + ']', function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    });
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
+    /**
+     * Renames the given aspect definition and propagates the change throughout the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {string} parameters.oldName - the current name of the aspect definition.
+     * @param {string} parameters.newName - the new name of the aspect definition.
+     * @param {function} callback
+     */
+    function changeAspectMeta(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            node,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('changeAspectMeta failed with error', err);
+                } else {
+                    logger.debug('changeAspectMeta completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash,
+                    parameters.branchName, parameters.tagName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return context.core.loadByPath(context.rootNode, parameters.nodePath);
+            })
+            .then(function (node_) {
+                var promises = [],
+                    i;
+                node = node_;
+
+                for (i = 0; i < parameters.meta.length; i += 1) {
+                    promises.push(context.core.loadByPath(context.rootNode, parameters.meta[i]));
+                }
+                return Q.all(promises);
+            })
+            .then(function (members) {
+                var oldMembers = context.core.getAspectMeta(node, parameters.oldName),
+                    sameMembers = _.intersection(oldMembers, parameters.meta),
+                    newMembers = _.difference(parameters.meta, oldMembers),
+                    nodes = {},
+                    i;
+
+                for (i = 0; i < members.length; i += 1) {
+                    nodes[context.core.getPath(members[i])] = members[i];
+                }
+
+                for (i = 0; i < sameMembers.length; i += 1) {
+                    context.core.moveAspectMetaTarget(node, nodes[sameMembers[i]],
+                        parameters.oldName, parameters.newName);
+                }
+
+                for (i = 0; i < newMembers.length; i += 1) {
+                    context.core.setAspectMetaTarget(node, parameters.newName, nodes[newMembers[i]]);
+                }
+
+                context.core.renameSet(node, parameters.oldName, parameters.newName);
+                context.core.delAspectMeta(node, parameters.oldName);
+                return metaRename.propagateMetaDefinitionRename(context.core, node, {
+                    excludeOriginNode: true,
+                    type: 'aspect',
+                    oldName: parameters.oldName,
+                    newName: parameters.newName
+                });
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'rename aspect definition [' + parameters.oldName +
+                    '->' + parameters.newName + '] of [' + parameters.nodePath + ']', function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    });
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
@@ -1394,7 +1702,11 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
         importSelectionFromFile: importSelectionFromFile,
         addLibrary: addLibrary,
         updateLibrary: updateLibrary,
-        updateProjectFromFile: updateProjectFromFile
+        updateProjectFromFile: updateProjectFromFile,
+        renameConcept: renameConcept,
+        changeAttributeMeta: changeAttributeMeta,
+        renameMetaPointerTarget: renameMetaPointerTarget,
+        changeAspectMeta: changeAspectMeta
     };
 }
 

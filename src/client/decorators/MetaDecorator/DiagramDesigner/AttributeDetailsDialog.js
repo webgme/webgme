@@ -80,23 +80,26 @@ define([
                 attrDesc.type === 'float') {
                 //number -> convert
                 attrDesc.defaultValue = getTypeConvertedValue(attrDesc.defaultValue, attrDesc.type);
+                if (typeof attrDesc.defaultValue !== 'number') {
+                    attrDesc.defaultValue = 0;
+                }
                 if (attrDesc.enumValues) {
                     eValues = attrDesc.enumValues.slice(0);
                     attrDesc.enumValues = [];
                     len = eValues.length;
                     for (i = 0; i < len; i += 1) {
                         cValue = getTypeConvertedValue(eValues[i], attrDesc.type);
-                        if (cValue) {
+                        if (typeof cValue === 'number') {
                             attrDesc.enumValues.push(cValue);
                         }
                     }
                 }
 
                 //adding range
-                if (getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type)) {
+                if (typeof getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type) === 'number') {
                     attrDesc.max = getTypeConvertedValue(self._pRangeMax.val(), attrDesc.type);
                 }
-                if (getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type)) {
+                if (typeof getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type) === 'number') {
                     attrDesc.min = getTypeConvertedValue(self._pRangeMin.val(), attrDesc.type);
                 }
             } else if (attrDesc.type === 'boolean') {
@@ -134,13 +137,13 @@ define([
                 case 'integer':
                     result = parseInt(value, 10);
                     if (isNaN(result)) {
-                        result = 0;
+                        result = undefined;
                     }
                     break;
                 case 'float':
                     result = parseFloat(value, 10);
                     if (isNaN(result)) {
-                        result = 0;
+                        result = undefined;
                     }
                     break;
                 case 'boolean':
@@ -193,9 +196,9 @@ define([
 
         isValidAttributeName = function (name) {
             return !(name === '' ||
-            name === 'name' ||
-            attributeNames.indexOf(name) !== -1 ||
-            REGEXP.DOCUMENT_KEY.test(name) === false);
+                name === 'name' ||
+                attributeNames.indexOf(name) !== -1 ||
+                REGEXP.DOCUMENT_KEY.test(name) === false);
         };
 
         this._dialog = $(attributeDetailsDialogTemplate);
@@ -359,10 +362,10 @@ define([
             } else {
                 this._pRange.show();
                 this._pRegExp.hide();
-                if (attributeDesc.min) {
+                if (typeof attributeDesc.min === 'number') {
                     this._pRangeMin.val(attributeDesc.min);
                 }
-                if (attributeDesc.max) {
+                if (typeof attributeDesc.max === 'number') {
                     this._pRangeMax.val(attributeDesc.max);
                 }
             }

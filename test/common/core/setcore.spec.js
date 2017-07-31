@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('set core', function () {
+describe.only('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -1074,5 +1074,119 @@ describe('set core', function () {
             expect(core.getMemberPaths(secondInstance, 'set')).to.have.members(['/II/C1', '/II/C2']);
             done();
         });
+    });
+
+    it('should rename a set of the node', function () {
+        var set = core.createNode({parent: root, relid: 'S'}),
+            member = core.createNode({parent: root, relid: 'C1'});
+
+        core.createSet(set, 'old');
+        core.addMember(set, 'old', member);
+        core.setMemberAttribute(set, 'old', core.getPath(member), 'attri', 1);
+        expect(core.getSetNames(set)).to.eql(['old']);
+        core.renameSet(set, 'old', 'new');
+        expect(core.getSetNames(set)).to.eql(['new']);
+        expect(core.getMemberPaths(set, 'new')).to.eql([core.getPath(member)]);
+        expect(core.getMemberAttribute(set, 'new', core.getPath(member), 'attri')).to.eql(1);
+    });
+
+    it('should rename a set of the node and override if the new name was taken', function () {
+        var set = core.createNode({parent: root, relid: 'S'}),
+            member = core.createNode({parent: root, relid: 'C1'});
+
+        core.createSet(set, 'old');
+        core.addMember(set, 'old', member);
+        core.setMemberAttribute(set, 'old', core.getPath(member), 'attri', 1);
+        core.createSet(set, 'new');
+        core.addMember(set, 'new', member);
+        core.setMemberAttribute(set, 'new', core.getPath(member), 'attri', 2);
+        expect(core.getSetNames(set)).to.eql(['old', 'new']);
+        core.renameSet(set, 'old', 'new');
+        expect(core.getSetNames(set)).to.eql(['new']);
+        expect(core.getMemberPaths(set, 'new')).to.eql([core.getPath(member)]);
+        expect(core.getMemberAttribute(set, 'new', core.getPath(member), 'attri')).to.eql(1);
+    });
+
+    it('should rename a set of the node without changes data of instances', function () {
+        var set = core.createNode({parent: root, relid: 'S'}),
+            sInstance = core.createNode({parent: root, base: set, relid: 'Si'}),
+            member = core.createNode({parent: root, relid: 'C1'}),
+            iMember = core.createNode({parent: root, relid: 'C2'});
+
+        core.createSet(set, 'old');
+        core.addMember(set, 'old', member);
+        core.setMemberAttribute(set, 'old', core.getPath(member), 'attri', 1);
+        core.addMember(sInstance, 'old', iMember);
+        core.setMemberAttribute(sInstance, 'old', core.getPath(iMember), 'attri', 2);
+        expect(core.getSetNames(set)).to.eql(['old']);
+        expect(core.getSetNames(sInstance)).to.eql(['old']);
+        core.renameSet(set, 'old', 'new');
+        expect(core.getSetNames(set)).to.eql(['new']);
+        expect(core.getMemberPaths(set, 'new')).to.eql([core.getPath(member)]);
+        expect(core.getMemberAttribute(set, 'new', core.getPath(member), 'attri')).to.eql(1);
+
+        expect(core.getSetNames(sInstance)).to.have.members(['new', 'old']);
+        expect(core.getMemberPaths(sInstance, 'new')).to.eql([core.getPath(member)]);
+        expect(core.getMemberAttribute(sInstance, 'new', core.getPath(member), 'attri')).to.eql(1);
+
+        expect(core.getMemberPaths(sInstance, 'old')).to.eql([core.getPath(iMember)]);
+        expect(core.getMemberAttribute(sInstance, 'old', core.getPath(iMember), 'attri')).to.eql(2);
+    });
+
+    it('should move a member from one set to another', function () {
+        var setOwner = core.createNode({parent: root, relid: 'S'}),
+            member = core.createNode({parent: root, relid: 'M'});
+
+        core.createSet(setOwner, 'from');
+        core.createSet(setOwner, 'to');
+        core.addMember(setOwner, 'from', member);
+
+        expect(core.getSetNames(setOwner)).to.have.members(['from', 'to']);
+        expect(core.getMemberPaths(setOwner, 'from')).to.eql(['/M']);
+        expect(core.getMemberPaths(setOwner, 'to')).to.eql([]);
+
+        core.moveMember(setOwner, '/M', 'from', 'to');
+        expect(core.getSetNames(setOwner)).to.have.members(['to']);
+        expect(core.getMemberPaths(setOwner, 'to')).to.eql(['/M']);
+    });
+
+    it('should not move inherited member', function () {
+        var setOwner = core.createNode({parent: root, relid: 'S'}),
+            member = core.createNode({parent: root, relid: 'M'}),
+            setInstance = core.createNode({parent: root, base: setOwner, relid: 'Si'});
+
+        core.createSet(setOwner, 'from');
+        core.createSet(setOwner, 'to');
+        core.addMember(setOwner, 'from', member);
+        core.setMemberRegistry(setInstance, 'from', '/M', 'anything', 'again');
+
+        expect(core.getSetNames(setInstance)).to.have.members(['from', 'to']);
+        expect(core.getMemberPaths(setInstance, 'from')).to.eql(['/M']);
+        expect(core.getMemberPaths(setInstance, 'to')).to.eql([]);
+
+        core.moveMember(setInstance, '/M', 'from', 'to');
+        expect(core.getSetNames(setInstance)).to.have.members(['from', 'to']);
+        expect(core.getMemberPaths(setInstance, 'from')).to.eql(['/M']);
+        expect(core.getMemberPaths(setInstance, 'to')).to.eql([]);
+    });
+
+    it('should move fully overriden member', function () {
+        var setOwner = core.createNode({parent: root, relid: 'S'}),
+            member = core.createNode({parent: root, relid: 'M'}),
+            setInstance = core.createNode({parent: root, base: setOwner, relid: 'Si'});
+
+        core.createSet(setOwner, 'from');
+        core.createSet(setOwner, 'to');
+        core.addMember(setOwner, 'from', member);
+        core.addMember(setInstance, 'from', member);
+
+        expect(core.getSetNames(setInstance)).to.have.members(['from', 'to']);
+        expect(core.getMemberPaths(setInstance, 'from')).to.eql(['/M']);
+        expect(core.getMemberPaths(setInstance, 'to')).to.eql([]);
+
+        core.moveMember(setInstance, '/M', 'from', 'to');
+        expect(core.getSetNames(setInstance)).to.have.members(['from', 'to']);
+        expect(core.getMemberPaths(setInstance, 'from')).to.eql(['/M']);
+        expect(core.getMemberPaths(setInstance, 'to')).to.eql(['/M']);
     });
 });

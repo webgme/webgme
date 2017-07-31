@@ -162,7 +162,13 @@ define([
 
     MetaEditorWidget.prototype.selectNewPointerName = function (existingPointerNames, notAllowedPointerNames,
                                                                 isSet, callback) {
-        new MetaEditorPointerNamesDialog().show(existingPointerNames, notAllowedPointerNames, isSet, callback);
+        new MetaEditorPointerNamesDialog().show({
+                existingNames: existingPointerNames,
+                notAllowedNames: notAllowedPointerNames,
+                isSet: isSet,
+                addPopularPointerNames: isSet === false
+            },
+            callback);
     };
 
     MetaEditorWidget.prototype.setFilterChecked = function (value) {

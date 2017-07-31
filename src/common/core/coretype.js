@@ -777,7 +777,7 @@ define([
             return result;
         };
 
-        this.moveNode = function (node, parent, relidLength) {
+        this.moveNode = function (node, parent, relidLength, newRelid) {
             ASSERT(self.isValidNewParent(node, parent),
                 'New parent would create loop in containment/inheritance tree.');
             var minRelidLength = innerCore.getProperty(parent, CONSTANTS.MINIMAL_RELID_LENGTH_PROPERTY),
@@ -792,7 +792,7 @@ define([
                 takenRelids[currRelid] = true;
             }
 
-            moved = innerCore.moveNode(node, parent, takenRelids, relidLength || minRelidLength);
+            moved = innerCore.moveNode(node, parent, takenRelids, relidLength || minRelidLength, newRelid);
             moved.base = base;
 
             this.processRelidReservation(parent, this.getRelid(moved));
@@ -1116,7 +1116,6 @@ define([
                 self.processRelidReservation(self.getParent(node), self.getRelid(node));
             }
         };
-
         //</editor-fold>
 
         //<editor-fold=Added Methods>

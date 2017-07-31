@@ -46,6 +46,12 @@ module.exports = {
         connectedWorkerStart: 'connectedWorkerStart',
         connectedWorkerQuery: 'connectedWorkerQuery',
         connectedWorkerStop: 'connectedworkerStop',
-        connectedWorkerStatus: 'connectedWorkerStatus'
+        connectedWorkerStatus: 'connectedWorkerStatus',
+
+        //Rename
+        renameConcept: 'renameConcept',
+        changeAttributeMeta: 'changeAttributeMeta',
+        renameMetaPointerTarget: 'renameMetaPointerTarget',
+        changeAspectMeta: 'changeAspectMeta'
     }
 };

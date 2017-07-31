@@ -80,7 +80,11 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE, ST
             UPDATE_LIBRARY: 'updateLibrary',
             EXPORT_SELECTION_TO_FILE: 'exportSelectionToFile',
             IMPORT_SELECTION_FROM_FILE: 'importSelectionFromFile',
-            UPDATE_PROJECT_FROM_FILE: 'updateProjectFromFile'
+            UPDATE_PROJECT_FROM_FILE: 'updateProjectFromFile',
+            RENAME_CONCEPT: 'renameConcept',
+            CHANGE_ATTRIBUTE_META: 'changeAttributeMeta',
+            RENAME_META_POINTER_TARGET: 'renameMetaPointerTarget',
+            CHANGE_ASPECT_META: 'changeAspectMeta'
         }
     };
 });

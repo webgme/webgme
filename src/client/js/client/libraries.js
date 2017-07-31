@@ -25,50 +25,6 @@ define(['js/Constants'], function (CONSTANTS) {
             return null;
         }
 
-        function addLibrary(name, blobHashOrLibraryInfo, callback) {
-            var parameters = {
-                command: 'addLibrary',
-                projectId: state.project.projectId,
-                libraryName: name,
-                branchName: state.branchName
-            };
-
-            if (typeof blobHashOrLibraryInfo === 'string') {
-                parameters.blobHash = blobHashOrLibraryInfo;
-            } else {
-                parameters.libraryInfo = blobHashOrLibraryInfo;
-            }
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-                callback(err, result);
-            });
-        }
-
-        function updateLibrary(name, blobHashOrLibraryInfo, callback) {
-            var parameters = {
-                command: 'updateLibrary',
-                projectId: state.project.projectId,
-                libraryName: name,
-                branchName: state.branchName
-            };
-
-            if (typeof blobHashOrLibraryInfo === 'string') {
-                parameters.blobHash = blobHashOrLibraryInfo;
-            } else if (blobHashOrLibraryInfo) {
-                parameters.libraryInfo = blobHashOrLibraryInfo;
-            }
-
-            storage.simpleRequest(parameters, function (err, result) {
-                if (err) {
-                    logger.error(err);
-                }
-                callback(err, result);
-            });
-        }
-
         function removeLibrary(libraryName) {
             state.core.removeLibrary(state.nodes[CONSTANTS.PROJECT_ROOT_ID].node, libraryName);
             saveRoot('removeLibrary(' + libraryName + ')');
@@ -116,8 +72,6 @@ define(['js/Constants'], function (CONSTANTS) {
 
         return {
             getLibraryNames: getLibraryNames,
-            addLibrary: addLibrary,
-            updateLibrary: updateLibrary,
             removeLibrary: removeLibrary,
             renameLibrary: renameLibrary,
             getLibraryInfo: getLibraryInfo,

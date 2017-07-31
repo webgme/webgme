@@ -2357,6 +2357,21 @@ define([
         };
 
         /**
+         * Returns the list of the META defined pointer names of the node that were specifically defined for the node.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The function returns all the pointer names that are defined among the META rules of the node.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getOwnValidPointerNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnValidPointerNames(node);
+        };
+
+        /**
          * Returns the list of the META defined set names of the node.
          * @param {module:Core~Node} node - the node in question.
          *
@@ -2369,6 +2384,21 @@ define([
             ensureNode(node, 'node');
 
             return core.getValidSetNames(node);
+        };
+
+        /**
+         * Returns the list of the META defined set names of the node that were specifically defined for the node.
+         * @param {module:Core~Node} node - the node in question.
+         *
+         * @return {string[]} The function returns all the set names that are defined among the META rules of the node.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getOwnValidSetNames = function (node) {
+            ensureNode(node, 'node');
+
+            return core.getOwnValidSetNames(node);
         };
 
         /**
@@ -3297,7 +3327,8 @@ define([
          *
          * @param {module:Core~Node} node - the node in question.
          *
-         * @return {string[]} The paths of the mixins in an array.
+         * @return {string[]} The paths of the mixins in an array ordered by their order of use (which is important
+         * in case of some collision among definitions would arise).
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
@@ -3910,6 +3941,421 @@ define([
             } else {
                 core.loadOwnMembers(node, setName, callback);
             }
+        };
+
+        /**
+         * Renames the given pointer of the node if its target is not inherited.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} oldName - the current name of the pointer in question.
+         * @param {string} newName - the new name of the pointer.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.renamePointer = function (node, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            if (core.getOwnPointerPath(node, oldName) === undefined) {
+                throw new CoreIllegalOperationError('Only pointers with values can be renamed.');
+            }
+
+            return core.renamePointer(node, oldName, newName);
+        };
+
+        /**
+         * Renames the given attribute of the node if its value is not inherited.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} oldName - the current name of the attribute in question.
+         * @param {string} newName - the new name of the attribute.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.renameAttribute = function (node, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            if(core.getOwnAttribute(node,oldName) === undefined){
+                throw new CoreIllegalOperationError('Only attributes with own values can be renamed.');
+            }
+            return core.renameAttribute(node, oldName, newName);
+        };
+
+        /**
+         * Renames the given registry of the node if its value is not inherited.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} oldName - the current name of the registry in question.
+         * @param {string} newName - the new name of the registry.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.renameRegistry = function (node, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            if(core.getOwnRegistry(node,oldName) === undefined){
+                throw new CoreIllegalOperationError('Only registry entries with own values can be renamed.');
+            }
+
+            return core.renameRegistry(node, oldName, newName);
+        };
+
+        /**
+         * Renames the given set of the node if its is not inherited.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} oldName - the current name of the set in question.
+         * @param {string} newName - the new name of the set.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.renameSet = function (node, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            if (core.getOwnSetNames(node).indexOf(oldName) === -1) {
+                throw new CoreIllegalOperationError('Cannot rename nonexistent/inherited set [' + oldName + ']');
+            }
+            return core.renameSet(node, oldName, newName);
+        };
+
+        /**
+         * Returns the meta node that introduces the given attribute.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the attribute in question.
+         *
+         * @return {module:Core~Node} The meta concept that defines the attribute for the given node.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getAttributeDefinitionOwner = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            if ((core.getValidAttributeNames(node) || []).indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Not a valid attribute name [' + name + '] of the node.');
+            }
+
+            return core.getAttributeDefinitionOwner(node, name);
+        };
+
+        /**
+         * Returns the meta nodes that introduce the given pointer relationship.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the pointer in question.
+         * @param {module:Core~Node} target - the target node.
+         *
+         * @return {Object} The result information contains the source of the rule and the target of the rule.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getPointerDefinitionInfo = function (node, name, target) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureNode(target, 'target');
+
+            if (core.getValidPointerNames(node).indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Not valid pointer name [' + name + '] of the node.');
+            }
+
+            if (core.isValidTargetOf(target, node, name) !== true) {
+                throw new CoreIllegalOperationError('Not a valid target node of [' + name + '] pointer.');
+            }
+
+            return core.getPointerDefinitionInfo(node, name, target);
+        };
+
+        /**
+         * Returns the meta nodes that introduce the given set relationship.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the set in question.
+         * @param {module:Core~Node} member - the member.
+         *
+         * @return {Object} The result information contains the source of the rule and the target of the rule.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getSetDefinitionInfo = function (node, name, member) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureNode(member, 'member');
+
+            if (core.getValidSetNames(node).indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Not valid set name [' + name + '] of the node.');
+            }
+
+            if (core.isValidTargetOf(member, node, name) !== true) {
+                throw new CoreIllegalOperationError('Not a valid member of [' + name + '] set.');
+            }
+
+            return core.getSetDefinitionInfo(node, name, member);
+        };
+
+        /**
+         * Returns the meta nodes that introduce the given containment relationship.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {module:Core~Node} child - the child.
+         *
+         * @return {Object} The result information contains the source of the rule and the target of the rule.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getChildDefinitionInfo = function (node, child) {
+            ensureNode(node, 'node');
+            ensureNode(child, 'child');
+
+            if (core.isValidChildOf(child, node) !== true) {
+                throw new CoreIllegalOperationError('Not a valid child.');
+            }
+
+            return core.getChildDefinitionInfo(node, child);
+        };
+
+        /**
+         * Returns the meta nodes that introduce the given aspect relationship.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the set in question.
+         * @param {module:Core~Node} member - the child.
+         *
+         * @return {Object} The result information contains the source of the rule and the target of the rule.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getAspectDefinitionInfo = function (node, name, member) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            ensureNode(member, 'member');
+
+            if (core.getValidAspectNames(node).indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Not valid aspect name [' + name + '] of the node.');
+            }
+
+            if (core.isValidAspectMemberOf(member, node, name) !== true) {
+                throw new CoreIllegalOperationError('Not a valid member of [' + name + '] aspect.');
+            }
+
+            return core.getAspectDefinitionInfo(node, name, member);
+        };
+
+        this.getValidAspectTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            return core.getValidAspectTargetPaths(node, name);
+        }
+
+        this.getOwnValidAspectTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+            return core.getOwnValidAspectTargetPaths(node, name);
+        }
+
+        /**
+         * Returns the meta node that introduces the given aspect.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the set in question.
+         *
+         * @return {module:Core~Node} The result is the closest base that defines the given aspect.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getAspectDefinitionOwner = function (node, name) {
+            ensureNode(node, 'node');
+            ensureType(name, 'name', 'string');
+
+            if (core.getValidAspectNames(node).indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Not valid aspect name [' + name + '] of the node.');
+            }
+
+            return core.getAspectDefinitionOwner(node, name);
+        };
+
+        /**
+         * Moves an own member of the set over to another set of the node.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} memberPath - the path of the memberNode that should be moved.
+         * @param {string} oldSetName - the name of the set where the member is currently reside.
+         * @param {string} newSetName - the name of the target set where the member should be moved to.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.moveMember = function (node, memberPath, oldSetName, newSetName) {
+            ensureNode(node, 'node');
+            ensureType(memberPath, 'memberPath', 'string');
+            ensurePath(memberPath, 'memberPath');
+            ensureType(oldSetName, 'oldSetName', 'string');
+            ensureType(newSetName, 'newSetName', 'string');
+
+            if (core.getSetNames(node).indexOf(oldSetName) === -1) {
+                throw new CoreIllegalOperationError('Source set [' + oldSetName + '] does not exists.');
+            }
+
+            if (core.getOwnMemberPaths(node, oldSetName).indexOf(memberPath) === -1) {
+                throw new CoreIllegalOperationError('Not own member of the set therefore cannot be moved.');
+            }
+
+            return core.moveMember(node, memberPath, oldSetName, newSetName);
+        };
+
+        /**
+         * Renames the given attribute definition of the node. It also renames the default value of the definition!
+         * As a result of this operation, all instances of node will have the new attribute, but if they have
+         * overriden the old attribute it will remain under that name (and become meta invalid).
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} oldName - the current name of the attribute definition in question.
+         * @param {string} newName - the new name of the attribute.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.renameAttributeMeta = function (node, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            if (core.getValidAttributeNames(node).indexOf(oldName) === -1) {
+                throw new CoreIllegalOperationError('Unknown definition [' + oldName + '] cannot be renamed.');
+            }
+
+            return core.renameAttributeMeta(node, oldName, newName);
+        };
+
+        /**
+         * Moves the given target definition over to a new pointer or set.
+         * Note this does not alter the actual pointer target or set members.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {module:Core~Node} target - the target that should be moved among definitions.
+         * @param {string} oldName - the current name of the pointer/set definition in question.
+         * @param {string} newName - the new name of the relation towards the target.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.movePointerMetaTarget = function (node, target, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureNode(target, 'target');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            if (core.getOwnValidPointerNames(node).indexOf(oldName) === -1 &&
+                core.getOwnValidSetNames(node).indexOf(oldName) === -1) {
+                throw new CoreIllegalOperationError('Definition [' + oldName + '] does not exists for the node.');
+            }
+
+            if (core.getOwnValidTargetPaths(node, oldName).indexOf(core.getPath(target)) === -1) {
+                throw new CoreIllegalOperationError('Not a valid target of [' + oldName + '] defined for the node.');
+            }
+            ;
+
+            return core.movePointerMetaTarget(node, target, oldName, newName);
+        };
+
+        /**
+         * Moves the given target definition over to a new aspect. As actual values in case of
+         * relation definitions vary quite a bit from the meta-targets, this function does not deals with
+         * the actual pointer/set target/members.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {module:Core~Node} target - the target that should be moved among definitions.
+         * @param {string} oldName - the current name of the aspect that has the target.
+         * @param {string} newName - the new aspect name where the target should be moved over.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.moveAspectMetaTarget = function (node, target, oldName, newName) {
+            ensureNode(node, 'node');
+            ensureNode(target, 'target');
+            ensureType(oldName, 'oldName', 'string');
+            ensureType(newName, 'newName', 'string');
+
+            if (core.getOwnValidAspectNames(node).indexOf(oldName) === -1) {
+                throw new CoreIllegalOperationError('Aspect [' + oldName + '] doesn\'t exists for the node.');
+            }
+
+            if (core.getOwnValidAspectTargetPaths(node, oldName).indexOf(core.getPath(target)) === -1) {
+                throw new CoreIllegalOperationError('Not a valid target of [' + oldName + '] defined for the node.');
+            }
+
+            return core.moveAspectMetaTarget(node, target, oldName, newName);
+        };
+
+        /**
+         * Returns if a node could be contained in the given container's aspect.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {module:Core~Node} parent - the container node in question.
+         * @param {string} name - the name of aspect.
+         *
+         * @return {bool} The function returns true if the given container could contain the node in the asked aspect.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.isValidAspectMemberOf = function (node, parent, name) {
+            ensureNode(node, 'node');
+            ensureNode(parent, 'parent');
+            ensureType(name, 'name', 'string');
+
+            return core.isValidAspectMemberOf(node, parent, name);
+        };
+
+        /**
+         * Returns the paths of Meta nodes that are possible targets of the given pointer/set introduced by the node.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of pointer/set.
+         *
+         * @return {string[]} The function returns the paths of valid nodes.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getOwnValidTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureRelationName(name, 'name');
+
+            return core.getOwnValidTargetPaths(node, name);
+        };
+
+        /**
+         * Returns the paths of Meta nodes that are possible targets of the given pointer/set.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of pointer/set.
+         *
+         * @return {string[]} The function returns the paths of valid nodes.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
+        this.getValidTargetPaths = function (node, name) {
+            ensureNode(node, 'node');
+            ensureRelationName(name, 'name');
+
+            return core.getValidTargetPaths(node, name);
         };
     }
 

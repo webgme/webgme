@@ -242,6 +242,34 @@ define(['common/core/core', 'q'], function (Core, Q) {
 
             return deferred.promise.nodeify(callback);
         };
+
+        var loadMembersOrg = this.loadMembers;
+        this.loadMembers = function (target, setName, callback) {
+            var deferred = Q.defer();
+            loadMembersOrg(target, setName, function (err, res) {
+                if (err) {
+                    deferred.reject(err instanceof Error ? err : new Error(err));
+                } else {
+                    deferred.resolve(res);
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
+        };
+
+        var loadOwnMembersOrg = this.loadOwnMembers;
+        this.loadOwnMembers = function (target, setName, callback) {
+            var deferred = Q.defer();
+            loadOwnMembersOrg(target, setName, function (err, res) {
+                if (err) {
+                    deferred.reject(err instanceof Error ? err : new Error(err));
+                } else {
+                    deferred.resolve(res);
+                }
+            });
+
+            return deferred.promise.nodeify(callback);
+        };
     }
 
     CoreQ.prototype = Object.create(Core.prototype);

@@ -577,6 +577,11 @@ define([
             innerCore.setProperty(node, name, value);
         };
 
+        this.renameAttribute = function (node, oldName, newName) {
+            node = innerCore.getChild(node, CONSTANTS.ATTRIBUTES_PROPERTY);
+            innerCore.renameProperty(node, oldName, newName);
+        };
+
         this.getRegistry = function (node, name) {
             /*node = coretree.getChild(node, coretree.constants.REGISTRY_PROPERTY);
              return coretree.getProperty(node, name);*/
@@ -591,6 +596,11 @@ define([
         this.setRegistry = function (node, name, value) {
             node = innerCore.getChild(node, CONSTANTS.REGISTRY_PROPERTY);
             innerCore.setProperty(node, name, value);
+        };
+
+        this.renameRegistry = function (node, oldName, newName) {
+            node = innerCore.getChild(node, CONSTANTS.REGISTRY_PROPERTY);
+            innerCore.renameProperty(node, oldName, newName);
         };
 
         this.overlayInquiry = function (node, source, name) {
@@ -1125,7 +1135,7 @@ define([
         //     return copiedNodes;
         // };
 
-        this.moveNode = function (node, parent, takenRelids, relidLength) {
+        this.moveNode = function (node, parent, takenRelids, relidLength, newRelid) {
             ASSERT(self.isValidNode(node) && self.isValidNode(parent));
 
             var ancestor,
@@ -1156,18 +1166,22 @@ define([
             aboveAncestor = 1;
 
             var oldNode = node;
-            if (takenRelids) {
-                if (takenRelids[innerCore.getRelid(oldNode)]) {
-                    node = innerCore.createChild(parent, takenRelids, relidLength);
+            if (typeof newRelid === 'string') {
+                node = innerCore.getChild(parent, newRelid);
+            } else {
+                if (takenRelids) {
+                    if (takenRelids[innerCore.getRelid(oldNode)]) {
+                        node = innerCore.createChild(parent, takenRelids, relidLength);
+                    } else {
+                        node = innerCore.getChild(parent, innerCore.getRelid(oldNode));
+                    }
                 } else {
                     node = innerCore.getChild(parent, innerCore.getRelid(oldNode));
-                }
-            } else {
-                node = innerCore.getChild(parent, innerCore.getRelid(oldNode));
-                if (!innerCore.isEmpty(node)) {
-                    // we have to change the relid of the node, to fit into its new
-                    // place...
-                    node = innerCore.createChild(parent);
+                    if (!innerCore.isEmpty(node)) {
+                        // we have to change the relid of the node, to fit into its new
+                        // place...
+                        node = innerCore.createChild(parent);
+                    }
                 }
             }
 
@@ -1449,6 +1463,29 @@ define([
 
                 self.overlayInsert(ancestor, sourcePath, name, targetPath);
             }
+        };
+
+        this.renamePointer = function (node, oldName, newName) {
+            ASSERT(self.isValidNode(node) && typeof oldName === 'string' && typeof newName === 'string');
+            var targetPath = self.getPointerPath(node, oldName),
+                sourcePath = self.getPath(node),
+                pointerNames = self.getPointerNames(node),
+                commonInfo;
+
+            ASSERT(targetPath !== undefined);
+
+            if (pointerNames.indexOf(newName) !== -1) {
+                self.deletePointer(node, newName);
+            }
+
+            commonInfo = innerCore.getCommonPathPrefixData(sourcePath, targetPath);
+
+            while (commonInfo.firstLength-- > 0) {
+                node = self.getParent(node);
+            }
+
+            self.overlayRemove(node, commonInfo.first, oldName, commonInfo.second);
+            self.overlayInsert(node, commonInfo.first, newName, commonInfo.second);
         };
 
         this.getChildrenHashes = function (node) {
