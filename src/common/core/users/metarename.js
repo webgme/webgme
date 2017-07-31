@@ -58,7 +58,8 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 .then(function (target) {
                     if (target !== null) {
                         definitionInfo = core.getPointerDefinitionInfo(visited, parameters.newName, target);
-                        if (definitionInfo.sourcePath === nodePath &&
+
+                        if (definitionInfo.ownerPath === nodePath &&
                             definitionInfo.targetPath === parameters.targetPath) {
                             core.renamePointer(visited, parameters.oldName, parameters.newName);
                         }
@@ -85,17 +86,25 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 return Q.resolve(null).nodeify(next);
             }
 
-            core.loadMembers(visited, parameters.oldName)
+            core.loadOwnMembers(visited, parameters.oldName)
                 .then(function (members) {
-                    var i;
+                    var i,
+                        ownMemberPaths = core.getOwnMemberPaths(visited, parameters.oldName);
 
                     for (i = 0; i < members.length; i += 1) {
-                        definitionInfo = core.getSetDefinitionInfo(visited, parameters.newName, members[i]);
-                        if (definitionInfo.sourcePath === nodePath &&
-                            definitionInfo.targetPath === parameters.targetPath) {
-                            core.moveMember(visited, core.getPath(members[i]), parameters.oldName, parameters.newName);
+                        if (ownMemberPaths.indexOf(core.getPath(members[i])) !== -1) {
+                            definitionInfo = core.getSetDefinitionInfo(visited, parameters.newName, members[i]);
+                            if (definitionInfo.ownerPath === nodePath &&
+                                definitionInfo.targetPath === parameters.targetPath) {
+                                core.moveMember(visited, core.getPath(members[i]), parameters.oldName, parameters.newName);
+                            }
                         }
                     }
+
+                    if (members.length === 0) {
+                        core.renameSet(visited, parameters.oldName, parameters.newName);
+                    }
+
                     deferred.resolve(null);
                     return;
                 })
@@ -125,7 +134,7 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
                     for (i = 0; i < members.length; i += 1) {
                         definitionInfo = core.getAspectDefinitionInfo(visited, parameters.newName, members[i]);
-                        if (definitionInfo.sourcePath === nodePath &&
+                        if (definitionInfo.ownerPath === nodePath &&
                             definitionInfo.targetPath === parameters.targetPath) {
                             core.moveMember(visited, core.getPath(members[i]), parameters.oldName, parameters.newName);
                         }

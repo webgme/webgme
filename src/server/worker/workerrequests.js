@@ -1558,7 +1558,6 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             })
             .then(function (nodes) {
                 context.core.movePointerMetaTarget(nodes[0], nodes[1], parameters.oldName, parameters.newName);
-                parameters.excludeOriginNode = true;
                 return metaRename.propagateMetaDefinitionRename(context.core, nodes[0], parameters);
             })
             .then(function () {
