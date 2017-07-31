@@ -7,7 +7,7 @@
 
 var testFixture = require('../../_globals.js');
 
-describe('set core', function () {
+describe.only('set core', function () {
     'use strict';
     var gmeConfig = testFixture.getGmeConfig(),
         Q = testFixture.Q,
@@ -1146,8 +1146,7 @@ describe('set core', function () {
         expect(core.getMemberPaths(setOwner, 'to')).to.eql([]);
 
         core.moveMember(setOwner, '/M', 'from', 'to');
-        expect(core.getSetNames(setOwner)).to.have.members(['from', 'to']);
-        expect(core.getMemberPaths(setOwner, 'from')).to.eql([]);
+        expect(core.getSetNames(setOwner)).to.have.members(['to']);
         expect(core.getMemberPaths(setOwner, 'to')).to.eql(['/M']);
     });
 
