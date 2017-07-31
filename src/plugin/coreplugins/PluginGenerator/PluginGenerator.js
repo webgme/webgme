@@ -51,6 +51,7 @@ define([
 
         // Get and log the configuration which will be appended to and used in the templates.
         self.currentConfig = self.getCurrentConfig();
+
         self.logger.info('Current configuration');
         self.logger.info(JSON.stringify(self.currentConfig, null, 4));
 

@@ -1,7 +1,7 @@
 {
   "id": "PluginGenerator",
   "name": "Plugin Generator",
-  "version": "1.7.0",
+  "version": "2.16.0",
   "description": "Generates a functional plugin that extends the PluginBase.",
   "icon": {
     "src": "",
