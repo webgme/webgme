@@ -106,7 +106,7 @@ define([
                     result.message = 'Name "' + name + '" is a reserved key word.';
                 }
 
-                if (parameters.isSet && name === 'src' || name === 'dst') {
+                if (parameters.isSet && (name === 'src' || name === 'dst')) {
                     result.hasViolation = true;
                     result.message = 'Name "' + name + '" can only be used for pointer names and not for sets.';
                 }

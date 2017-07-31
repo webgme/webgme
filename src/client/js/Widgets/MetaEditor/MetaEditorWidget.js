@@ -165,7 +165,8 @@ define([
         new MetaEditorPointerNamesDialog().show({
                 existingNames: existingPointerNames,
                 notAllowedNames: notAllowedPointerNames,
-                isSet: isSet
+                isSet: isSet,
+                addPopularPointerNames: isSet === false
             },
             callback);
     };

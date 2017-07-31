@@ -376,6 +376,7 @@ define(['js/Constants'], function (CONSTANTS) {
                 exportSelectionToFile: exportSelectionToFile,
                 importSelectionFromFile: importSelectionFromFile
             },
+
             // To keep the client API intact we still provide the old functions directly as well
             importProjectFromFile: importProjectFromFile,
             updateProjectFromFile: updateProjectFromFile,

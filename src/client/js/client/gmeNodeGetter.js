@@ -490,6 +490,83 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return this._state.readOnlyProject || this._state.viewer || this.isLibraryRoot() || this.isLibraryElement();
     };
 
+    GMENode.prototype.getAttributeDefinitionOwnerId = function (name) {
+        return this._storeNode(this._state.core.getAttributeDefinitionOwner(this._state.nodes[this._id].node, name));
+    };
+
+    GMENode.prototype.getAspectDefinitionOwner = function (name) {
+        return this._storeNode(this._state.core.getAttributeDefinitionOwner(this._state.nodes[this._id].node, name));
+    };
+
+    GMENode.prototype.isValidAspectMemberOf = function (parentId, name) {
+        return this._state.core.isValidAspectMemberOf(this._state.nodes[this._id].node,
+            this._state.nodes[parentId].node, name);
+    };
+
+    GMENode.prototype.getOwnValidPointerNames = function () {
+        return this._state.core.getOwnValidPointerNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getOwnValidSetNames = function () {
+        return this._state.core.getOwnValidSetNames(this._state.nodes[this._id].node);
+    };
+
+    GMENode.prototype.getValidTargetIds = function (name) {
+        return this._state.core.getValidTargetPaths(this._state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getOwnValidTargetIds = function (name) {
+        return this._state.core.getOwnValidTargetPaths(this._state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getValidAspectTargetIds = function (name) {
+        return this._state.core.getValidAspectTargetPaths(this._state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getOwnValidAspectTargetIds = function (name) {
+        return this._state.core.getOwnValidAspectTargetPaths(this._state.nodes[this._id].node, name);
+    };
+
+    GMENode.prototype.getPointerDefinitionInfo = function (name, targetId) {
+        var coreInfo = this._state.core.getPointerDefinitionInfo(this._state.nodes[this._id].node, name,
+            this._state.nodes[targetId]),
+            nodeInfo = {
+                ownerId: this._storeNode(coreInfo.ownerNode),
+                targetId: this._storeNode(coreInfo.targetNode)
+            };
+        return nodeInfo;
+    };
+
+    GMENode.prototype.getAspectDefinitionInfo = function (name, targetId) {
+        var coreInfo = this._state.core.getAspectDefinitionInfo(this._state.nodes[this._id].node,
+            name, this._state.nodes[targetId]),
+            nodeInfo = {
+                ownerId: this._storeNode(coreInfo.ownerNode),
+                targetId: this._storeNode(coreInfo.targetNode)
+            };
+        return nodeInfo;
+    };
+
+    GMENode.prototype.getSetDefinitionInfo = function (name, targetId) {
+        var coreInfo = this._state.core.getSetDefinitionInfo(this._state.nodes[this._id].node,
+            name, this._state.nodes[targetId]),
+            nodeInfo = {
+                ownerId: this._storeNode(coreInfo.ownerNode),
+                targetId: this._storeNode(coreInfo.targetNode)
+            };
+        return nodeInfo;
+    };
+
+    GMENode.prototype.getChildDefinitionInfo = function (name, targetId) {
+        var coreInfo = this._state.core.getChildDefinitionInfo(this._state.nodes[this._id].node,
+            name, this._state.nodes[targetId]),
+            nodeInfo = {
+                ownerId: this._storeNode(coreInfo.ownerNode),
+                targetId: this._storeNode(coreInfo.targetNode)
+            };
+        return nodeInfo;
+    };
+
     // GetNode from another node...
     GMENode.prototype.getNode = function (id) {
         if (this._state.nodes[id]) {
