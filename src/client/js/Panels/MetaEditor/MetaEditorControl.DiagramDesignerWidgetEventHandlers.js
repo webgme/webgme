@@ -1070,12 +1070,12 @@ define(['js/logger',
         }
         switch (type) {
             case 'pointer':
-                existingNames = srcNode.getValidSetNames();
+                existingNames = _.without(srcNode.getValidPointerNames(), currentName);
                 notAllowedNames = _.union(srcNode.getValidPointerNames(), srcNode.getValidAspectNames(), [currentName]);
                 headerLabel = 'Rename pointer [' + currentName + ']';
                 break;
             case 'set':
-                existingNames = srcNode.getValidSetNames();
+                existingNames = _.without(srcNode.getValidSetNames(), currentName);
                 notAllowedNames = _.union(srcNode.getValidPointerNames(), srcNode.getValidAspectNames(), [currentName]);
                 headerLabel = 'Rename set [' + currentName + ']';
                 break;
