@@ -117,6 +117,7 @@ define([
         if (params.question) {
             this._contentDiv.find('.question-text').text(params.question);
         } else if (params.htmlQuestion) {
+            this._contentDiv.find('.question-text').text('');
             this._contentDiv.find('.question-text').append(params.htmlQuestion);
         }
 
