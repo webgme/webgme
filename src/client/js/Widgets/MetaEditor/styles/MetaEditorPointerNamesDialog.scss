@@ -3,6 +3,11 @@
  */
 
 .meta-editor-pointer-names-dialog {
+  .modal-body {
+    .info-text {
+      font-size: 14px;
+    }
+  }
   .modal-footer {
     .message-badge {
       text-align: left;

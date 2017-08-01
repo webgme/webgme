@@ -55,6 +55,7 @@ define([
             i,
             len = parameters.existingNames.length,
             closeAndCallback,
+            infoEl,
             popularsAdded;
 
         closeAndCallback = function (selectedName) {
@@ -136,6 +137,15 @@ define([
 
         if (typeof parameters.newLabel === 'string') {
             this._dialog.find('.create-new-label').text(parameters.newLabel);
+        }
+
+        infoEl = this._dialog.find('.info-text');
+        if (typeof parameters.infoText === 'string') {
+            infoEl.text(parameters.infoText);
+        } else if (parameters.isSet === true) {
+            infoEl.text('A set is a one-to-many relationship where the set-owner is said to have member-nodes.');
+        } else {
+            infoEl.text('A pointer is a one-to-one relationship where the owner is said to point to the target.');
         }
 
         //get controls
