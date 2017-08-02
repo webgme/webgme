@@ -426,19 +426,24 @@ define(['js/logger',
             }
 
             if (isAttribute === true) {
-                //is it inherited??? if so, it can be reseted to the inherited value
-                if (this._isResettableAttribute(selectedNodes, keyParts[0])) {
-                    dst[extKey].options = dst[extKey].options || {};
-                    dst[extKey].options.resetable = true;
-                }
 
-                //if it is an attribute it might be invalid according the current meta rules
-                if (this._isInvalidAttribute(selectedNodes, keyParts[0])) {
-                    dst[extKey].options = dst[extKey].options || {};
-                    dst[extKey].options.invalid = true;
-                } else if (this._isInvalidAttributeValue(selectedNodes, keyParts[0])) {
-                    dst[extKey].options = dst[extKey].options || {};
-                    dst[extKey].options.invalidValue = true;
+                if (this._isMetaReadOnlyAttribute(selectedNodes, keyParts[0])) {
+                    dst[extKey].readOnly = true;
+                } else {
+                    //is it inherited??? if so, it can be reseted to the inherited value
+                    if (this._isResettableAttribute(selectedNodes, keyParts[0])) {
+                        dst[extKey].options = dst[extKey].options || {};
+                        dst[extKey].options.resetable = true;
+                    }
+
+                    //if it is an attribute it might be invalid according the current meta rules
+                    if (this._isInvalidAttribute(selectedNodes, keyParts[0])) {
+                        dst[extKey].options = dst[extKey].options || {};
+                        dst[extKey].options.invalid = true;
+                    } else if (this._isInvalidAttributeValue(selectedNodes, keyParts[0])) {
+                        dst[extKey].options = dst[extKey].options || {};
+                        dst[extKey].options.invalidValue = true;
+                    }
                 }
 
                 //if the attribute value is an enum, display the enum values
@@ -578,7 +583,8 @@ define(['js/logger',
                             dst[cbyKey].options.invalid =
                                 this._isInvalidPointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
 
-                            if (dst[repKey].value === false && !dst[cbyKey].options.resetable && !dst[cbyKey].options.invalid) {
+                            if (dst[repKey].value === false &&
+                                !dst[cbyKey].options.resetable && !dst[cbyKey].options.invalid) {
                                 // In this case it is only clutter to display this pointer widget.
                                 delete dst[cbyKey];
                             }
@@ -823,6 +829,18 @@ define(['js/logger',
         }
 
         return true;
+    };
+
+    PropertyEditorController.prototype._isMetaReadOnlyAttribute = function (selectedNodes, attrName) {
+        var i;
+
+        for (i = 0; i < selectedNodes.length; i += 1) {
+            if (selectedNodes[i].isMetaReadOnlyAttribute(attrName) && selectedNodes[i].isMetaNode() !== true) {
+                return true;
+            }
+        }
+
+        return false;
     };
 
     PropertyEditorController.prototype._isResettablePointer = function (selectedNodes, pointerName) {

@@ -67,7 +67,8 @@ define([
                     name: self._inputName.val(),
                     type: self._inputType.val(),
                     defaultValue: self._inputDefaultValue.val(),
-                    isEnum: self._cbEnum.is(':checked')
+                    isEnum: self._cbEnum.is(':checked'),
+                    metaReadOnly: self._cbMetaReadOnly.is(':checked')
                 },
                 cValue;
 
@@ -224,6 +225,8 @@ define([
 
         this._inputEnumValues = this._el.find('#inputEnumValues').first();
 
+        this._cbMetaReadOnly = this._el.find('#cbMetaReadOnly').first();
+
         //extended options
         this._pRegExp = this._el.find('#pRegExp');
         this._pRegExpValue = this._el.find('#inputRegExp');
@@ -330,6 +333,9 @@ define([
         //fill controls based on the currently edited attribute
         this._inputName.val(attributeDesc.name);
         this._inputType.val(attributeDesc.type);
+        if (attributeDesc.metaReadOnly) {
+            this._cbMetaReadOnly.attr('checked', true);
+        }
         if (attributeDesc.type === 'boolean') {
             //boolean type
             this._pDefaultValue.hide();

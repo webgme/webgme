@@ -882,6 +882,10 @@ define([
             }
             return null;
         };
+
+        this.isMetaReadOnlyAttribute = function (node, name) {
+            return (self.getAttributeMeta(node, name) || {}).metaReadOnly === true;
+        };
         //</editor-fold>
     };
 

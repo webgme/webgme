@@ -567,6 +567,10 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         return nodeInfo;
     };
 
+    GMENode.prototype.isMetaReadOnlyAttribute = function (name) {
+        return this._state.core.isMetaReadOnlyAttribute(this._state.nodes[this._id].node, name);
+    };
+
     // GetNode from another node...
     GMENode.prototype.getNode = function (id) {
         if (this._state.nodes[id]) {

@@ -158,6 +158,8 @@ define([
                     return;
                 }
 
+                desc.metaReadOnly = attrMeta.metaReadOnly;
+
                 if (attrMeta.enum && attrMeta.enum.length > 0) {
                     desc.isEnum = true;
                     desc.enumValues = [];
@@ -559,6 +561,11 @@ define([
             confirmDialog = new ConfirmDialog();
 
         attrSchema = {type: attrDesc.type, min: attrDesc.min, max: attrDesc.max, regexp: attrDesc.regexp};
+
+        if (attrDesc.metaReadOnly) {
+            attrSchema.metaReadOnly = true;
+        }
+
         if (attrDesc.isEnum) {
             attrSchema.enum = attrDesc.enumValues;
         }
