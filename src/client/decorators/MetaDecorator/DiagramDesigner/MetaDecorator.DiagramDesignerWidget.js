@@ -150,7 +150,8 @@ define([
                     defaultValue: attrValue,
                     min: attrMeta.min,
                     max: attrMeta.max,
-                    regexp: attrMeta.regexp
+                    regexp: attrMeta.regexp,
+                    metaReadOnly: attrMeta.metaReadOnly
                 });
 
                 //we will not let 'name' attribute to be modified as that is used UI-wise
@@ -158,7 +159,10 @@ define([
                     return;
                 }
 
-                desc.metaReadOnly = attrMeta.metaReadOnly;
+                if (attrMeta.multiline) {
+                    desc.multiline = true;
+                    desc.multilineType = attrMeta.multilineType || 'generic';
+                }
 
                 if (attrMeta.enum && attrMeta.enum.length > 0) {
                     desc.isEnum = true;
@@ -564,6 +568,11 @@ define([
 
         if (attrDesc.metaReadOnly) {
             attrSchema.metaReadOnly = true;
+        }
+
+        if (attrDesc.multiline) {
+            attrSchema.multiline = true;
+            attrSchema.multilineType = attrDesc.multilineType || 'generic';
         }
 
         if (attrDesc.isEnum) {

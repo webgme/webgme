@@ -59,6 +59,50 @@ define([
             return result;
         }
 
+        function enumSelectionChanged(checked) {
+            var multiChecked = self._cbMultiLine.is(':checked');
+
+            if (checked) {
+                if (multiChecked) {
+                    self._cbMultiLine.attr('checked', false);
+                    multiLineSelectionChanged(false);
+                }
+                self._pEnumValues.show();
+                self._pRange.hide();
+                self._pRangeMax.val('');
+                self._pRangeMin.val('');
+                self._pRegExp.hide();
+                self._pRegExpValue.val('');
+            } else {
+                self._pEnumValues.hide();
+                self._inputEnumValues.val('');
+                if (self._inputType.val() === 'float' ||
+                    self._inputType.val() === 'integer') {
+                    self._pRange.show();
+                } else if (self._inputType.val() === 'string') {
+                    self._pRegExp.show();
+                }
+            }
+        }
+
+        function multiLineSelectionChanged(checked) {
+            var enumChecked = self._cbEnum.is(':checked');
+
+            if (checked) {
+                if (enumChecked) {
+                    self._cbEnum.attr('checked', false);
+                    enumSelectionChanged(false);
+                }
+                self._pMultiLineSubTypes.show();
+                self._pRegExp.hide();
+                self._pRegExpValue.val('');
+            } else {
+                self._multilineType.val('generic');
+                self._pMultiLineSubTypes.hide();
+                self._pRegExp.show();
+            }
+        }
+
         closeSave = function () {
             var i,
                 len,
@@ -68,9 +112,14 @@ define([
                     type: self._inputType.val(),
                     defaultValue: self._inputDefaultValue.val(),
                     isEnum: self._cbEnum.is(':checked'),
-                    metaReadOnly: self._cbMetaReadOnly.is(':checked')
+                    metaReadOnly: self._cbMetaReadOnly.is(':checked'),
                 },
                 cValue;
+
+            if (self._cbMultiLine.is(':checked')) {
+                attrDesc.multiline = true;
+                attrDesc.multilineType = self._multilineType.val();
+            }
 
             if (attrDesc.isEnum) {
                 attrDesc.enumValues = self._inputEnumValues.val().split('\n');
@@ -163,6 +212,10 @@ define([
                 self._pEnumValues.show();
             }
             self._pDefaultValueBoolean.hide();
+            self._pMultiLine.hide();
+            if (self._cbMultiLine.is(':checked')) {
+                self._pMultiLineSubTypes.hide();
+            }
 
             switch (newType) {
                 case 'integer':
@@ -191,6 +244,10 @@ define([
                 default:
                     self._pRegExp.show();
                     self._pRange.hide();
+                    self._pMultiLine.show();
+                    if (self._cbMultiLine.is(':checked')) {
+                        self._pMultiLineSubTypes.show();
+                    }
                     break;
             }
         };
@@ -208,6 +265,12 @@ define([
         this._el = this._dialog.find('.modal-body').first();
         this._cbEnum = this._el.find('#cbEnum').first();
         this._pEnum = this._el.find('#pEnum').first();
+        this._cbMultiLine = this._el.find('#cbMultiLine').first();
+
+        this._pMultiLine = this._el.find('#pMultiLine').first();
+        this._pMultiLineSubTypes = this._el.find('#pMultiLineSubTypes').first();
+        this._pMultiLineSubTypes.hide();
+        this._multilineType = this._el.find('#multilineType').first();
 
         this._pEnumValues = this._el.find('#pEnumValues').first();
         this._pEnumValues.hide();
@@ -280,25 +343,11 @@ define([
 
         //'Enumeration' checkbox check change
         this._cbEnum.on('change', null, function () {
-            var checked = $(this).is(':checked');
+            enumSelectionChanged($(this).is(':checked'));
+        });
 
-            if (checked) {
-                self._pEnumValues.show();
-                self._pRange.hide();
-                self._pRangeMax.val('');
-                self._pRangeMin.val('');
-                self._pRegExp.hide();
-                self._pRegExpValue.val('');
-            } else {
-                self._pEnumValues.hide();
-                self._inputEnumValues.val('');
-                if (self._inputType.val() === 'float' ||
-                    self._inputType.val() === 'integer') {
-                    self._pRange.show();
-                } else if (self._inputType.val() === 'string') {
-                    self._pRegExp.show();
-                }
-            }
+        this._cbMultiLine.on('change', null, function () {
+            multiLineSelectionChanged($(this).is(':checked'));
         });
 
         //'type' checkbox check change
@@ -340,6 +389,7 @@ define([
             //boolean type
             this._pDefaultValue.hide();
             this._pEnum.hide();
+            this._pMultiLine.hide();
             this._pDefaultValueBoolean.show();
             this._pRange.hide();
             this._pRegExp.hide();
@@ -349,6 +399,7 @@ define([
         } else if (attributeDesc.type === ASSET_TYPE) {
             this._pDefaultValue.hide();
             this._pEnum.hide();
+            this._pMultiLine.hide();
             this._pRange.hide();
             this._pRegExp.hide();
         } else {
@@ -356,7 +407,7 @@ define([
             if (attributeDesc.isEnum) {
                 this._cbEnum.attr('checked', true);
                 this._inputEnumValues.val(attributeDesc.enumValues.join('\n'));
-                this._pEnumValues.show();
+                enumSelectionChanged(true);
             }
 
             if (attributeDesc.type === 'string') {
@@ -364,6 +415,12 @@ define([
                 this._pRegExp.show();
                 if (attributeDesc.regexp) {
                     this._pRegExpValue.val(attributeDesc.regexp);
+                }
+
+                if (attributeDesc.multiline) {
+                    this._cbMultiLine.attr('checked', true);
+                    this._multilineType.val(attributeDesc.multilineType || 'generic');
+                    multiLineSelectionChanged(true);
                 }
             } else {
                 this._pRange.show();
