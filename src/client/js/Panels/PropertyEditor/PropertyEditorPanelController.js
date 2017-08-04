@@ -458,6 +458,12 @@ define(['js/logger',
                     dst[extKey].minValue = range.min;
                     dst[extKey].maxValue = range.max;
                 }
+
+                // Check if the attribute is a multi-line
+                if (commonAttrMeta[key].multiline) {
+                    dst[extKey].multiline = true;
+                    dst[extKey].multilineType = commonAttrMeta[key].multilineType || 'generic';
+                }
             } else if (isRegistry === true) {
                 //is it inherited??? if so, it can be reseted to the inherited value
                 if (this._isResettableRegistry(selectedNodes, keyParts[0])) {

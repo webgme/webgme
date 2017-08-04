@@ -56,6 +56,9 @@ define([
             SpecificWidget = propDesc.widget,
             widget;
 
+        if (propDesc.multiline) {
+            SpecificWidget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
+        }
         if (readOnly && type !== 'boolean') {
             widget = new LabelWidget(propDesc);
         } else if (SpecificWidget) {
