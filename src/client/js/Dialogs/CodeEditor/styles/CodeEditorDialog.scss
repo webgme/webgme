@@ -3,47 +3,40 @@
 */
 
 div.code-editor-dialog {
-  .modal-content {
-    &.info {
+  .modal-dialog {
+
+    width: 90%;
+    height: 90%;
+
+    .modal-content {
+      height: 100%;
+      width: 100%;
+
       .modal-header {
         .header-icon {
+          font-size: 20px;
+          margin-right: 1ex;
+          display: inline-block;
           color: #2e6da4;
         }
-      }
-    }
-    &.warning {
-      .modal-header {
-        .header-icon {
-          color: #f0ad4e;
+        span {
+          font-size: 24px;
         }
       }
-    }
-    .delete-item {
-      text-align: center;
-      font-size: 20px;
-      margin-top: 14px;
-      font-weight: bold;
-    }
-    .modal-header {
-      .header-icon {
-        font-size: 20px;
-        margin-right: 1ex;
-        display: inline-block;
-        color: #d9534f;
-      }
-      span {
-        font-size: 24px;
-      }
-    }
-  }
 
-  .modal-footer {
-    form {
-      .do-not-show {
-        display: none;
+      .modal-body {
+        max-height: none;
+        height: 85%;
+        .CodeMirror {
+          height: 100%;
+        }
       }
-      label {
-        font-weight: lighter;
+      .modal-footer {
+        form {
+          label {
+            font-weight: lighter;
+          }
+        }
       }
     }
   }

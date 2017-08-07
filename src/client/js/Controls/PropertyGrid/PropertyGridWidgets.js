@@ -15,6 +15,7 @@ define([], function () {
         META_TYPE_WIDGET: 'META_TYPE_WIDGET',
         MULTI_SELECT_WIDGET: 'MULTI_SELECT_WIDGET',
         COLOR_PICKER: 'COLOR_PICKER',
-        SVG_SELECT: 'SVG_SELECT'
+        SVG_SELECT: 'SVG_SELECT',
+        MULTI_LINE: 'MULTI_LINE'
     };
 });

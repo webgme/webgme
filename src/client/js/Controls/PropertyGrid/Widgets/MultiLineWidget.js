@@ -12,24 +12,19 @@ define([
     'use strict';
 
     var MultiLineWidget,
-        LABEL_BASE = $('<span/>', {}),
-        BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-mini btn-dialog-open">...</a>');
+        BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-link btn-sm">edit content</a>');
 
     MultiLineWidget = function (propertyDesc) {
         var self = this;
 
-        WidgetBase.call(this, propertyDesc);
-
-        this.__label = LABEL_BASE.clone();
-        this.el.append(this.__label);
-
-        this.__clipboard = propertyDesc.clipboard;
-
-        if (this.__clipboard === true) {
-            new Clipboard(this.__label[0]);
-            this.__label.attr('title', 'Copy to clipboard');
-            this.__label.css('cursor', 'copy');
+        function saving(oked, value) {
+            if (oked) {
+                self.setValue(value);
+            }
+            self.fireFinishChange();
         }
+
+        WidgetBase.call(this, propertyDesc);
 
         this.__btnDialogOpen = BTN_DIALOG_OPEN_BASE.clone();
         this.el.append(this.__btnDialogOpen);
@@ -40,6 +35,8 @@ define([
             e.stopPropagation();
             e.preventDefault();
 
+            propertyDesc.onHideFn = saving;
+
             dialog.show(propertyDesc);
         });
 
@@ -49,20 +46,9 @@ define([
     MultiLineWidget.prototype = Object.create(WidgetBase.prototype);
     MultiLineWidget.prototype.constructor = MultiLineWidget;
 
-    MultiLineWidget.prototype.updateDisplay = function () {
-        if (this.useDisplayedValue(this.propertyValue)) {
-            this.__label.text(this.displayedValue || this.propertyValue);
-        } else {
-            this.__label.text(this.propertyValue);
-        }
-
-        if (this.__clipboard === true) {
-            this.__label.attr('data-clipboard-text', this.propertyValue);
-        } else {
-            this.__label.attr('title', this.propertyValue);
-        }
-        return WidgetBase.prototype.updateDisplay.call(this);
-    };
+    // MultiLineWidget.prototype.updateDisplay = function () {
+    //     return WidgetBase.prototype.updateDisplay.call(this);
+    // };
 
     MultiLineWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);

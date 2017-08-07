@@ -21,6 +21,7 @@ define([
     'js/Controls/PropertyGrid/Widgets/MetaTypeWidget',
     'js/Controls/PropertyGrid/Widgets/MultiSelectWidget',
     'js/Controls/PropertyGrid/Widgets/SvgSelectWidget',
+    'js/Controls/PropertyGrid/Widgets/MultiLineWidget',
     './PropertyGridWidgets'
 ], function (StringWidget,
              NumberBoxWidget,
@@ -38,6 +39,7 @@ define([
              MetaTypeWidget,
              MultiSelectWidget,
              SvgSelectWidget,
+             MultiLineWidget,
              PROPERTY_GRID_WIDGETS) {
 
     'use strict';
@@ -57,7 +59,7 @@ define([
             widget;
 
         if (propDesc.multiline) {
-            SpecificWidget = PROPERTY_GRID_WIDGETS.DIALOG_WIDGET;
+            SpecificWidget = PROPERTY_GRID_WIDGETS.MULTI_LINE;
         }
         if (readOnly && type !== 'boolean') {
             widget = new LabelWidget(propDesc);
@@ -80,6 +82,9 @@ define([
                     break;
                 case PROPERTY_GRID_WIDGETS.SVG_SELECT:
                     widget = new SvgSelectWidget(propDesc);
+                    break;
+                case PROPERTY_GRID_WIDGETS.MULTI_LINE:
+                    widget = new MultiLineWidget(propDesc);
                     break;
                 default:
                     widget = new SpecificWidget(propDesc);

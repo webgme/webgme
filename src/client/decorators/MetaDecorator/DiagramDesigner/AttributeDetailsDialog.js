@@ -8,8 +8,9 @@ define([
     'js/util',
     'common/regexp',
     'text!./templates/AttributeDetailsDialog.html',
+    'js/Dialogs/CodeEditor/constants',
     'css!./styles/AttributeDetailsDialog.css'
-], function (util, REGEXP, attributeDetailsDialogTemplate) {
+], function (util, REGEXP, attributeDetailsDialogTemplate, MODE_CONSTANTS) {
 
     'use strict';
 
@@ -97,7 +98,7 @@ define([
                 self._pRegExp.hide();
                 self._pRegExpValue.val('');
             } else {
-                self._multilineType.val('generic');
+                self._multilineType.val(MODE_CONSTANTS.MODE.generic);
                 self._pMultiLineSubTypes.hide();
                 self._pRegExp.show();
             }
@@ -118,7 +119,7 @@ define([
 
             if (self._cbMultiLine.is(':checked')) {
                 attrDesc.multiline = true;
-                attrDesc.multilineType = self._multilineType.val();
+                attrDesc.multilineType = MODE_CONSTANTS.MODE[self._multilineType.val()] || MODE_CONSTANTS.MODE.generic;
             }
 
             if (attrDesc.isEnum) {
@@ -419,7 +420,15 @@ define([
 
                 if (attributeDesc.multiline) {
                     this._cbMultiLine.attr('checked', true);
-                    this._multilineType.val(attributeDesc.multilineType || 'generic');
+
+                    this._multilineType.val(MODE_CONSTANTS.MODE.generic);
+                    for (var mode in MODE_CONSTANTS.MODE) {
+                        if (attributeDesc.multilineType === MODE_CONSTANTS.MODE[mode]) {
+                            this._multilineType.val(mode);
+                            break;
+                        }
+                    }
+
                     multiLineSelectionChanged(true);
                 }
             } else {
