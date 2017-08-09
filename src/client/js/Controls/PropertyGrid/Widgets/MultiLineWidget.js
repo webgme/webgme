@@ -26,6 +26,7 @@ define([
 
         WidgetBase.call(this, propertyDesc);
 
+        this._readOnly = false;
         this.__btnDialogOpen = BTN_DIALOG_OPEN_BASE.clone();
         this.el.append(this.__btnDialogOpen);
 
@@ -36,6 +37,7 @@ define([
             e.preventDefault();
 
             propertyDesc.onHideFn = saving;
+            propertyDesc.readOnly = self._readOnly;
 
             dialog.show(propertyDesc);
         });
@@ -53,13 +55,7 @@ define([
     MultiLineWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
-        if (this.__btnDialogOpen) {
-            if (this._isReadOnly === true) {
-                this.__btnDialogOpen.disable(true);
-            } else {
-                this.__btnDialogOpen.disable(false);
-            }
-        }
+        this._readOnly = isReadOnly;
     };
 
     return MultiLineWidget;

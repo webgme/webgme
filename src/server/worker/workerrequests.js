@@ -1687,6 +1687,78 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             .nodeify(finish);
     }
 
+    /**
+     * Renames the given aspect definition and propagates the change throughout the whole project.
+     * @param {string} webgmeToken
+     * @param {object} parameters
+     * @param {string} parameters.projectId
+     * @param {string} parameters.branchName
+     * @param {string} parameters.nodePath - the starting meta node's path.
+     * @param {'attribute'|'pointer'|'set'|'containment'|'aspect'} parameters.type - the type of the rule
+     * that needs to be removed.
+     * @param {string} parameters.name - the name of the definition.
+     * @param {string} parameters.targetPath - in case of relational rules, there must be a target node.
+     * @param {function} callback
+     */
+    function removeMetaRule(webgmeToken, parameters, callback) {
+        var storage,
+            context,
+            node,
+            finish = function (err, result) {
+                if (err) {
+                    err = err instanceof Error ? err : new Error(err);
+                    logger.error('changeAspectMeta failed with error', err);
+                } else {
+                    logger.debug('changeAspectMeta completed');
+                }
+                storage.close(function (closeErr) {
+                    callback(err || closeErr, result);
+                });
+            };
+
+        getConnectedStorage(webgmeToken)
+            .then(function (storage_) {
+                storage = storage_;
+                return _getCoreAndRootNode(storage, parameters.projectId, parameters.commitHash,
+                    parameters.branchName, parameters.tagName);
+            })
+            .then(function (context_) {
+                context = context_;
+                return context.core.loadByPath(context.rootNode, parameters.nodePath);
+            })
+            .then(function (node_) {
+                node = node_;
+
+                return metaRename.propagateMetaDefinitionRemove(context.core, node, parameters);
+            })
+            .then(function () {
+                var deferred = Q.defer(),
+                    persisted;
+
+                context.core.delAttributeMeta(node, parameters.name);
+
+                persisted = context.core.persist(context.rootNode);
+
+                context.project.makeCommit(
+                    parameters.branchName,
+                    [context.commitObject._id],
+                    persisted.rootHash,
+                    persisted.objects,
+                    'remove meta definition [' + parameters.name + '] of [' + parameters.nodePath + ']',
+                    function (err, saveResult) {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve(saveResult);
+                        }
+                    }
+                );
+
+                return deferred.promise;
+            })
+            .nodeify(finish);
+    }
+
     return {
         executePlugin: executePlugin,
         seedProject: seedProject,
@@ -1706,7 +1778,8 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
         renameConcept: renameConcept,
         changeAttributeMeta: changeAttributeMeta,
         renameMetaPointerTarget: renameMetaPointerTarget,
-        changeAspectMeta: changeAspectMeta
+        changeAspectMeta: changeAspectMeta,
+        removeMetaRule: removeMetaRule
     };
 }
 

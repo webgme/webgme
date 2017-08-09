@@ -52,6 +52,7 @@ module.exports = {
         renameConcept: 'renameConcept',
         changeAttributeMeta: 'changeAttributeMeta',
         renameMetaPointerTarget: 'renameMetaPointerTarget',
-        changeAspectMeta: 'changeAspectMeta'
+        changeAspectMeta: 'changeAspectMeta',
+        removeMetaRule: 'removeMetaRule'
     }
 };

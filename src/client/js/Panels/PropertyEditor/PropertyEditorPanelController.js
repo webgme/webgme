@@ -1145,7 +1145,7 @@ define(['js/logger',
             node,
             isReadOnly = false;
 
-        if (this._client.isProjectReadOnly()) {
+        if (this._client.isProjectReadOnly() || this._client.isCommitReadOnly()) {
             isReadOnly = true;
         } else {
             for (i = 0; i < objectIds.length; i += 1) {

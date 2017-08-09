@@ -40,7 +40,7 @@ define([
     ConfirmDialog.prototype.show = function (params) {
         var self = this,
             codemirrorOptions = {
-                readOnly: this._readOnly,
+                readOnly: params.readOnly,
                 lineNumbers: true,
                 matchBrackets: true,
                 fullscreen: false,
@@ -104,6 +104,11 @@ define([
         this._dialog.modal('show');
 
         this._editor.setValue(params.value);
+
+        if (params.readOnly) {
+            this._okBtn.hide();
+            this._cancelBtn.hide();
+        }
     };
 
     return ConfirmDialog;

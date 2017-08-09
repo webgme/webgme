@@ -80,7 +80,8 @@ define(['js/logger',
                 self._aspect = null;
             }
 
-            if (container && self._client && !self._client.isProjectReadOnly() && self._partBrowserView) {
+            if (container && self._client && !self._client.isProjectReadOnly() &&
+                !self._client.isCommitReadOnly() && self._partBrowserView) {
                 self._partBrowserView.setReadOnly(container.isLibraryElement() || container.isLibraryRoot());
                 self.setReadOnly(container.isLibraryElement() || container.isLibraryRoot());
             }

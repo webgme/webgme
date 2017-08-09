@@ -84,7 +84,8 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE, ST
             RENAME_CONCEPT: 'renameConcept',
             CHANGE_ATTRIBUTE_META: 'changeAttributeMeta',
             RENAME_META_POINTER_TARGET: 'renameMetaPointerTarget',
-            CHANGE_ASPECT_META: 'changeAspectMeta'
+            CHANGE_ASPECT_META: 'changeAspectMeta',
+            REMOVE_META_RULE: 'removeMetaRule'
         }
     };
 });
