@@ -462,6 +462,12 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
                 return;
             }
 
+            if (typeof parameters.targetPath !== 'string') {
+                core.delSet(visited, parameters.name);
+                next(null);
+                return;
+            }
+
             core.loadMembers(visited, parameters.name)
                 .then(function (members) {
                     var i;

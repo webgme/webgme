@@ -17,7 +17,8 @@ define(['js/logger',
     './MetaEditorConstants',
     './MetaDocItem',
     'js/Utils/PreferencesHelper',
-    'js/Controls/AlignMenu'
+    'js/Controls/AlignMenu',
+    'js/Dialogs/Confirm/ConfirmDialog'
 ], function (Logger,
              util,
              CONSTANTS,
@@ -31,13 +32,14 @@ define(['js/logger',
              MetaEditorConstants,
              MetaDocItem,
              PreferencesHelper,
-             AlignMenu) {
+             AlignMenu,
+             ConfirmDialog) {
 
     'use strict';
 
     var MetaEditorControl,
         META_DECORATOR = 'MetaDecorator',
-        DOCUMENT_DECORATOR= 'DocumentDecorator',
+        DOCUMENT_DECORATOR = 'DocumentDecorator',
         WIDGET_NAME = 'DiagramDesigner',
         META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
 
@@ -45,7 +47,7 @@ define(['js/logger',
         var self = this;
 
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:MetaEditor:MetaEditorControl',
-                WebGMEGlobal.gmeConfig.client.log);
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
         this._config = MetaEditorControl.getDefaultConfig();
@@ -857,7 +859,7 @@ define(['js/logger',
                                 connDesc[1] = connTexts;
                             }
 
-                        } else{
+                        } else {
                             connDesc[1] = connTexts;
                         }
                     }
@@ -877,7 +879,7 @@ define(['js/logger',
                                 connDesc[1] = connTexts;
                             }
 
-                        } else{
+                        } else {
                             connDesc[1] = connTexts;
                         }
                     }
@@ -1240,11 +1242,39 @@ define(['js/logger',
     };
 
     MetaEditorControl.prototype._deleteContainmentRelationship = function (containerID, objectID) {
-        var containerNode = this._client.getNode(containerID),
-            objectNode = this._client.getNode(objectID);
+        var self = this,
+            containerNode = this._client.getNode(containerID),
+            objectNode = this._client.getNode(objectID),
+            confirmDialog = new ConfirmDialog();
 
         if (containerNode && objectNode) {
-            this._client.delChildMeta(containerID, objectID);
+            confirmDialog.show({
+                title: 'Propagate Meta containment remoe',
+                question: 'Do you wish to propagate the containment relation removal throughout the project?',
+                okLabel: 'Propagate',
+                cancelLabel: 'Don\'t propagate',
+                onHideFn: function (oked) {
+                    if (oked) {
+                        self._client.workerRequests.removeMetaRule(containerID, undefined, 'containment',
+                            objectID, function (err) {
+                                var errorDialog;
+
+                                if (err) {
+                                    errorDialog = new ConfirmDialog();
+                                    errorDialog.show({
+                                        title: 'Meta containment target removal propagation failed',
+                                        question: err,
+                                        noCancelButton: true
+                                    }, function () {
+                                    });
+                                }
+                            });
+                    } else {
+                        self._client.delChildMeta(containerID, objectID);
+                    }
+                }
+            }, function () {
+            });
         }
     };
 
@@ -1337,26 +1367,61 @@ define(['js/logger',
     };
 
     MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName, isSet) {
-        var sourceNode = this._client.getNode(sourceID),
+        var self = this,
+            sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
-            pointerMetaDescriptor;
+            pointerMetaDescriptor,
+            confirmDialog = new ConfirmDialog(),
+            title = isSet ? 'Propagate Meta set target remove' : 'Propagate Meta pointer target remove',
+            question = isSet ? 'Do you wish to propagate the set target removal throughout the project?' :
+                'Do you wish to propagate the pointer target removal throughout the project?';
 
         //NOTE: this method is called from inside a transaction, don't need to start/complete one
 
         if (sourceNode && targetNode) {
-            this._client.delPointerMetaTarget(sourceID, pointerName, targetID);
-            pointerMetaDescriptor = this._client.getValidTargetItems(sourceID, pointerName);
-            if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
-                if (isSet === false) {
-                    //single pointer
-                    this._client.delPointerMeta(sourceID, pointerName);
-                    this._client.delPointer(sourceID, pointerName);
-                } else {
-                    //pointer list
-                    this._client.delPointerMeta(sourceID, pointerName);
-                    this._client.deleteSet(sourceID, pointerName);
+            confirmDialog.show({
+                title: 'Propagate Meta ' + (isSet ? 'set' : 'pointer') + 'target remove',
+                question: 'Do you wish to propagate the ' + (isSet ? 'set' : 'pointer') +
+                ' target removal throughout the project?',
+                okLabel: 'Propagate',
+                cancelLabel: 'Don\'t propagate',
+                onHideFn: function (oked) {
+                    if (oked) {
+                        self._client.workerRequests.removeMetaRule(sourceID, pointerName, isSet ? 'set' : 'pointer',
+                            targetID, function (err) {
+                                var errorDialog;
+
+                                if (err) {
+                                    errorDialog = new ConfirmDialog();
+                                    errorDialog.show({
+                                        title: 'Meta ' + (isSet ? 'set' : 'pointer') +
+                                        ' target removal propagation failed',
+                                        question: err,
+                                        noCancelButton: true
+                                    }, function () {
+                                    });
+                                }
+                            });
+                    } else {
+                        self._client.startTransaction();
+                        self._client.delPointerMetaTarget(sourceID, pointerName, targetID);
+                        pointerMetaDescriptor = self._client.getValidTargetItems(sourceID, pointerName);
+                        if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
+                            if (isSet === false) {
+                                //single pointer
+                                self._client.delPointerMeta(sourceID, pointerName);
+                                self._client.delPointer(sourceID, pointerName);
+                            } else {
+                                //pointer list
+                                self._client.delPointerMeta(sourceID, pointerName);
+                                self._client.deleteSet(sourceID, pointerName);
+                            }
+                        }
+                        self._client.completeTransaction();
+                    }
                 }
-            }
+            }, function () {
+            });
         }
     };
 
@@ -1503,7 +1568,7 @@ define(['js/logger',
         //FIXME: What does this mean?
         var len = this._filteredOutConnectionDescriptors &&
             this._filteredOutConnectionDescriptors.hasOwnProperty(connType) ?
-                this._filteredOutConnectionDescriptors[connType].length : 0,
+            this._filteredOutConnectionDescriptors[connType].length : 0,
             gmeSrcId,
             gmeDstId,
             connTexts;
@@ -2108,7 +2173,7 @@ define(['js/logger',
                     this._metaAspectMembersPerSheet[this._selectedMetaAspectSet][len]);
 
                 this._metaAspectMemberPatterns[this._metaAspectMembersPerSheet[this._selectedMetaAspectSet][len]] =
-                {children: 0};
+                    {children: 0};
             }
         }
 

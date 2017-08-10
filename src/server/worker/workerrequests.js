@@ -1735,7 +1735,30 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
                 var deferred = Q.defer(),
                     persisted;
 
-                context.core.delAttributeMeta(node, parameters.name);
+                switch (parameters.type) {
+                    case 'attribute':
+                        context.core.delAttributeMeta(node, parameters.name);
+                        break;
+                    case 'pointer':
+                    case 'set':
+                        context.core.delPointerMetaTarget(node, parameters.name, parameters.targetPath);
+                        if (context.core.getValidTargetPaths(node, parameters.name).length === 0) {
+                            context.core.delPointerMeta(node, parameters.name);
+                        }
+                        break;
+                    case 'containment':
+                        context.core.delChildMeta(node, parameters.targetPath);
+                        break;
+                    case 'aspect':
+                        if (typeof parameters.targetPath === 'string') {
+                            context.core.delAspectMetaTarget(node, parameters.name, parameters.targetPath);
+                        }
+
+                        if (typeof  parameters.targetPath !== 'string' ||
+                            context.core.getValidAspectTargetPaths(node, parameters.name).length === 0) {
+                            context.core.delAspectMeta(node, parameters.name)
+                        }
+                }
 
                 persisted = context.core.persist(context.rootNode);
 
