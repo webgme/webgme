@@ -125,10 +125,10 @@ describe('core', function () {
                 'getChildDefinitionInfo', 'getValidTargetPaths', 'getOwnValidTargetPaths',
                 'isValidAspectMemberOf', 'moveAspectMetaTarget', 'movePointerMetaTarget',
                 'renameAttributeMeta', 'moveMember', 'getOwnValidPointerNames', 'getOwnValidSetNames',
-                'getValidAspectTargetPaths', 'getOwnValidAspectTargetPaths'
+                'getValidAspectTargetPaths', 'getOwnValidAspectTargetPaths', 'isMetaReadOnlyAttribute'
             ];
 
-        // console.log(_.difference(functions,Matches));
+        console.log(_.difference(functions, Matches));
         expect(functions).to.have.members(Matches);
         console.error(Matches.length);
 
@@ -4820,4 +4820,29 @@ describe('core', function () {
             expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
+
+    it('should throw @isMetaReadOnlyAttribute if node is not valid', function () {
+        var myError;
+
+        try {
+            core.isMetaReadOnlyAttribute(null, '');
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
+    it('should throw @isMetaReadOnlyAttribute if attribute name tpe is invalid', function () {
+        var myError;
+
+        try {
+            core.isMetaReadOnlyAttribute(rootNode, 42);
+        } catch (e) {
+            myError = e;
+        } finally {
+            expect(myError.name).to.eql('CoreIllegalArgumentError');
+        }
+    });
+
 });

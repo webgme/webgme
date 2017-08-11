@@ -1754,9 +1754,8 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
                             context.core.delAspectMetaTarget(node, parameters.name, parameters.targetPath);
                         }
 
-                        if (typeof  parameters.targetPath !== 'string' ||
-                            context.core.getValidAspectTargetPaths(node, parameters.name).length === 0) {
-                            context.core.delAspectMeta(node, parameters.name)
+                        if (typeof  parameters.targetPath !== 'string') {
+                            context.core.delAspectMeta(node, parameters.name);
                         }
                 }
 
