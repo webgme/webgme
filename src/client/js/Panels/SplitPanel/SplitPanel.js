@@ -17,7 +17,7 @@ define([
     var SPLIT_PANEL_CLASS = 'split-panel',
         PANEL_CONTAINER_CLASS = 'split-panel-panel-container',
         PANEL_ID_DATA_KEY = 'SPLIT_PANEL_ID',
-        SPLITTER_ID_DATA_KEY = 'SPLIT_PANEL_SPILITTER_ID',
+        SPLITTER_ID_DATA_KEY = 'SPLIT_PANEL_SPLITTER_ID',
         SPLITTER_CLASS = 'splitter',
         SPLITTER_SIZE = 4,
         SPLITTER_RESIZE_CLASS = 'resize',
@@ -38,6 +38,7 @@ define([
         this._panelIdCounter = 1;
         this._activePanelId = null;
 
+        this._maximized = false;
         /**
          *
          * @example
@@ -257,7 +258,6 @@ define([
             });
         }
 
-
         this._activePanelId = newPanelId;
         WebGMEGlobal.PanelManager.setActivePanel(null);
         // Awaiting a call to updateActivePanel
@@ -387,29 +387,29 @@ define([
     SplitPanel.prototype._getNewCurrentSplitter = function (p) {
         var MARGIN = 2,
             top = p.splitters.top && {
-                    x1: this._splitters[p.splitters.top].x1,
-                    x2: this._splitters[p.splitters.top].x2,
-                    y: this._splitters[p.splitters.top].y1,
-                    id: p.splitters.top
-                },
+                x1: this._splitters[p.splitters.top].x1,
+                x2: this._splitters[p.splitters.top].x2,
+                y: this._splitters[p.splitters.top].y1,
+                id: p.splitters.top
+            },
             bottom = p.splitters.bottom && {
-                    x1: this._splitters[p.splitters.bottom].x1,
-                    x2: this._splitters[p.splitters.bottom].x2,
-                    y: this._splitters[p.splitters.bottom].y1,
-                    id: p.splitters.bottom
-                },
+                x1: this._splitters[p.splitters.bottom].x1,
+                x2: this._splitters[p.splitters.bottom].x2,
+                y: this._splitters[p.splitters.bottom].y1,
+                id: p.splitters.bottom
+            },
             left = p.splitters.left && {
-                    y1: this._splitters[p.splitters.left].y1,
-                    y2: this._splitters[p.splitters.left].y2,
-                    x: this._splitters[p.splitters.left].x1,
-                    id: p.splitters.left
-                },
+                y1: this._splitters[p.splitters.left].y1,
+                y2: this._splitters[p.splitters.left].y2,
+                x: this._splitters[p.splitters.left].x1,
+                id: p.splitters.left
+            },
             right = p.splitters.right && {
-                    y1: this._splitters[p.splitters.right].y1,
-                    y2: this._splitters[p.splitters.right].y2,
-                    x: this._splitters[p.splitters.right].x,
-                    id: p.splitters.right
-                },
+                y1: this._splitters[p.splitters.right].y1,
+                y2: this._splitters[p.splitters.right].y2,
+                x: this._splitters[p.splitters.right].x,
+                id: p.splitters.right
+            },
             candidate;
 
         function eq(a, b) {
@@ -434,7 +434,7 @@ define([
                         //------------------ bottom y
                         return vertical.id;
                     }
-                } else if (eq(top.y, vertical.y1)){
+                } else if (eq(top.y, vertical.y1)) {
                     return vertical.id;
                 }
             } else if (bottom) {
@@ -465,7 +465,7 @@ define([
                         //   |          |
                         return horizontal.id;
                     }
-                } else if (eq(left.x, horizontal.x1)){
+                } else if (eq(left.x, horizontal.x1)) {
                     return horizontal.id;
                 }
             } else if (right) {
@@ -572,7 +572,7 @@ define([
                 panelPos.top : newVertPos[splitterId].y1;
 
             newVertPos[splitterId].y2 = panelPos.top + panelPos.height > newVertPos[splitterId].y2 ?
-            panelPos.top + panelPos.height : newVertPos[splitterId].y2;
+                panelPos.top + panelPos.height : newVertPos[splitterId].y2;
         }
 
         function updateHorizontalPositions(splitterId, panelPos) {
@@ -581,7 +581,7 @@ define([
                 panelPos.left : newHorzPos[splitterId].x1;
 
             newHorzPos[splitterId].x2 = panelPos.left + panelPos.width > newHorzPos[splitterId].x2 ?
-            panelPos.left + panelPos.width : newHorzPos[splitterId].x2;
+                panelPos.left + panelPos.width : newHorzPos[splitterId].x2;
         }
 
         // Update all panels sizes based on splitter positions.
@@ -721,7 +721,6 @@ define([
         this._splitterResizePos = this._splitters[splitterId].relPos;
         this._splitStartMousePos = this._splitters[splitterId].vertical ? event.pageX : event.pageY;
 
-
         $(document).on('mousemove.SplitPanel', function (event) {
             self._onMouseMove(splitterId, event);
         });
@@ -813,13 +812,16 @@ define([
     // N.B. JQuery does not support event capturing..
     SplitPanel.prototype._attachActivateHandler = function (panelContainer) {
         var self = this,
-            handler = function (/*event*/) {
+            handler = function (event) {
                 var el = $(this),
                     panelId = el.data(PANEL_ID_DATA_KEY);
 
+                if (event.metaKey || event.ctrlKey && panelId === self._activePanelId) {
+                    console.log('maximize!!!');
+                    self._maximize();
+                }
                 self.setActivePanel(panelId);
             };
-
 
         panelContainer.get(0).addEventListener('mousedown', handler, true);
 
@@ -830,6 +832,63 @@ define([
         panelContainer.get(0).removeEventListener('mousedown', handler, true);
 
         return handler;
+    };
+
+    SplitPanel.prototype._maximize = function (setToMax) {
+        var panelIds = Object.keys(this._panels),
+            splitterIds = Object.keys(this._splitters),
+            i;
+
+        if (this._maximized === false) {
+            this._maximized = true;
+            this._storedPanels = this._panels;
+            this._panels = {};
+            this._panels[this._activePanelId] = {
+                eventHandler: this._storedPanels[this._activePanelId].eventHandler,
+                instance: this._storedPanels[this._activePanelId].instance,
+                panelContainer: this._storedPanels[this._activePanelId].panelContainer,
+                splitters: {
+                    top: null,
+                    left: null,
+                    bottom: null,
+                    right: null
+                },
+                currentSplitter: null
+            };
+
+            for (i = 0; i < splitterIds.length; i += 1) {
+                $(this._splitters[splitterIds[i]].el).hide();
+            }
+            this._storedSplitters = this._splitters;
+            this._splitters = {};
+
+            for (i = 0; i < panelIds.length; i += 1) {
+                if (panelIds[i] !== this._activePanelId) {
+                    this._storedPanels[panelIds[i]].panelContainer.hide();
+                }
+            }
+        } else {
+            this._maximized = false;
+
+            panelIds = Object.keys(this._storedPanels);
+            splitterIds = Object.keys(this._storedSplitters);
+            this._panels = this._storedPanels;
+            delete this._storedPanels;
+            this._splitters = this._storedSplitters;
+            delete this._storedSplitters;
+
+            for (i = 0; i < splitterIds.length; i += 1) {
+                $(this._splitters[splitterIds[i]].el).show();
+            }
+
+            for (i = 0; i < panelIds.length; i += 1) {
+                if (panelIds[i] !== this._activePanelId) {
+                    this._panels[panelIds[i]].panelContainer.show();
+                }
+            }
+        }
+
+        this._updateUI();
     };
 
     return SplitPanel;
