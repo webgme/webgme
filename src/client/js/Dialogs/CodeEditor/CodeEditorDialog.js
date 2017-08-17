@@ -11,6 +11,7 @@ define([
     'codemirror',
     'text!./templates/CodeEditorDialog.html',
     './constants',
+    'common/Constants',
     'css!./styles/CodeEditorDialog.css',
     'codemirror/mode/clike/clike',
     'codemirror/mode/css/css',
@@ -26,10 +27,10 @@ define([
     'codemirror/mode/python/python',
     'codemirror/mode/ttcn/ttcn',
     'codemirror/mode/yaml/yaml'
-], function (CodeMirror, dialogTemplate, CONSTANTS) {
+], function (CodeMirror, dialogTemplate, CONSTANTS, COMMON) {
     'use strict';
 
-    function ConfirmDialog() {
+    function CodeEditorDialog() {
         this._dialog = $(dialogTemplate);
         this._icon = this._dialog.find('.header-icon');
         this._contentDiv = this._dialog.find('.modal-content');
@@ -37,7 +38,7 @@ define([
         this._cancelBtn = this._dialog.find('.btn-cancel');
     }
 
-    ConfirmDialog.prototype.show = function (params) {
+    CodeEditorDialog.prototype.show = function (params) {
         var self = this,
             codemirrorOptions = {
                 readOnly: params.readOnly,
@@ -47,8 +48,8 @@ define([
             },
             oked = false;
 
-        if (params.multilineType && params.multilinetype !== CONSTANTS.MODE.generic) {
-            codemirrorOptions.mode = params.multilineType;
+        if (params.multilineType && params.multilineType !== COMMON.MULTILINE_MODE.generic) {
+            codemirrorOptions.mode = CONSTANTS.MODE[params.multilineType];
         }
 
         if (params.iconClass) {
@@ -111,5 +112,5 @@ define([
         }
     };
 
-    return ConfirmDialog;
+    return CodeEditorDialog;
 });

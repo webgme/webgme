@@ -427,7 +427,7 @@ define(['js/logger',
 
             if (isAttribute === true) {
 
-                if (this._isMetaReadOnlyAttribute(selectedNodes, keyParts[0])) {
+                if (this._isReadonlyAttribute(selectedNodes, keyParts[0])) {
                     dst[extKey].readOnly = true;
                 } else {
                     //is it inherited??? if so, it can be reseted to the inherited value
@@ -837,11 +837,11 @@ define(['js/logger',
         return true;
     };
 
-    PropertyEditorController.prototype._isMetaReadOnlyAttribute = function (selectedNodes, attrName) {
+    PropertyEditorController.prototype._isReadonlyAttribute = function (selectedNodes, attrName) {
         var i;
 
         for (i = 0; i < selectedNodes.length; i += 1) {
-            if (selectedNodes[i].isMetaReadOnlyAttribute(attrName) && selectedNodes[i].isMetaNode() !== true) {
+            if (selectedNodes[i].getAttributeMeta(attrName).readonly && selectedNodes[i].isMetaNode() !== true) {
                 return true;
             }
         }

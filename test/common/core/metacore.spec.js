@@ -590,14 +590,4 @@ describe('meta core', function () {
         expect(core.getValidAspectTargetPaths(defOwner, 'a2')).to.have.members(['/T2']);
     });
 
-    it('should check if attribute is metaReadOnly', function () {
-        var defRoot = core.createNode({}),
-            defOwner = core.createNode({parent: defRoot, relid: 'O'});
-
-        core.setAttributeMeta(defOwner, 'not', {type: 'string'});
-        core.setAttributeMeta(defOwner, 'yes', {type: 'string', metaReadOnly: true});
-
-        expect(core.isMetaReadOnlyAttribute(defOwner, 'not')).to.eql(false);
-        expect(core.isMetaReadOnlyAttribute(defOwner, 'yes')).to.eql(true);
-    });
 });

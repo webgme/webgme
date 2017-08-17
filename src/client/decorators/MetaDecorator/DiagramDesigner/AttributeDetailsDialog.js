@@ -8,9 +8,9 @@ define([
     'js/util',
     'common/regexp',
     'text!./templates/AttributeDetailsDialog.html',
-    'js/Dialogs/CodeEditor/constants',
+    'common/Constants',
     'css!./styles/AttributeDetailsDialog.css'
-], function (util, REGEXP, attributeDetailsDialogTemplate, MODE_CONSTANTS) {
+], function (util, REGEXP, attributeDetailsDialogTemplate, CONSTANTS) {
 
     'use strict';
 
@@ -98,7 +98,7 @@ define([
                 self._pRegExp.hide();
                 self._pRegExpValue.val('');
             } else {
-                self._multilineType.val(MODE_CONSTANTS.MODE.generic);
+                self._multilineType.val(CONSTANTS.MULTILINE_MODE.generic);
                 self._pMultiLineSubTypes.hide();
                 self._pRegExp.show();
             }
@@ -113,13 +113,13 @@ define([
                     type: self._inputType.val(),
                     defaultValue: self._inputDefaultValue.val(),
                     isEnum: self._cbEnum.is(':checked'),
-                    metaReadOnly: self._cbMetaReadOnly.is(':checked'),
+                    readonly: self._cbReadonly.is(':checked'),
                 },
                 cValue;
 
             if (self._cbMultiLine.is(':checked')) {
                 attrDesc.multiline = true;
-                attrDesc.multilineType = MODE_CONSTANTS.MODE[self._multilineType.val()] || MODE_CONSTANTS.MODE.generic;
+                attrDesc.multilineType = self._multilineType.val() || CONSTANTS.MULTILINE_MODE.generic;
             }
 
             if (attrDesc.isEnum) {
@@ -266,10 +266,10 @@ define([
         this._el = this._dialog.find('.modal-body').first();
         this._cbEnum = this._el.find('#cbEnum').first();
         this._pEnum = this._el.find('#pEnum').first();
-        this._cbMultiLine = this._el.find('#cbMultiLine').first();
+        this._cbMultiLine = this._el.find('#cbMultiline').first();
 
-        this._pMultiLine = this._el.find('#pMultiLine').first();
-        this._pMultiLineSubTypes = this._el.find('#pMultiLineSubTypes').first();
+        this._pMultiLine = this._el.find('#pMultiline').first();
+        this._pMultiLineSubTypes = this._el.find('#pMultilineSubtypes').first();
         this._pMultiLineSubTypes.hide();
         this._multilineType = this._el.find('#multilineType').first();
 
@@ -289,7 +289,7 @@ define([
 
         this._inputEnumValues = this._el.find('#inputEnumValues').first();
 
-        this._cbMetaReadOnly = this._el.find('#cbMetaReadOnly').first();
+        this._cbReadonly = this._el.find('#cbReadonly').first();
 
         //extended options
         this._pRegExp = this._el.find('#pRegExp');
@@ -383,8 +383,8 @@ define([
         //fill controls based on the currently edited attribute
         this._inputName.val(attributeDesc.name);
         this._inputType.val(attributeDesc.type);
-        if (attributeDesc.metaReadOnly) {
-            this._cbMetaReadOnly.attr('checked', true);
+        if (attributeDesc.readonly) {
+            this._cbReadonly.attr('checked', true);
         }
         if (attributeDesc.type === 'boolean') {
             //boolean type
@@ -421,12 +421,10 @@ define([
                 if (attributeDesc.multiline) {
                     this._cbMultiLine.attr('checked', true);
 
-                    this._multilineType.val(MODE_CONSTANTS.MODE.generic);
-                    for (var mode in MODE_CONSTANTS.MODE) {
-                        if (attributeDesc.multilineType === MODE_CONSTANTS.MODE[mode]) {
-                            this._multilineType.val(mode);
-                            break;
-                        }
+                    if (CONSTANTS.MULTILINE_MODE.hasOwnProperty(attributeDesc.multilineType)) {
+                        this._multilineType.val(attributeDesc.multilineType);
+                    } else {
+                        this._multilineType.val(CONSTANTS.MULTILINE_MODE.generic);
                     }
 
                     multiLineSelectionChanged(true);

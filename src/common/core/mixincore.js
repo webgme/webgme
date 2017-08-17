@@ -655,10 +655,6 @@ define([
         this.getChildDefinitionInfo = function (node, child) {
             return getFirstMatchingRuleInfo(node, undefined, child, self.getOwnValidChildrenPaths, {});
         };
-
-        this.isMetaReadOnlyAttribute = function (node, name) {
-            return (self.getAttributeMeta(node, name) || {}).metaReadOnly === true;
-        };
         //</editor-fold>
 
         //<editor-fold=Added Methods>

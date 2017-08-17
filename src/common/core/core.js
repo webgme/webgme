@@ -4389,23 +4389,6 @@ define([
 
             return core.getValidTargetPaths(node, name);
         };
-
-        /**
-         * Checks if the given attribute is set to be meta read-only.
-         * @param {module:Core~Node} node - the node in question
-         * @param {string} name - the attribute in question
-         *
-         * @return {boolean} Returns true if the valid attribute of the node can only be set at meta level.
-         *
-         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
-         * @throws {CoreAssertError} If some internal error took place inside the core layers.
-         */
-        this.isMetaReadOnlyAttribute = function (node, name) {
-            ensureNode(node, 'node');
-            ensureType(name, 'name', 'string');
-
-            return core.isMetaReadOnlyAttribute(node, name);
-        };
     }
 
     return Core;

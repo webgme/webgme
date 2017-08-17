@@ -11,10 +11,10 @@ define([
 ], function (WidgetBase, Clipboard, CodeEditorDialog) {
     'use strict';
 
-    var MultiLineWidget,
+    var MultilineWidget,
         BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-link btn-sm">edit content</a>');
 
-    MultiLineWidget = function (propertyDesc) {
+    MultilineWidget = function (propertyDesc) {
         var self = this;
 
         function saving(oked, value) {
@@ -45,19 +45,24 @@ define([
         this.updateDisplay();
     };
 
-    MultiLineWidget.prototype = Object.create(WidgetBase.prototype);
-    MultiLineWidget.prototype.constructor = MultiLineWidget;
+    MultilineWidget.prototype = Object.create(WidgetBase.prototype);
+    MultilineWidget.prototype.constructor = MultilineWidget;
 
-    // MultiLineWidget.prototype.updateDisplay = function () {
+    // MultilineWidget.prototype.updateDisplay = function () {
     //     return WidgetBase.prototype.updateDisplay.call(this);
     // };
 
-    MultiLineWidget.prototype.setReadOnly = function (isReadOnly) {
+    MultilineWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         this._readOnly = isReadOnly;
+        if(isReadOnly){
+            this.__btnDialogOpen.text('view content');
+        } else {
+            this.__btnDialogOpen.text('edit content');
+        }
     };
 
-    return MultiLineWidget;
+    return MultilineWidget;
 
 });

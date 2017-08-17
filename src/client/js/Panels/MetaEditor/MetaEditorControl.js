@@ -1249,7 +1249,7 @@ define(['js/logger',
 
         if (containerNode && objectNode) {
             confirmDialog.show({
-                title: 'Propagate Meta containment remoe',
+                title: 'Propagate Meta containment remove',
                 question: 'Do you wish to propagate the containment relation removal throughout the project?',
                 okLabel: 'Propagate',
                 cancelLabel: 'Don\'t propagate',

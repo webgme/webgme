@@ -151,7 +151,7 @@ define([
                     min: attrMeta.min,
                     max: attrMeta.max,
                     regexp: attrMeta.regexp,
-                    metaReadOnly: attrMeta.metaReadOnly
+                    readonly: attrMeta.readonly
                 });
 
                 //we will not let 'name' attribute to be modified as that is used UI-wise
@@ -566,8 +566,8 @@ define([
 
         attrSchema = {type: attrDesc.type, min: attrDesc.min, max: attrDesc.max, regexp: attrDesc.regexp};
 
-        if (attrDesc.metaReadOnly) {
-            attrSchema.metaReadOnly = true;
+        if (attrDesc.readonly) {
+            attrSchema.readonly = true;
         }
 
         if (attrDesc.multiline) {
