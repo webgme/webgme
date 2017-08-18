@@ -22,6 +22,12 @@ div.code-editor-dialog {
         span {
           font-size: 24px;
         }
+        .mode-selector {
+          position: absolute;
+          right: 50px;
+          font-size: 20px;
+          color: #2e6da4;
+        }
       }
 
       .modal-body {

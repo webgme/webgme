@@ -14,6 +14,11 @@ div.code-editor-dialog .modal-dialog {
       color: #2e6da4; }
     div.code-editor-dialog .modal-dialog .modal-content .modal-header span {
       font-size: 24px; }
+    div.code-editor-dialog .modal-dialog .modal-content .modal-header .mode-selector {
+      position: absolute;
+      right: 50px;
+      font-size: 20px;
+      color: #2e6da4; }
     div.code-editor-dialog .modal-dialog .modal-content .modal-body {
       max-height: none;
       height: 85%; }

@@ -98,7 +98,7 @@ define([
                 self._pRegExp.hide();
                 self._pRegExpValue.val('');
             } else {
-                self._multilineType.val(CONSTANTS.MULTILINE_MODE.generic);
+                self._multilineType.val(CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plaintext);
                 self._pMultiLineSubTypes.hide();
                 self._pRegExp.show();
             }
@@ -119,7 +119,7 @@ define([
 
             if (self._cbMultiLine.is(':checked')) {
                 attrDesc.multiline = true;
-                attrDesc.multilineType = self._multilineType.val() || CONSTANTS.MULTILINE_MODE.generic;
+                attrDesc.multilineType = self._multilineType.val() || CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plain;
             }
 
             if (attrDesc.isEnum) {
@@ -421,10 +421,10 @@ define([
                 if (attributeDesc.multiline) {
                     this._cbMultiLine.attr('checked', true);
 
-                    if (CONSTANTS.MULTILINE_MODE.hasOwnProperty(attributeDesc.multilineType)) {
+                    if (CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.hasOwnProperty(attributeDesc.multilineType)) {
                         this._multilineType.val(attributeDesc.multilineType);
                     } else {
-                        this._multilineType.val(CONSTANTS.MULTILINE_MODE.generic);
+                        this._multilineType.val(CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plaintext);
                     }
 
                     multiLineSelectionChanged(true);

@@ -272,6 +272,13 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
 
         for (i = 0; i < names.length; i++) {
             if (validNames.indexOf(names[i]) !== -1) {
+                if (meta.attributes[names[i]].readonly === true && core.getOwnAttribute(node, names[i]) !== undefined &&
+                    core.isMetaNode(node) === false) {
+                    result.messages.push('Read-only attribute "' + names[i] +
+                        '" value has been set for a non-meta node!');
+                    result.hasViolation = true;
+                }
+
                 try {
                     if (!core.isValidAttributeValueOf(node, names[i], core.getAttribute(node, names[i]))) {
                         result.hasViolation = true;

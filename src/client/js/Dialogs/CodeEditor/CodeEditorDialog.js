@@ -48,7 +48,12 @@ define([
             },
             oked = false;
 
-        if (params.multilineType && params.multilineType !== COMMON.MULTILINE_MODE.generic) {
+        // mode selector
+        this._modeSelect = this._dialog.find("#mode_select").first();
+        $(this._modeSelect).val(params.multilineType || COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
+        this._modeSelect.on('change', this.changeMode.bind(this));
+
+        if (params.multilineType && params.multilineType !== COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext) {
             codemirrorOptions.mode = CONSTANTS.MODE[params.multilineType];
         }
 
@@ -110,6 +115,12 @@ define([
             this._okBtn.hide();
             this._cancelBtn.hide();
         }
+    };
+
+    CodeEditorDialog.prototype.changeMode = function (event) {
+        var modeSelect = event.target,
+            mode = modeSelect.options[modeSelect.selectedIndex].textContent;
+        this._editor.setOption('mode', CONSTANTS.MODE[mode]);
     };
 
     return CodeEditorDialog;

@@ -9,22 +9,25 @@ define([], function () {
 
     return {
         MODE: {
-            generic: 'generic',
-            HTML: 'htmlmixed',
-            'C-LIKE': 'clike',
-            CSS: 'css',
-            Erlang: 'erlang',
-            Java: 'text/x-java',
-            JavaScript: 'javascript',
-            Markdown: 'markdown',
-            Mathematica: 'mathematica',
-            Modelica: 'modelica',
-            LaTeX: 'stex',
-            Lua: 'lua',
-            SQL: 'sql',
-            Python: 'python',
-            TTCN: 'ttcn',
-            YAML: 'yaml'
+            plaintext: 'generic',
+            html: 'htmlmixed',
+            c: 'clike',
+            cpp: 'clike',
+            'c#': 'clike',
+            css: 'css',
+            erlang: 'erlang',
+            java: 'text/x-java',
+            javascript: 'javascript',
+            markdown: 'markdown',
+            mathematica: 'mathematica',
+            modelica: 'modelica',
+            tex: 'stex',
+            latex: 'stex',
+            lua: 'lua',
+            sql: 'sql',
+            python: 'python',
+            ttcn: 'ttcn',
+            yaml: 'yaml'
         }
     };
 });
