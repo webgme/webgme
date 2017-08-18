@@ -15,7 +15,6 @@ ul.split-panel-dropdown-list {
   }
 }
 
-
 .split-panel {
   //background-color: #FF0000;
   position: absolute;
@@ -26,6 +25,23 @@ ul.split-panel-dropdown-list {
   .split-panel-panel-container {
     position: absolute;
     overflow: hidden;
+
+    .toolbar {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+
+    }
+    .maximize-btn {
+      position: absolute;
+      top: 7px;
+      right: 5px;
+      font-size: 1.3em;
+      color: #00235b;
+      opacity: 0.75;
+      cursor: pointer;
+    }
   }
 
   .splitter {

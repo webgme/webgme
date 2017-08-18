@@ -20,6 +20,19 @@ ul.split-panel-dropdown-list {
   .split-panel .split-panel-panel-container {
     position: absolute;
     overflow: hidden; }
+    .split-panel .split-panel-panel-container .toolbar {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 1; }
+    .split-panel .split-panel-panel-container .maximize-btn {
+      position: absolute;
+      top: 7px;
+      right: 5px;
+      font-size: 1.3em;
+      color: #00235b;
+      opacity: 0.75;
+      cursor: pointer; }
   .split-panel .splitter {
     z-index: 1000;
     position: absolute;
