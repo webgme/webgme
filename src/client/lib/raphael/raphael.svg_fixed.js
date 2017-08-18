@@ -323,6 +323,7 @@ window.Raphael && window.Raphael.svg && function(R) {
                 if (isEnd) {
                     from = o._.arrows.startdx * stroke || 0;
                     to = R.getTotalLength(attrs.path) - delta * stroke;
+                    to = to < 0 ? 0 : to; // #1358 ensure end-position is not negative
                 } else {
                     from = delta * stroke;
                     to = R.getTotalLength(attrs.path) - (o._.arrows.enddx * stroke || 0);
