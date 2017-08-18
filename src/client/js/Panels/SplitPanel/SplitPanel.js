@@ -9,8 +9,9 @@
 define([
     'common/util/assert',
     'js/PanelBase/PanelBase',
+    './SplitMaximizeButton',
     'css!./styles/SplitPanel.css'
-], function (ASSERT, PanelBase) {
+], function (ASSERT, PanelBase, SplitMaximizeButton) {
 
     'use strict';
 
@@ -112,10 +113,12 @@ define([
         panelContainer.data(PANEL_ID_DATA_KEY, this._activePanelId);
 
         this.$el.append(panelContainer);
+
         this._panels[this._activePanelId] = {
             panelContainer: panelContainer,
             instance: null,
             eventHandler: self._attachActivateHandler(panelContainer),
+            maximizeButton: new SplitMaximizeButton(this._activePanelId, this, panelContainer),
             splitters: {
                 top: null,
                 right: null,
@@ -155,7 +158,7 @@ define([
     SplitPanel.prototype.updateActivePanel = function (panel) {
         var activePanel = this._panels[this._activePanelId];
 
-        activePanel.panelContainer.empty();
+        // activePanel.panelContainer.empty();
         activePanel.instance = panel;
         activePanel.panelContainer.append(panel.$pEl);
         panel.afterAppend();
@@ -185,6 +188,7 @@ define([
             panelContainer: panelContainer,
             instance: null,
             eventHandler: self._attachActivateHandler(panelContainer),
+            maximizeButton: new SplitMaximizeButton(newPanelId, self, panelContainer),
             splitters: {
                 // Initially set splitters to same as panel splitting from.
                 top: this._panels[this._activePanelId].splitters.top,
@@ -334,6 +338,16 @@ define([
             splitterIds = Object.keys(this._splitters),
             i;
 
+        if (this._maximized) {
+            this._maximized = false;
+            this._splitters = this._storedSplitters;
+            delete this._storedSplitters;
+            this._panels = this._storedPanels;
+            delete this._storedPanels;
+            panelIds = Object.keys(this._panels);
+            splitterIds = Object.keys(this._splitters);
+        }
+
         for (i = 0; i < splitterIds.length; i += 1) {
             this._splitters[splitterIds[i]].el.remove();
             delete this._splitters[splitterIds[i]];
@@ -359,6 +373,10 @@ define([
     };
 
     SplitPanel.prototype.getNumberOfPanels = function () {
+        if (this._maximized) {
+            return Object.keys(this._storedPanels).length;
+        }
+
         return Object.keys(this._panels).length;
     };
 
@@ -815,11 +833,6 @@ define([
             handler = function (event) {
                 var el = $(this),
                     panelId = el.data(PANEL_ID_DATA_KEY);
-
-                if (event.metaKey || event.ctrlKey && panelId === self._activePanelId) {
-                    console.log('maximize!!!');
-                    self._maximize();
-                }
                 self.setActivePanel(panelId);
             };
 
@@ -834,7 +847,11 @@ define([
         return handler;
     };
 
-    SplitPanel.prototype._maximize = function (setToMax) {
+    SplitPanel.prototype.isMaximized = function () {
+        return this._maximized;
+    };
+
+    SplitPanel.prototype.maximize = function (setToMax, panelId) {
         var panelIds = Object.keys(this._panels),
             splitterIds = Object.keys(this._splitters),
             i;
@@ -843,10 +860,10 @@ define([
             this._maximized = true;
             this._storedPanels = this._panels;
             this._panels = {};
-            this._panels[this._activePanelId] = {
-                eventHandler: this._storedPanels[this._activePanelId].eventHandler,
-                instance: this._storedPanels[this._activePanelId].instance,
-                panelContainer: this._storedPanels[this._activePanelId].panelContainer,
+            this._panels[panelId] = {
+                eventHandler: this._storedPanels[panelId].eventHandler,
+                instance: this._storedPanels[panelId].instance,
+                panelContainer: this._storedPanels[panelId].panelContainer,
                 splitters: {
                     top: null,
                     left: null,
@@ -863,10 +880,12 @@ define([
             this._splitters = {};
 
             for (i = 0; i < panelIds.length; i += 1) {
-                if (panelIds[i] !== this._activePanelId) {
+                if (panelIds[i] !== panelId) {
                     this._storedPanels[panelIds[i]].panelContainer.hide();
                 }
             }
+
+            this.setActivePanel(panelId);
         } else {
             this._maximized = false;
 
