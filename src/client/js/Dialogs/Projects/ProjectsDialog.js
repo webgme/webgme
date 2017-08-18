@@ -42,6 +42,9 @@ define([
         this._logger.debug('Created');
         this._dontAskOnDelete = false;
         this._openingProject = false;
+
+        this._sortType = null;
+        this._sortReverse = false;
     };
 
     ProjectsDialog.prototype.show = function () {
@@ -279,63 +282,27 @@ define([
         });
 
         this._tableHead.on('click', 'th', function (event) {
-            var elm = $(this),
-                sortedRows,
-                type,
-                reverse = elm.hasClass('reverse-order');
+            var elm = $(this);
 
             event.stopPropagation();
             event.preventDefault();
 
             if (elm.hasClass('title-owner')) {
-                type = 'owner';
+                self._sortType = 'owner';
             } else if (elm.hasClass('title-name')) {
-                type = 'name';
+                self._sortType = 'name';
             } else if (elm.hasClass('title-modified')) {
-                type = 'modified';
+                self._sortType = 'modified';
             } else if (elm.hasClass('title-viewed')) {
-                type = 'viewed';
+                self._sortType = 'viewed';
             } else if (elm.hasClass('title-created')) {
-                type = 'created';
+                self._sortType = 'created';
             } else {
                 return;
             }
 
-            self._tableHead.find('th').removeClass('reverse-order in-order');
-            if (reverse) {
-                elm.addClass('in-order');
-            } else {
-                elm.addClass('reverse-order');
-            }
-
-            sortedRows = self._tableBody.children('tr');
-            sortedRows.sort(function (a, b) {
-                var rowAData = $(a).data(DATA_PROJECT),
-                    rowBData = $(b).data(DATA_PROJECT),
-                    result = 0;
-
-                if (rowAData[type] > rowBData[type]) {
-                    result = 1;
-                } else if (rowAData[type] < rowBData[type]) {
-                    result = -1;
-                }
-
-                if (type === 'modified' || type === 'viewed' || type === 'created') {
-                    result = result * (-1);
-                }
-
-                if (result === 0) {
-                    if (rowAData._id.toUpperCase() > rowBData._id.toUpperCase()) {
-                        result = 1;
-                    } else {
-                        result = -1;
-                    }
-                }
-
-                return reverse ? result * (-1) : result;
-            });
-
-            sortedRows.detach().appendTo(self._tableBody);
+            self._sortReverse = elm.hasClass('reverse-order');
+            self._updateSort(self._sortType, self._sortReverse);
         });
 
         this._tableBody.on('click', 'i.delete-project', function (event) {
@@ -499,7 +466,7 @@ define([
 
             });
 
-            self._updateProjectNameList();
+            self._updateProjectTable();
 
             self._loader.stop();
             self._btnRefresh.find('i').css('opacity', '1');
@@ -519,7 +486,7 @@ define([
         });
     };
 
-    ProjectsDialog.prototype._updateProjectNameList = function () {
+    ProjectsDialog.prototype._updateProjectTable = function () {
         var self = this,
             len = this._projectIds.length,
             i,
@@ -627,6 +594,9 @@ define([
         }
 
         self._updateFilter();
+        if (self._sortType) {
+            self._updateSort(self._sortType, self._sortReverse);
+        }
     };
 
     ProjectsDialog.prototype._updateFilter = function (filter) {
@@ -665,6 +635,48 @@ define([
         } else {
             self._table.removeClass('no-children');
         }
+    };
+
+    ProjectsDialog.prototype._updateSort = function (type, reverse) {
+        var elm = this._tableHead.find('th.title-' + type),
+            sortedRows;
+
+        this._tableHead.find('th').removeClass('reverse-order in-order');
+
+        if (reverse) {
+            elm.addClass('in-order');
+        } else {
+            elm.addClass('reverse-order');
+        }
+
+        sortedRows = this._tableBody.children('tr');
+        sortedRows.sort(function (a, b) {
+            var rowAData = $(a).data(DATA_PROJECT),
+                rowBData = $(b).data(DATA_PROJECT),
+                result = 0;
+
+            if (rowAData[type] > rowBData[type]) {
+                result = 1;
+            } else if (rowAData[type] < rowBData[type]) {
+                result = -1;
+            }
+
+            if (type === 'modified' || type === 'viewed' || type === 'created') {
+                result = result * (-1);
+            }
+
+            if (result === 0) {
+                if (rowAData._id.toUpperCase() > rowBData._id.toUpperCase()) {
+                    result = 1;
+                } else {
+                    result = -1;
+                }
+            }
+
+            return reverse ? result * (-1) : result;
+        });
+
+        sortedRows.detach().appendTo(this._tableBody);
     };
 
     ProjectsDialog.prototype._createProject = function (projectName,
