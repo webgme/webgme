@@ -59,6 +59,9 @@ define(['js/logger',
         //the territory rules
         this._territoryRules = {'': {children: 0}};
 
+        //
+        this._stateChangeTimeoutId = null;
+
         //the current visualizer
         this._visualizer = null;
 
@@ -70,6 +73,15 @@ define(['js/logger',
         this._logger = Logger.create('gme:Panels:PartBrowser:PartBrowserPanelControl',
             WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug('Created');
+
+        function stateChangeUpdate() {
+            clearTimeout(self._stateChangeTimeoutId);
+            self._partBrowserView.showProgressbar();
+            self._stateChangeTimeoutId = setTimeout(function () {
+                self._updateDescriptor(self._getPartDescriptorCollection());
+                self._partBrowserView.hideProgressbar();
+            });
+        }
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObject) {
             self._containerNodeId = activeObject;
@@ -85,7 +97,7 @@ define(['js/logger',
                 self.setReadOnly(container.isLibraryElement() || container.isLibraryRoot());
             }
 
-            self._updateDescriptor(self._getPartDescriptorCollection());
+            stateChangeUpdate();
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (/*model, activeTabId*/) {
@@ -93,20 +105,16 @@ define(['js/logger',
             activeAspect = activeAspect === CONSTANTS.ASPECT_ALL ? null : activeAspect;
             if (self._aspect !== activeAspect) {
                 self._aspect = activeAspect;
-                self._updateDescriptor(self._getPartDescriptorCollection());
+
+                stateChangeUpdate();
             }
-            //else {
-            //    if (self._visualizer === 'SetEditor') {
-            //        //we have to react to all tab change...
-            //        self._updateDescriptor(self._getPartDescriptorCollection());
-            //    }
-            //} //TODO right now we cannot create objects in setEditor so we do not need this functionality
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_VISUALIZER, function (model, activeVisualizer) {
             if (self._visualizer !== activeVisualizer) {
                 self._visualizer = activeVisualizer;
-                self._updateDescriptor(self._getPartDescriptorCollection());
+
+                stateChangeUpdate();
             }
         });
 
@@ -126,7 +134,7 @@ define(['js/logger',
                 containerChanged) {
                 self._shortMetaDescriptor = newShortMetaDescriptor;
                 self._updateLibrarySelector();
-                self._updateDescriptor(self._getPartDescriptorCollection());
+                self._updateDescriptor(self._getPartDescriptorCollection(), true);
             } else {
                 self._updateDecorators();
             }
@@ -172,7 +180,7 @@ define(['js/logger',
         return result;
     };
 
-    PartBrowserControl.prototype._updateDescriptor = function (newDescriptor) {
+    PartBrowserControl.prototype._updateDescriptor = function (newDescriptor, delay) {
         var descriptor = newDescriptor || {},
             keys,
             i,
@@ -229,9 +237,14 @@ define(['js/logger',
         newTerritoryRules = this._getTerritoryPatterns();
         if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
             this._territoryRules = newTerritoryRules;
-            setTimeout(function () {
+            if (delay) {
+                setTimeout(function () {
+                    self._client.updateTerritory(self._guid, self._territoryRules);
+                });
+            } else {
                 self._client.updateTerritory(self._guid, self._territoryRules);
-            }, 0);
+            }
+
         } else {
             this._updateDecorators();
         }
@@ -274,7 +287,7 @@ define(['js/logger',
         for (i = 0; i < metaNodes.length; i += 1) {
             descriptor = this._getPartDescriptor(metaNodes[i].getId());
             if (descriptor) {
-                descriptorCollection[metaNodes[i].getId()] = this._getPartDescriptor(metaNodes[i].getId());
+                descriptorCollection[metaNodes[i].getId()] = descriptor;
                 descriptorCollection[metaNodes[i].getId()].visibility = 'hidden';
             }
         }
@@ -333,7 +346,7 @@ define(['js/logger',
             objDescriptor.namespace = nodeObj.getNamespace();
             objDescriptor.name = nodeObj.getFullyQualifiedName();
         } else {
-            this._logger.error('Node not loaded', nodeId);
+            this._logger.error(new Error('Node not loaded, ' + nodeId + ', when getting part descriptor.'));
         }
 
         return objDescriptor;

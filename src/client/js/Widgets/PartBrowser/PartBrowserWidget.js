@@ -10,10 +10,11 @@ define([
     'js/logger',
     'js/Constants',
     'js/DragDrop/DragSource',
+    'js/Loader/LoaderCircles',
     'js/Toolbar/ToolbarDropDownButton',
     'js/Toolbar/ToolbarRadioButtonGroup',
     'css!./styles/PartBrowserWidget.css'
-], function (Logger, CONSTANTS, dragSource, ToolbarDropDownButton, ToolbarRadioButtonGroup) {
+], function (Logger, CONSTANTS, dragSource, LoaderCircles, ToolbarDropDownButton, ToolbarRadioButtonGroup) {
 
     'use strict';
 
@@ -91,6 +92,8 @@ define([
 
         this._container.append(this._toolbar);
         this._container.append(this._partsContainer);
+        this._loader = new LoaderCircles({containerElement: this._el});
+
         this._el.append(this._container);
 
         // By default only names are listed.
@@ -451,6 +454,18 @@ define([
 
     PartBrowserWidget.prototype.onSelectorChanged = function (newValue) {
         this._logger.error('onSelectorChanged function should be overwritten for proper usage!', newValue);
+    };
+
+    PartBrowserWidget.prototype.showProgressbar = function () {
+        this._loader.start();
+        this._partsContainer.css('opacity', 0.3);
+        this._namelist.css('opacity', 0.3);
+    };
+
+    PartBrowserWidget.prototype.hideProgressbar = function () {
+        this._loader.stop();
+        this._partsContainer.css('opacity', 1);
+        this._namelist.css('opacity', 1);
     };
 
     return PartBrowserWidget;
