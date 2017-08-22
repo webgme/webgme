@@ -53,7 +53,8 @@ define([
          *          bottom: null,
          *          left: null
          *     },
-         *     currentSplitter: 1_2
+         *     currentSplitter: 1_2,
+         *     maximized: false
          *   },
          *   2: {
          *     instance: MetaEditor instance,
@@ -64,7 +65,8 @@ define([
          *          bottom: null,
          *          left: 1_2
          *     },
-         *     currentSplitter: 1_2
+         *     currentSplitter: 1_2,
+         *     maximized: true
          *   }
          * }
          * @private
@@ -340,12 +342,6 @@ define([
 
         if (this._maximized) {
             this._maximized = false;
-            this._splitters = this._storedSplitters;
-            delete this._storedSplitters;
-            this._panels = this._storedPanels;
-            delete this._storedPanels;
-            panelIds = Object.keys(this._panels);
-            splitterIds = Object.keys(this._splitters);
         }
 
         for (i = 0; i < splitterIds.length; i += 1) {
@@ -373,10 +369,6 @@ define([
     };
 
     SplitPanel.prototype.getNumberOfPanels = function () {
-        if (this._maximized) {
-            return Object.keys(this._storedPanels).length;
-        }
-
         return Object.keys(this._panels).length;
     };
 
@@ -670,6 +662,16 @@ define([
                 });
             }
         }
+
+        if (self._maximized) {
+            self._panels[self._activePanelId].panelContainer.css({
+                width: self._width,
+                height: self._height,
+                top: 0,
+                left: 0
+            });
+            self._panels[self._activePanelId].instance.setSize(self._width, self._height);
+        }
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
@@ -858,43 +860,20 @@ define([
 
         if (this._maximized === false) {
             this._maximized = true;
-            this._storedPanels = this._panels;
-            this._panels = {};
-            this._panels[panelId] = {
-                eventHandler: this._storedPanels[panelId].eventHandler,
-                instance: this._storedPanels[panelId].instance,
-                panelContainer: this._storedPanels[panelId].panelContainer,
-                splitters: {
-                    top: null,
-                    left: null,
-                    bottom: null,
-                    right: null
-                },
-                currentSplitter: null
-            };
 
             for (i = 0; i < splitterIds.length; i += 1) {
                 $(this._splitters[splitterIds[i]].el).hide();
             }
-            this._storedSplitters = this._splitters;
-            this._splitters = {};
 
             for (i = 0; i < panelIds.length; i += 1) {
                 if (panelIds[i] !== panelId) {
-                    this._storedPanels[panelIds[i]].panelContainer.hide();
+                    this._panels[panelIds[i]].panelContainer.hide();
                 }
             }
 
             this.setActivePanel(panelId);
         } else {
             this._maximized = false;
-
-            panelIds = Object.keys(this._storedPanels);
-            splitterIds = Object.keys(this._storedSplitters);
-            this._panels = this._storedPanels;
-            delete this._storedPanels;
-            this._splitters = this._storedSplitters;
-            delete this._storedSplitters;
 
             for (i = 0; i < splitterIds.length; i += 1) {
                 $(this._splitters[splitterIds[i]].el).show();
