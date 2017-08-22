@@ -841,7 +841,8 @@ define(['js/logger',
         var i;
 
         for (i = 0; i < selectedNodes.length; i += 1) {
-            if (selectedNodes[i].getAttributeMeta(attrName).readonly && selectedNodes[i].isMetaNode() !== true) {
+            if ((selectedNodes[i].getAttributeMeta(attrName) || {}).readonly &&
+                selectedNodes[i].isMetaNode() !== true) {
                 return true;
             }
         }

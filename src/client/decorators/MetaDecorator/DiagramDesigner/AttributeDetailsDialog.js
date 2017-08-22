@@ -119,7 +119,7 @@ define([
 
             if (self._cbMultiLine.is(':checked')) {
                 attrDesc.multiline = true;
-                attrDesc.multilineType = self._multilineType.val() || CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plain;
+                attrDesc.multilineType = self._multilineType.val() || CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plaintext;
             }
 
             if (attrDesc.isEnum) {

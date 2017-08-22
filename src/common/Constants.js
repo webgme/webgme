@@ -92,7 +92,7 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE, ST
             html: 'html',
             c: 'c',
             cpp: 'cpp',
-            'c#': 'c#',
+            csharp: 'csharp',
             css: 'css',
             erlang: 'erlang',
             java: 'java',

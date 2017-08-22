@@ -13,7 +13,7 @@ define([], function () {
             html: 'htmlmixed',
             c: 'clike',
             cpp: 'clike',
-            'c#': 'clike',
+            csharp: 'clike',
             css: 'css',
             erlang: 'erlang',
             java: 'text/x-java',
