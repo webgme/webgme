@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, $*/
 /*jshint browser: true*/
 /**
  * Provides dialog helpers with backend support for handling libraries.
@@ -9,9 +9,10 @@ define([
     'js/logger',
     'js/Dialogs/Confirm/ConfirmDialog',
     'js/Dialogs/AddOrUpdateLibrary/AddOrUpdateLibraryDialog',
+    'js/Loader/ProgressNotification',
     'common/regexp',
     'common/storage/constants'
-], function (Logger, ConfirmDialog, AddOrUpdateLibraryDialog, REGEXP, CONSTANTS) {
+], function (Logger, ConfirmDialog, AddOrUpdateLibraryDialog, ProgressNotification, REGEXP, CONSTANTS) {
     'use strict';
 
     var LibraryManager = function (client, mainLogger) {
@@ -132,8 +133,7 @@ define([
     LibraryManager.prototype.check = function (name, callback) {
         var client = this._client,
             availableNames = client.getLibraryNames(),
-            libraryInfo,
-            notification;
+            libraryInfo;
 
         if (availableNames.indexOf(name) !== -1) {
             libraryInfo = client.getLibraryInfo(name);
@@ -143,7 +143,7 @@ define([
                         callback(err);
                     } else if (branches[libraryInfo.branchName] &&
                         branches[libraryInfo.branchName] !== libraryInfo.commitHash) {
-                        client.notifyUser({message: 'New version available from [' + name + '] library'});
+                        this._notifyNewLibraryVersion(name);
                         callback(null, true);
                     } else {
                         callback(null, false);
@@ -189,9 +189,8 @@ define([
                         if (self._libraryInfos[libraryName].projectId === event.projectId &&
                             event.branchName === self._libraryInfos[libraryName].branchName &&
                             self._libraryInfos[libraryName].notified === false) {
-                            self._client.notifyUser({
-                                message: 'New version available from [' + libraryName + '] library'
-                            });
+
+                            self._notifyNewLibraryVersion(libraryName);
                             self._libraryInfos[libraryName].notified = true;
                             self._unwatchProject(self._libraryInfos[libraryName].projectId);
                         }
@@ -212,12 +211,79 @@ define([
         if (libraryInfo) {
             client.getBranches(libraryInfo.projectId, function (err, branches) {
                 if (err) {
-                    //TODO log the error
+                    self._logger.error(err);
                 } else if (branches[libraryInfo.branchName] &&
                     branches[libraryInfo.branchName] !== libraryInfo.commitHash) {
-                    client.notifyUser({message: 'New version available from [' + name + '] library'});
+                    self._notifyNewLibraryVersion(name);
                     libraryInfo.notified = true;
                     self._unwatchProject(libraryInfo.projectId);
+                }
+            });
+        }
+    };
+
+    LibraryManager.prototype._notifyNewLibraryVersion = function (libName) {
+        var self = this,
+            projectId = this._client.getActiveProjectId(),
+            branchName = this._client.getActiveBranchName(),
+            note;
+
+        if (this._client.isReadOnly()) {
+            this._client.notifyUser({message: 'New version of [' + libName + '] library available'});
+        } else {
+            note = $.notify({
+                icon: 'glyphicon glyphicon-folder-close',
+                message: 'A new version of the <strong>' + libName + '</strong> library is available for the ' +
+                'current project. Click here to update!'
+            }, {
+                delay: 10000,
+                hideDuration: 0,
+                type: 'info',
+                offset: {
+                    x: 20,
+                    y: 37
+                },
+                mouse_over: 'pause',
+                onClose: function () {
+                    note.$ele.off();
+                }
+            });
+
+            note.$ele.css('cursor', 'pointer');
+
+            note.$ele.on('click', function () {
+                note.close();
+                var progress = ProgressNotification.start('Updating library <strong>' + libName + '</strong>,' +
+                    'please stand by...');
+
+                if (projectId === self._client.getActiveProjectId() &&
+                    branchName === self._client.getActiveBranchName()) {
+                    self._client.workerRequests.updateLibrary(libName, null, function (err/*, res*/) {
+                        if (err) {
+                            clearInterval(progress.intervalId);
+                            progress.note.update({
+                                message: 'Library updated failed with error: ' + err.message,
+                                type: 'danger',
+                                progress: 100
+                            });
+                        } else {
+                            clearInterval(progress.intervalId);
+                            progress.note.update({
+                                message: 'Library updated successfully!',
+                                type: 'success',
+                                progress: 100
+                            });
+
+                            progress.note.close();
+                        }
+                    });
+                } else {
+                    clearInterval(progress.intervalId);
+                    progress.note.update({
+                        message: 'Project and or branch changed before update was invoked.',
+                        type: 'danger',
+                        progress: 100
+                    });
                 }
             });
         }
@@ -241,7 +307,7 @@ define([
             return;
         } else if (projectId === this._currentProjectId && branchName === this._currentBranchName) {
             //Same project and branch -> check if there is any change in the set of libraries.
-            
+
             availableNames = client.getLibraryNames();
 
             //removals
