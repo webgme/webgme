@@ -352,6 +352,9 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         for (i = 0; i < keys.length; i++) {
             if (this._state.nodes[keys[i]]) {
                 parameters.children.push(this._state.nodes[keys[i]].node);
+            } else {
+                this._logger.warn('Child node, ' + keys[i] + ', not loaded at getValidChildrenTypes' +
+                    'Detailed invocation - cardinality constraints will not be enforced properly.');
             }
         }
 
@@ -388,6 +391,9 @@ define(['js/RegistryKeys'], function (REG_KEYS) {
         for (i = 0; i < keys.length; i++) {
             if (this._state.nodes[keys[i]]) {
                 parameters.members.push(this._state.nodes[keys[i]].node);
+            } else {
+                this._logger.warn('Member node, ' + keys[i] + ', not loaded at getValidSetMemberTypes' +
+                    'Detailed invocation - cardinality constraints will not be enforced properly.');
             }
         }
 
