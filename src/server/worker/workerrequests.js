@@ -1233,8 +1233,17 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
             })
             .then(function (context_) {
                 var deferred = Q.defer(),
+                    libs = context_.core.getLibraryNames(context_.rootNode),
                     libraryInfo;
+
                 context = context_;
+
+                if (libs.indexOf(parameters.libraryName) < 0) {
+                    deferred.reject(new Error('No such library "' + parameters.libraryName +
+                        '" among [' + libs.toString() + '].'));
+                    return deferred.promise;
+                }
+
                 if (parameters.blobHash) {
                     _importProjectPackage(blobClient, parameters.blobHash, true)
                         .then(deferred.resolve)
@@ -1254,6 +1263,7 @@ function WorkerRequests(mainLogger, gmeConfig, webgmeUrl) {
                     });
                 } else {
                     // We have to dig out library info from our own project
+
                     libraryInfo = context.core.getLibraryInfo(context.rootNode, parameters.libraryName);
                     if (libraryInfo && libraryInfo.projectId && libraryInfo.branchName) {
                         if (projectId === libraryInfo.projectId) {
