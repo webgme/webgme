@@ -80,7 +80,6 @@ define(['js/logger',
          */
         this._validVisualizerIds = null;
 
-
         //initialize UI
 
         this._initialize();
@@ -110,12 +109,15 @@ define(['js/logger',
             icon: 'gme icon-gme_split-panels',
             menuClass: 'split-panel-dropdown-list',
             clickFn: function () {
+                var maximized = self._splitPanel.isMaximized();
+
                 self._toolbarBtn.clear();
 
                 self._toolbarBtn.addButton({
                     text: 'Split vertically',
                     title: 'Splits the active panel vertically',
                     icon: 'fa fa-columns split-panel-dropdown-icon',
+                    disabled: maximized,
                     clickFn: function () {
                         self._addNewPanel(true);
                     }
@@ -125,6 +127,7 @@ define(['js/logger',
                     text: 'Split horizontally',
                     title: 'Splits the active panel horizontally',
                     icon: 'fa fa-columns fa-rotate-270 split-panel-dropdown-icon',
+                    disabled: maximized,
                     clickFn: function () {
                         self._addNewPanel();
                     }
@@ -136,6 +139,7 @@ define(['js/logger',
                     text: 'Remove active panel',
                     title: 'Removes the active panel',
                     icon: 'fa fa-minus-circle split-panel-dropdown-icon',
+                    disabled: maximized || self._splitPanel.getNumberOfPanels() === 1,
                     clickFn: function () {
                         self._deletePanel();
                     }
@@ -145,6 +149,7 @@ define(['js/logger',
                     text: 'Exit split mode',
                     title: 'Remove all but the active panel',
                     icon: 'fa fa-times-circle split-panel-dropdown-icon',
+                    disabled: self._splitPanel.getNumberOfPanels() === 1,
                     clickFn: function () {
                         self._exitSplitMode();
                     }
