@@ -292,14 +292,38 @@ define([
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype.deleteAspectDescriptor = function (cName) {
         var client = this._control._client,
-            objID = this._metaInfo[CONSTANTS.GME_ID];
+            objID = this._metaInfo[CONSTANTS.GME_ID],
+            confirmDialog = new ConfirmDialog();
 
-        client.startTransaction();
+        confirmDialog.show({
+            title: 'Propagate Meta aspect remove',
+            question: 'Do you wish to propagate the aspect removal throughout the project?',
+            okLabel: 'Propagate',
+            cancelLabel: 'Don\'t propagate',
+            onHideFn: function (oked) {
+                if (oked) {
+                    client.workerRequests.removeMetaRule(objID, cName, 'aspect', undefined, function (err) {
+                        var errorDialog;
 
-        client.delAspectMeta(objID, cName);
-        client.deleteSet(objID, cName);
-
-        client.completeTransaction();
+                        if (err) {
+                            errorDialog = new ConfirmDialog();
+                            errorDialog.show({
+                                title: 'Meta aspect removal propagation failed',
+                                question: err,
+                                noCancelButton: true
+                            }, function () {
+                            });
+                        }
+                    });
+                } else {
+                    client.startTransaction();
+                    client.delAspectMeta(objID, cName);
+                    client.deleteSet(objID, cName);
+                    client.completeTransaction();
+                }
+            }
+        }, function () {
+        });
     };
 
     return MetaDecoratorDiagramDesignerWidgetAspects;

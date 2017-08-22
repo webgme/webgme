@@ -3980,7 +3980,7 @@ define([
             ensureType(oldName, 'oldName', 'string');
             ensureType(newName, 'newName', 'string');
 
-            if(core.getOwnAttribute(node,oldName) === undefined){
+            if (core.getOwnAttribute(node, oldName) === undefined) {
                 throw new CoreIllegalOperationError('Only attributes with own values can be renamed.');
             }
             return core.renameAttribute(node, oldName, newName);
@@ -4001,7 +4001,7 @@ define([
             ensureType(oldName, 'oldName', 'string');
             ensureType(newName, 'newName', 'string');
 
-            if(core.getOwnRegistry(node,oldName) === undefined){
+            if (core.getOwnRegistry(node, oldName) === undefined) {
                 throw new CoreIllegalOperationError('Only registry entries with own values can be renamed.');
             }
 
@@ -4157,17 +4157,50 @@ define([
             return core.getAspectDefinitionInfo(node, name, member);
         };
 
+        /**
+         * Returns the paths of the meta nodes that are valid target members of the given aspect.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the aspec in question.
+         *
+         * @return {string[]} The paths of the meta nodes whose instances could be members of the aspect.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
         this.getValidAspectTargetPaths = function (node, name) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
-            return core.getValidAspectTargetPaths(node, name);
-        }
 
+            if (core.getValidAspectNames(node).indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Not a valid aspect [' + name + '] of the node.');
+            }
+
+            return core.getValidAspectTargetPaths(node, name);
+        };
+
+        /**
+         * Returns the paths of the meta nodes that are valid target members of the given aspect
+         * specifically defined for the node.
+         * @param {module:Core~Node} node - the node in question.
+         * @param {string} name - the name of the aspec in question.
+         *
+         * @return {string[]} The paths of the meta nodes whose instances could be members of the aspect.
+         *
+         * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
+         * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
+         * @throws {CoreAssertError} If some internal error took place inside the core layers.
+         */
         this.getOwnValidAspectTargetPaths = function (node, name) {
             ensureNode(node, 'node');
             ensureType(name, 'name', 'string');
+
+            if (core.getValidAspectNames(node).indexOf(name) === -1) {
+                throw new CoreIllegalOperationError('Not a valid aspect [' + name + '] of the node.');
+            }
+
             return core.getOwnValidAspectTargetPaths(node, name);
-        }
+        };
 
         /**
          * Returns the meta node that introduces the given aspect.
@@ -4270,7 +4303,6 @@ define([
             if (core.getOwnValidTargetPaths(node, oldName).indexOf(core.getPath(target)) === -1) {
                 throw new CoreIllegalOperationError('Not a valid target of [' + oldName + '] defined for the node.');
             }
-            ;
 
             return core.movePointerMetaTarget(node, target, oldName, newName);
         };

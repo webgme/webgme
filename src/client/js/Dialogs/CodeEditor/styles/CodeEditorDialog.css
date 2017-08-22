@@ -1,0 +1,28 @@
+/**
+* @author kecso / https://github.com/kecso
+*/
+div.code-editor-dialog .modal-dialog {
+  width: 90%;
+  height: 90%; }
+  div.code-editor-dialog .modal-dialog .modal-content {
+    height: 100%;
+    width: 100%; }
+    div.code-editor-dialog .modal-dialog .modal-content .modal-header .header-icon {
+      font-size: 20px;
+      margin-right: 1ex;
+      display: inline-block;
+      color: #2e6da4; }
+    div.code-editor-dialog .modal-dialog .modal-content .modal-header span {
+      font-size: 24px; }
+    div.code-editor-dialog .modal-dialog .modal-content .modal-header .mode-selector {
+      position: absolute;
+      right: 50px;
+      font-size: 20px;
+      color: #2e6da4; }
+    div.code-editor-dialog .modal-dialog .modal-content .modal-body {
+      max-height: none;
+      height: 85%; }
+      div.code-editor-dialog .modal-dialog .modal-content .modal-body .CodeMirror {
+        height: 100%; }
+    div.code-editor-dialog .modal-dialog .modal-content .modal-footer form label {
+      font-weight: lighter; }

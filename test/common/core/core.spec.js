@@ -128,7 +128,7 @@ describe('core', function () {
                 'getValidAspectTargetPaths', 'getOwnValidAspectTargetPaths'
             ];
 
-        // console.log(_.difference(functions,Matches));
+        console.log(_.difference(functions, Matches));
         expect(functions).to.have.members(Matches);
         console.error(Matches.length);
 
@@ -4820,4 +4820,5 @@ describe('core', function () {
             expect(myError.name).to.eql('CoreIllegalOperationError');
         }
     });
+
 });

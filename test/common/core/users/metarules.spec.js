@@ -394,6 +394,30 @@ describe('Meta Rules', function () {
             .nodeify(done);
     });
 
+    it('should fail when read-only attribute is overriden', function (done) {
+        var nodePath = '/2048951527',
+            node,
+            base;
+
+        testFixture.loadNode(ir.core, ir.rootNode, nodePath)
+            .then(function (_node) {
+                base = ir.core.getBase(_node);
+                node = _node;
+                ir.core.setAttribute(node, 'Desc', 'should not be changed');
+                ir.core.setAttributeMeta(base, 'Desc', {type: 'string', readonly: true});
+
+                return checkNode(ir.core, node);
+            })
+            .then(function (result) {
+                expect(result.hasViolation).to.equal(true);
+                expect(result.message).to.contain('Read-only attribute');
+
+                ir.core.setAttributeMeta(base, 'Desc', {type: 'string'});
+                ir.core.delAttribute(node, 'Desc');
+            })
+            .nodeify(done);
+    });
+
     describe('metaConsistencyCheck', function () {
         function getContext() {
             var result = {

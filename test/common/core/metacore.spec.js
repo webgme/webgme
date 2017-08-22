@@ -573,4 +573,21 @@ describe('meta core', function () {
         expect(core.isValidAspectMemberOf(defTarget, defOwner, 'old')).to.eql(false);
         expect(core.isValidAspectMemberOf(defTarget, defOwner, 'new')).to.eql(true);
     });
+
+    it('should return the paths of valid aspect targets', function () {
+        var defRoot = core.createNode({}),
+            defOwner = core.createNode({parent: defRoot, relid: 'O'}),
+            defTarget1 = core.createNode({parent: defRoot, relid: 'T1'}),
+            defTarget2 = core.createNode({parent: defRoot, relid: 'T2'});
+
+        core.setAspectMetaTarget(defOwner, 'all', defTarget1);
+        core.setAspectMetaTarget(defOwner, 'all', defTarget2);
+        core.setAspectMetaTarget(defOwner, 'a1', defTarget1);
+        core.setAspectMetaTarget(defOwner, 'a2', defTarget2);
+
+        expect(core.getValidAspectTargetPaths(defOwner, 'all')).to.have.members(['/T1', '/T2']);
+        expect(core.getValidAspectTargetPaths(defOwner, 'a1')).to.have.members(['/T1']);
+        expect(core.getValidAspectTargetPaths(defOwner, 'a2')).to.have.members(['/T2']);
+    });
+
 });

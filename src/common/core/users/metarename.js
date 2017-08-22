@@ -370,10 +370,169 @@ define(['q', 'common/core/constants'], function (Q, CONSTANTS) {
         return deferred.promise.nodeify(callback);
     }
 
+    function propagateMetaDefinitionRemove(core, node, parameters, callback) {
+        var deferred = Q.defer(),
+            nodePath = core.getPath(node),
+            visitFn;
+
+        function visitForAttribute(visited, next) {
+            if (core.getValidAttributeNames(visited).indexOf(parameters.name) === -1 ||
+                core.getOwnAttributeNames(visited).indexOf(parameters.name) === -1) {
+                next(null);
+                return;
+            }
+
+            if (core.getPath(core.getAttributeDefinitionOwner(visited, parameters.name)) === nodePath) {
+                core.delAttribute(visited, parameters.name);
+            }
+            next(null);
+        }
+
+        function visitForPointer(visited, next) {
+            var definitionInfo,
+                deferred = Q.defer();
+
+            if (core.getValidPointerNames(visited).indexOf(parameters.name) === -1 ||
+                core.getOwnPointerPath(visited, parameters.name) === undefined) {
+                return Q.resolve(null).nodeify(next);
+            }
+
+            core.loadPointer(visited, parameters.name)
+                .then(function (target) {
+                    if (target !== null) {
+                        definitionInfo = core.getPointerDefinitionInfo(visited, parameters.name, target);
+
+                        if (definitionInfo.ownerPath === nodePath &&
+                            definitionInfo.targetPath === parameters.targetPath) {
+                            core.deletePointer(visited, parameters.name);
+                        }
+                    } else if (core.getPath(visited) === nodePath) {
+                        core.deletePointer(visited, parameters.name);
+                    }
+                    deferred.resolve(null);
+                })
+                .catch(deferred.reject);
+
+            return deferred.promise.nodeify(next);
+        }
+
+        function visitForSet(visited, next) {
+            var definitionInfo,
+                deferred = Q.defer();
+
+            if (core.getValidSetNames(visited).indexOf(parameters.name) === -1 ||
+                core.getOwnSetNames(visited).indexOf(parameters.name) === -1) {
+                return Q.resolve(null).nodeify(next);
+            }
+
+            core.loadOwnMembers(visited, parameters.name)
+                .then(function (members) {
+                    var i,
+                        ownMemberPaths = core.getOwnMemberPaths(visited, parameters.name);
+
+                    for (i = 0; i < members.length; i += 1) {
+                        if (ownMemberPaths.indexOf(core.getPath(members[i])) !== -1) {
+                            definitionInfo = core.getSetDefinitionInfo(visited, parameters.name, members[i]);
+                            if (definitionInfo.ownerPath === nodePath &&
+                                definitionInfo.targetPath === parameters.targetPath) {
+                                core.delMember(visited, parameters.name, core.getPath(members[i]));
+                            }
+                        }
+                    }
+
+                    if (members.length === 0) {
+                        core.deleteSet(visited, parameters.name);
+                    }
+
+                    deferred.resolve(null);
+                    return;
+                })
+                .catch(deferred.reject);
+
+            return deferred.promise.nodeify(next);
+        }
+
+        function visitForAspect(visited, next) {
+            var definitionInfo,
+                deferred = Q.defer();
+
+            if (core.getValidAspectNames(visited).indexOf(parameters.name) === -1 ||
+                core.getOwnSetNames(visited).indexOf(parameters.name) === -1) {
+                next(null);
+                return;
+            }
+
+            if (typeof parameters.targetPath !== 'string') {
+                core.delSet(visited, parameters.name);
+                next(null);
+                return;
+            }
+
+            core.loadMembers(visited, parameters.name)
+                .then(function (members) {
+                    var i;
+
+                    for (i = 0; i < members.length; i += 1) {
+                        definitionInfo = core.getAspectDefinitionInfo(visited, parameters.name, members[i]);
+                        if (definitionInfo.ownerPath === nodePath &&
+                            definitionInfo.targetPath === parameters.targetPath) {
+                            core.delMember(visited, parameters.name, core.getPath(members[i]));
+                        }
+                    }
+                    deferred.resolve(null);
+                    return;
+                })
+                .catch(deferred.reject);
+
+            return deferred.promise.nodeify(next);
+        }
+
+        function visitForContainment(visited, next) {
+            var definitionInfo,
+                parent = core.getParent(visited);
+
+            if (parent !== null) {
+                definitionInfo = core.getChildDefinitionInfo(parent, visited);
+                if (definitionInfo.ownerPath === nodePath &&
+                    definitionInfo.targetPath === parameters.targetPath) {
+                    core.deleteNode(visited);
+                }
+            }
+            next(null);
+        }
+
+        switch (parameters.type) {
+            case 'attribute':
+                visitFn = visitForAttribute;
+                break;
+            case 'pointer':
+                visitFn = visitForPointer;
+                break;
+            case 'set':
+                visitFn = visitForSet;
+                break;
+            case 'aspect':
+                visitFn = visitForAspect;
+                break;
+            case 'containment':
+                visitFn = visitForContainment;
+                break;
+            default:
+                return Q.reject(new Error('Invalid parameter misses a correct type for renaming.')).nodeify(callback);
+        }
+
+        core.traverse(core.getRoot(node), {excludeRoot: true, stopOnError: true}, visitFn)
+            .then(deferred.resolve)
+            .catch(deferred.reject);
+
+        return deferred.promise.nodeify(callback);
+    }
+
     return {
         propagateMetaDefinitionRename: propagateMetaDefinitionRename,
         metaConceptRename: metaConceptRename,
         metaConceptRenameInMeta: metaConceptRenameInMeta,
-        propagateMetaConceptRename: propagateMetaConceptRename
+        propagateMetaConceptRename: propagateMetaConceptRename,
+        propagateMetaDefinitionRemove: propagateMetaDefinitionRemove
     };
 });

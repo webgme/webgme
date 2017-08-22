@@ -37,7 +37,6 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE, ST
          */
         PROJECT_ROOT_NAME: 'ROOT',
 
-
         /*
          * Dedicated POINTER names
          */
@@ -84,7 +83,31 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE, ST
             RENAME_CONCEPT: 'renameConcept',
             CHANGE_ATTRIBUTE_META: 'changeAttributeMeta',
             RENAME_META_POINTER_TARGET: 'renameMetaPointerTarget',
-            CHANGE_ASPECT_META: 'changeAspectMeta'
+            CHANGE_ASPECT_META: 'changeAspectMeta',
+            REMOVE_META_RULE: 'removeMetaRule'
+        },
+
+        ATTRIBUTE_MULTILINE_TYPES: {
+            plaintext: 'plaintext',
+            html: 'html',
+            c: 'c',
+            cpp: 'cpp',
+            csharp: 'csharp',
+            css: 'css',
+            erlang: 'erlang',
+            java: 'java',
+            javascript: 'javascript',
+            markdown: 'markdown',
+            mathematica: 'mathematica',
+            modelica: 'modelica',
+            tex: 'tex',
+            latex: 'latex',
+            lua: 'lua',
+            sql: 'sql',
+            python: 'python',
+            ttcn: 'ttcn',
+            yaml: 'yaml'
         }
+
     };
 });

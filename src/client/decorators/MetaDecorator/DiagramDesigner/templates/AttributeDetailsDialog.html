@@ -26,6 +26,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="form-group" id="pReadonly"
+                     title="If true, the value can only be set at Meta nodes">
+                    <label class="col-sm-4 control-label"></label>
+                    <div class="col-sm-8 controls">
+                        <label class="checkbox">
+                            <input type="checkbox" id="cbReadonly" value="">
+                            Read-only
+                        </label>
+                    </div>
+                </div>
                 <div class="form-group" id="pDefaultValue">
                     <label class="col-sm-4 control-label" for="inputDefaultValue">Default value</label>
 
@@ -63,11 +73,16 @@
                 </div>
                 <div class="form-group" id="pEnum">
                     <label class="col-sm-4 control-label"></label>
-
-                    <div class="col-sm-8 controls">
+                    <div class="col-sm-2 controls">
                         <label class="checkbox">
                             <input type="checkbox" id="cbEnum" value="">
                             Enumeration
+                        </label>
+                    </div>
+                    <div id="pMultiLine" class="col-sm-2 controls">
+                        <label class="checkbox">
+                            <input type="checkbox" id="cbMultiline" value="">
+                            Multiline
                         </label>
                     </div>
                 </div>
@@ -77,6 +92,32 @@
                     <div class="col-sm-8 controls">
                         <textarea rows="3" id="inputEnumValues"
                                   placeholder="Enter each value in separate line"></textarea>
+                    </div>
+                </div>
+                <div id="pMultilineSubtypes" class="form-group">
+                    <label class="col-sm-4 control-label" for="multilineType">Multiline subtype</label>
+                    <div class="col-sm-8 controls">
+                        <select id="multilineType">
+                            <option>plaintext</option>
+                            <option>c</option>
+                            <option>cpp</option>
+                            <option>c#</option>
+                            <option>css</option>
+                            <option>erlang</option>
+                            <option>html</option>
+                            <option>java</option>
+                            <option>javascript</option>
+                            <option>markdown</option>
+                            <option>mathematica</option>
+                            <option>modelica</option>
+                            <option>lua</option>
+                            <option>tex</option>
+                            <option>latex</option>
+                            <option>sql</option>
+                            <option>python</option>
+                            <option>ttcn</option>
+                            <option>yaml</option>
+                        </select>
                     </div>
                 </div>
             </form>

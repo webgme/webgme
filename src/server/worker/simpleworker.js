@@ -244,6 +244,16 @@ process.on('message', function (parameters) {
                 });
             }
         );
+    } else if (parameters.command === CONSTANTS.workerCommands.removeMetaRule) {
+        wr.removeMetaRule(parameters.webgmeToken, parameters, function (err, result) {
+                safeSend({
+                    pid: process.pid,
+                    type: CONSTANTS.msgTypes.result,
+                    error: err ? err.message : null,
+                    result: result
+                });
+            }
+        );
     } else {
         safeSend({
             pid: process.pid,

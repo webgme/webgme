@@ -150,12 +150,18 @@ define([
                     defaultValue: attrValue,
                     min: attrMeta.min,
                     max: attrMeta.max,
-                    regexp: attrMeta.regexp
+                    regexp: attrMeta.regexp,
+                    readonly: attrMeta.readonly
                 });
 
                 //we will not let 'name' attribute to be modified as that is used UI-wise
                 if (attrName === nodePropertyNames.Attributes.name) {
                     return;
+                }
+
+                if (attrMeta.multiline) {
+                    desc.multiline = true;
+                    desc.multilineType = attrMeta.multilineType || 'generic';
                 }
 
                 if (attrMeta.enum && attrMeta.enum.length > 0) {
@@ -559,6 +565,16 @@ define([
             confirmDialog = new ConfirmDialog();
 
         attrSchema = {type: attrDesc.type, min: attrDesc.min, max: attrDesc.max, regexp: attrDesc.regexp};
+
+        if (attrDesc.readonly) {
+            attrSchema.readonly = true;
+        }
+
+        if (attrDesc.multiline) {
+            attrSchema.multiline = true;
+            attrSchema.multilineType = attrDesc.multilineType || 'generic';
+        }
+
         if (attrDesc.isEnum) {
             attrSchema.enum = attrDesc.enumValues;
         }
@@ -607,19 +623,41 @@ define([
 
     MetaDecoratorDiagramDesignerWidget.prototype.deleteAttributeDescriptor = function (attrName) {
         var client = this._control._client,
-            objID = this._metaInfo[CONSTANTS.GME_ID];
+            objID = this._metaInfo[CONSTANTS.GME_ID],
+            confirmDialog = new ConfirmDialog();
 
-        client.startTransaction();
-
-        //TODO: as of now we have to create an alibi attribute instance with the same name
-        //TODO: just because of this hack, make sure that the name is not overwritten
-        //TODO: just because of this hack, delete the alibi attribute as well
-        if (attrName !== nodePropertyNames.Attributes.name) {
-            client.delAttributeMeta(objID, attrName);
-            client.delAttribute(objID, attrName);
+        if (attrName === nodePropertyNames.Attributes.name) {
+            return;
         }
+        confirmDialog.show({
+            title: 'Propagate Meta attribute remove',
+            question: 'Do you wish to propagate the attribute remove throughout the project?',
+            okLabel: 'Propagate',
+            cancelLabel: 'Don\'t propagate',
+            onHideFn: function (oked) {
+                if (oked) {
+                    client.workerRequests.removeMetaRule(objID, attrName, 'attribute', undefined, function (err) {
+                        var errorDialog;
 
-        client.completeTransaction();
+                        if (err) {
+                            errorDialog = new ConfirmDialog();
+                            errorDialog.show({
+                                title: 'Meta attribute removal propagation failed',
+                                question: err,
+                                noCancelButton: true
+                            }, function () {
+                            });
+                        }
+                    });
+                } else {
+                    client.startTransaction();
+                    client.delAttributeMeta(objID, attrName);
+                    client.delAttribute(objID, attrName);
+                    client.completeTransaction();
+                }
+            }
+        }, function () {
+        });
     };
 
     /********* END OF --- ATTRIBUTES **************************************/

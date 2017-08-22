@@ -11,6 +11,8 @@ var testFixture = require('../../_globals.js');
 describe('Simple worker', function () {
     'use strict';
 
+    this.timeout(10000);
+
     var WebGME,
         gmeConfig = testFixture.getGmeConfig(),
         guestAccount = gmeConfig.authentication.guestAccount,
@@ -231,6 +233,13 @@ describe('Simple worker', function () {
                     result.project.createBranch('renameMetaPointerTargetFails', result.commitHash),
                     result.project.createBranch('changeAspectMeta', result.commitHash),
                     result.project.createBranch('changeAspectMetaFails', result.commitHash),
+                    result.project.createBranch('delAttributeMeta', result.commitHash),
+                    result.project.createBranch('delPointerMeta', result.commitHash),
+                    result.project.createBranch('delSetMeta', result.commitHash),
+                    result.project.createBranch('delContainmentMeta', result.commitHash),
+                    result.project.createBranch('delAspectMeta', result.commitHash),
+                    result.project.createBranch('delAspectMetaTarget', result.commitHash),
+                    result.project.createBranch('delMetaFails', result.commitHash),
                 ]);
             })
             .then(function () {
@@ -3370,7 +3379,7 @@ describe('Simple worker', function () {
                     type: 'aspect',
                     oldName: 'onsies',
                     newName: 'oneSet',
-                    meta: ['/X/m','/X/w']
+                    meta: ['/X/m', '/X/w']
                 });
             })
             .finally(restoreProcessFunctions)
@@ -3388,12 +3397,170 @@ describe('Simple worker', function () {
                 return worker.send({
                     command: CONSTANTS.workerCommands.changeAspectMeta,
                     projectId: renameProjectImportResult.projectId,
-                    branchName: 'changeAspectMeta',
+                    branchName: 'changeAspectMetaFails',
                     nodePath: '/not/cool',
                     type: 'aspect',
                     oldName: 'onsies',
                     newName: 'oneSet',
                     meta: ['/X/m']
+                });
+            })
+            .then(function () {
+                throw new Error('test failed -- missing error handling');
+            })
+            .catch(function (err) {
+                expect(err.message).not.to.contains('test failed');
+                expect(err.message).to.contains('Parameter \'node\'');
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    //delMetaRule
+    it('should propagate the remove of an attribute definition', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.removeMetaRule,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'delAttributeMeta',
+                    nodePath: '/X/7',
+                    type: 'attribute',
+                    name: 'some'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should propagate the removal of a pointer target', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.removeMetaRule,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'delPointerMeta',
+                    nodePath: '/X/I',
+                    targetPath: '/X/a',
+                    type: 'pointer',
+                    name: 'ptrOne'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should propagate the removal of a set target', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.removeMetaRule,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'delSetMeta',
+                    nodePath: '/X/I',
+                    targetPath: '/X/a',
+                    type: 'set',
+                    name: 'ptrOne'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should propagate the removal of an aspect', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.removeMetaRule,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'delAspectMeta',
+                    nodePath: '/X/w',
+                    type: 'aspect',
+                    name: 'onsies'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should propagate the removal of an aspect target', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.removeMetaRule,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'delAspectMetaTarget',
+                    nodePath: '/X/w',
+                    targetPath: '/X/m',
+                    type: 'aspect',
+                    name: 'onsies'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should propagate the removal of a containment', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.removeMetaRule,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'delContainmentMeta',
+                    nodePath: '/X/w',
+                    targetPath: '/X/7',
+                    type: 'containment'
+                });
+            })
+            .finally(restoreProcessFunctions)
+            .nodeify(done);
+    });
+
+    it('should fail to propagate the removal of an aspect if node is invalid', function (done) {
+        var worker = getSimpleWorker();
+
+        worker.send({command: CONSTANTS.workerCommands.initialize, gmeConfig: gmeConfig})
+            .then(function (msg) {
+                expect(msg.pid).equal(process.pid);
+                expect(msg.type).equal(CONSTANTS.msgTypes.initialized);
+
+                return worker.send({
+                    command: CONSTANTS.workerCommands.removeMetaRule,
+                    projectId: renameProjectImportResult.projectId,
+                    branchName: 'delMetaFails',
+                    nodePath: '/not/cool',
+                    type: 'aspect',
+                    name: 'onsies'
                 });
             })
             .then(function () {

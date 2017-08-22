@@ -169,6 +169,25 @@ define(['js/Constants'], function (CONSTANTS) {
             });
         }
 
+        function removeMetaRule(nodePath, name, type, targetPath, callback) {
+            var parameters = {
+                command: CONSTANTS.SERVER_WORKER_REQUESTS.REMOVE_META_RULE,
+                projectId: state.project.projectId,
+                nodePath: nodePath,
+                type: type,
+                name: name,
+                targetPath: targetPath,
+                branchName: state.branchName
+            };
+
+            storage.simpleRequest(parameters, function (err, result) {
+                if (err) {
+                    logger.error(err);
+                }
+                callback(err, result);
+            });
+        }
+
         //meta rules checking
         /**
          *
@@ -367,6 +386,7 @@ define(['js/Constants'], function (CONSTANTS) {
                 renameAttributeDefinition: renameAttributeDefinition,
                 renamePointerTargetDefinition: renamePointerTargetDefinition,
                 renameAspectDefinition: renameAspectDefinition,
+                removeMetaRule: removeMetaRule,
                 checkMetaRules: checkMetaRules,
                 checkCustomConstraints: checkCustomConstraints,
                 seedProject: seedProject,
