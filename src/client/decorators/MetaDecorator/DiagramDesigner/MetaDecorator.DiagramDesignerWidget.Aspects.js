@@ -244,31 +244,42 @@ define([
 
     MetaDecoratorDiagramDesignerWidgetAspects.prototype.saveAspectDescriptor = function (cName, cDesc) {
         var client = this._control._client,
+            diagramDesigner = this._control.diagramDesigner,
             objID = this._metaInfo[CONSTANTS.GME_ID],
             confirmDialog = new ConfirmDialog();
 
         if (cName !== cDesc.name) {
             confirmDialog.show({
-                title: 'Propagate Meta aspect name change',
-                question: 'Do you wish to propagate the aspect name change throughout the project?',
-                okLabel: 'Propagate',
-                cancelLabel: 'Don\'t propagate',
+                title: 'Propagate Renaming',
+                iconClass: 'fa fa-sitemap',
+                htmlQuestion: $('<div>By default the renaming of a meta definition will only alter the ' +
+                    'stored values at the owner of the definition. This can lead to meta-violations by ' +
+                    'derived nodes inside the project. <br/><br/>' +
+                    'Would you like to propagate the renaming of the aspect throughout the entire project?</div>'),
+                okLabel: 'Yes',
+                cancelLabel: 'No, only rename the definition',
+                severity: 'info',
                 onHideFn: function (oked) {
                     if (oked) {
 
-                        client.workerRequests.renameAspectDefinition(objID, cDesc.items || [], cName, cDesc.name, function (err) {
-                            var errorDialog;
+                        diagramDesigner.showProgressbar();
 
-                            if (err) {
-                                errorDialog = new ConfirmDialog();
-                                errorDialog.show({
-                                    title: 'Meta aspect change propagation failed',
-                                    question: err,
-                                    noCancelButton: true
-                                }, function () {
-                                });
-                            }
-                        });
+                        client.workerRequests.renameAspectDefinition(objID, cDesc.items || [], cName, cDesc.name,
+                            function (err) {
+                                diagramDesigner.hideProgressbar();
+                                if (err) {
+                                    client.notifyUser({
+                                        severity: 'error',
+                                        message: 'Rename propagation failed with error: ' + err
+                                    });
+                                } else {
+                                    client.notifyUser({
+                                        severity: 'success',
+                                        message: 'Successfully propagated name change from [' +
+                                        cName + '] to [' + cDesc.name + '].'
+                                    });
+                                }
+                            });
                     } else {
                         client.startTransaction();
                         client.delAspectMeta(objID, cName);

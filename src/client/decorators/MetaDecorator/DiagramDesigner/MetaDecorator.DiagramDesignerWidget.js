@@ -560,6 +560,7 @@ define([
 
     MetaDecoratorDiagramDesignerWidget.prototype.saveAttributeDescriptor = function (attrName, attrDesc) {
         var client = this._control._client,
+            diagramDesigner = this._control.diagramDesigner,
             objID = this._metaInfo[CONSTANTS.GME_ID],
             attrSchema,
             confirmDialog = new ConfirmDialog();
@@ -582,25 +583,35 @@ define([
         this.logger.debug('saveAttributeDescriptor: ' + attrName + ', attrDesc: ' + JSON.stringify(attrDesc));
         if (attrName !== attrDesc.name) {
             confirmDialog.show({
-                title: 'Propagate Meta attribute name change',
-                question: 'Do you wish to propagate the attribute name change throughout the project?',
-                okLabel: 'Propagate',
-                cancelLabel: 'Don\'t propagate',
+                title: 'Propagate Renaming',
+                iconClass: 'fa fa-sitemap',
+                htmlQuestion: $('<div>By default the renaming of a meta definition will only alter the ' +
+                    'stored values at the owner of the definition. This can lead to meta-violations by ' +
+                    'derived nodes inside the project. <br/><br/>' +
+                    'Would you like to propagate renaming of the attribute throughout the entire project?</div>'),
+                okLabel: 'Yes',
+                cancelLabel: 'No, only rename the definition',
+                severity: 'info',
                 onHideFn: function (oked) {
                     if (oked) {
-                        client.workerRequests.renameAttributeDefinition(objID, attrSchema, attrName, attrDesc.name, function (err) {
-                            var errorDialog;
-
-                            if (err) {
-                                errorDialog = new ConfirmDialog();
-                                errorDialog.show({
-                                    title: 'Meta attribute change propagation failed',
-                                    question: err,
-                                    noCancelButton: true
-                                }, function () {
-                                });
+                        diagramDesigner.showProgressbar();
+                        client.workerRequests.renameAttributeDefinition(objID, attrSchema, attrName, attrDesc.name,
+                            function (err) {
+                                diagramDesigner.hideProgressbar();
+                                if (err) {
+                                    client.notifyUser({
+                                        severity: 'error',
+                                        message: 'Rename propagation failed with error: ' + err
+                                    });
+                                } else {
+                                    client.notifyUser({
+                                        severity: 'success',
+                                        message: 'Successfully propagated name change from [' +
+                                        attrName + '] to [' + attrDesc.name + '].'
+                                    });
+                                }
                             }
-                        });
+                        );
                     } else {
                         client.startTransaction();
                         client.delAttributeMeta(objID, attrName);

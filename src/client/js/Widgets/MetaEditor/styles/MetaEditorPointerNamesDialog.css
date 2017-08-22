@@ -1,5 +1,7 @@
 /**
  * @author pmeijer / https://github.com/pmeijer
  */
+.meta-editor-pointer-names-dialog .modal-body .info-text {
+  font-size: 14px; }
 .meta-editor-pointer-names-dialog .modal-footer .message-badge {
   text-align: left; }

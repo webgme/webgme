@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, _, $*/
 /*jshint browser: true */
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -35,7 +35,9 @@ define(['js/logger',
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers,
         DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID',
-        DRAG_PARAMS_ACTIVE_META_ASPECT = 'DRAG_PARAMS_ACTIVE_META_ASPECT';
+        DRAG_PARAMS_ACTIVE_META_ASPECT = 'DRAG_PARAMS_ACTIVE_META_ASPECT',
+        MENU_RENAME_CONCEPT = 'conceptRename',
+        MENU_RENAME_DEFINITION = 'definitionRename';
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers = function () {
         this.logger = Logger.create('gme:Panels:MetaEditor:MetaEditorControl.DiagramDesignerWidgetEventHandlers',
@@ -1055,11 +1057,12 @@ define(['js/logger',
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getNewNameAndPropagationConsent = function
-        (srcPath, dstPath, type, currentName, callback) {
+        (srcPath, dstPath, type, key, currentName, callback) {
         var self = this,
             renameDialog = new MetaEditorPointerNamesDialog(),
             confirmDialog = new ConfirmDialog(),
             srcNode = self._client.getNode(srcPath),
+            infoText,
             headerLabel,
             existingNames = [],
             notAllowedNames = [];
@@ -1072,32 +1075,46 @@ define(['js/logger',
             case 'pointer':
                 existingNames = _.without(srcNode.getValidPointerNames(), currentName);
                 notAllowedNames = _.union(srcNode.getValidPointerNames(), srcNode.getValidAspectNames(), [currentName]);
-                headerLabel = 'Rename pointer [' + currentName + ']';
+                headerLabel = 'Rename Pointer';
                 break;
             case 'set':
                 existingNames = _.without(srcNode.getValidSetNames(), currentName);
                 notAllowedNames = _.union(srcNode.getValidPointerNames(), srcNode.getValidAspectNames(), [currentName]);
-                headerLabel = 'Rename set [' + currentName + ']';
+                headerLabel = 'Rename Set';
                 break;
             default:
                 callback(false, null, false);
                 return;
         }
 
+        if (key === MENU_RENAME_DEFINITION) {
+            infoText = 'This will rename this particular definition of "' + currentName + '".';
+        } else if (key === MENU_RENAME_CONCEPT) {
+            infoText = 'This will rename this definition of "' + currentName + '" together with all other ' +
+                'definitions of "' + currentName + '" defined between any of the bases and instances ' +
+                '(including mixins) of the owner and target.';
+        }
+
         renameDialog.show({
             existingNames: existingNames,
             notAllowedNames: notAllowedNames,
             header: headerLabel,
+            infoText: infoText,
             newBtnLabel: 'Rename',
             onHideFn: function (newName) {
                 if (newName === null) {
                     callback(false, null, false);
                 } else {
                     confirmDialog.show({
-                        title: 'Propagate rename',
-                        question: 'Would you like to propagate the renaming throughout the whole project?',
-                        okLabel: 'Propagate',
-                        cancelLabel: 'Don\'t propagate',
+                        title: 'Propagate Renaming',
+                        iconClass: 'fa fa-sitemap',
+                        htmlQuestion: $('<div>By default the renaming of a meta definition will only alter the ' +
+                            'stored values at the owner of the definition. This can lead to meta-violations by ' +
+                            'derived nodes inside the project. <br/><br/>' +
+                            'Would you like to propagate the renaming throughout the entire project?</div>'),
+                        okLabel: 'Yes',
+                        cancelLabel: 'No, only rename the definition',
+                        severity: 'info',
                         onHideFn: function (oked) {
                             callback(true, newName, oked);
                         }
@@ -1112,17 +1129,30 @@ define(['js/logger',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionContextMenu = function (selectedIds,
                                                                                                       mousePos) {
         var menuItems = {},
-            MENU_RENAME_CONCEPT = 'conceptRename',
-            MENU_RENAME_DEFINITION = 'definitionRename',
-            node,
-            i,
-            paths,
-            libraryContentSelected = false,
             self = this,
             srcPath,
             dstPath,
             oldName,
             type;
+
+        function afterRenameFn(prevName, newName) {
+            return function (err) {
+                if (err) {
+                    self._client.notifyUser({
+                        severity: 'error',
+                        message: 'Rename propagation failed with error: ' + err
+                    });
+                } else {
+                    self._client.notifyUser({
+                        severity: 'success',
+                        message: 'Successfully propagated name change from [' +
+                        prevName + '] to [' + newName + '].'
+                    });
+                }
+
+                self.diagramDesigner.hideProgressbar();
+            };
+        }
 
         if (selectedIds.length === 1) {
             if (self._connectionListByID.hasOwnProperty(selectedIds[0]) &&
@@ -1134,17 +1164,17 @@ define(['js/logger',
                 oldName = self._connectionListByID[selectedIds[0]].name;
 
                 menuItems[MENU_RENAME_CONCEPT] = {
-                    name: 'Rename concept'//,
+                    name: 'Rename concept ...'//,
                     // icon: 'glyphicon glyphicon-ok-sign'
                 };
                 menuItems[MENU_RENAME_DEFINITION] = {
-                    name: 'Rename definition'//,
+                    name: 'Rename definition ...'//,
                     // icon: 'glyphicon glyphicon-ok-sign'
                 };
 
                 this.diagramDesigner.createMenu(menuItems, function (key) {
                         if (key === MENU_RENAME_DEFINITION || key === MENU_RENAME_CONCEPT) {
-                            self._getNewNameAndPropagationConsent(srcPath, dstPath, type, oldName,
+                            self._getNewNameAndPropagationConsent(srcPath, dstPath, type, key, oldName,
                                 function (approved, newName, shouldPropagate) {
 
                                     if (approved !== true) {
@@ -1155,21 +1185,7 @@ define(['js/logger',
                                         if (shouldPropagate) {
                                             self.diagramDesigner.showProgressbar();
                                             self._client.workerRequests.renameConcept(srcPath, type, oldName, newName,
-                                                function (err) {
-                                                    var errorDialog;
-
-                                                    if (err) {
-                                                        errorDialog = new ConfirmDialog();
-                                                        errorDialog.show({
-                                                            title: 'Meta concept rename failed',
-                                                            question: err,
-                                                            noCancelButton: true
-                                                        }, function () {
-                                                        });
-                                                    }
-                                                    self.diagramDesigner.hideProgressbar();
-                                                }
-                                            );
+                                                afterRenameFn(oldName, newName));
                                         } else {
                                             self._client.movePointerMetaTarget(srcPath, dstPath, oldName, newName);
                                         }
@@ -1177,22 +1193,7 @@ define(['js/logger',
                                         if (shouldPropagate) {
                                             self.diagramDesigner.showProgressbar();
                                             self._client.workerRequests.renamePointerTargetDefinition(srcPath, dstPath,
-                                                oldName, newName, type === 'set',
-                                                function (err) {
-                                                    var errorDialog;
-
-                                                    if (err) {
-                                                        errorDialog = new ConfirmDialog();
-                                                        errorDialog.show({
-                                                            title: 'Meta defintion rename failed',
-                                                            question: err,
-                                                            noCancelButton: true
-                                                        }, function () {
-                                                        });
-                                                    }
-                                                    self.diagramDesigner.hideProgressbar();
-                                                }
-                                            );
+                                                oldName, newName, type === 'set', afterRenameFn(oldName, newName));
                                         } else {
                                             self._client.movePointerMetaTarget(srcPath, dstPath, oldName, newName);
                                         }
