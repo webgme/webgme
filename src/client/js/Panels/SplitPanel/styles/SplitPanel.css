@@ -35,6 +35,8 @@ ul.split-panel-dropdown-list {
       color: #00235b;
       opacity: 0.75;
       cursor: pointer; }
+      .split-panel .split-panel-panel-container .maximize-btn:hover {
+        opacity: 1; }
   .split-panel .splitter {
     z-index: 1000;
     position: absolute;

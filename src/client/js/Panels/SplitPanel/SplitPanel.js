@@ -53,8 +53,7 @@ define([
          *          bottom: null,
          *          left: null
          *     },
-         *     currentSplitter: 1_2,
-         *     maximized: false
+         *     currentSplitter: 1_2
          *   },
          *   2: {
          *     instance: MetaEditor instance,
@@ -65,8 +64,7 @@ define([
          *          bottom: null,
          *          left: 1_2
          *     },
-         *     currentSplitter: 1_2,
-         *     maximized: true
+         *     currentSplitter: 1_2
          *   }
          * }
          * @private
@@ -832,7 +830,7 @@ define([
     // N.B. JQuery does not support event capturing..
     SplitPanel.prototype._attachActivateHandler = function (panelContainer) {
         var self = this,
-            handler = function (event) {
+            handler = function (/*event*/) {
                 var el = $(this),
                     panelId = el.data(PANEL_ID_DATA_KEY);
                 self.setActivePanel(panelId);

@@ -43,6 +43,10 @@ ul.split-panel-dropdown-list {
       color: #00235b;
       opacity: 0.75;
       cursor: pointer;
+
+      &:hover {
+        opacity: 1
+      }
     }
   }
 
