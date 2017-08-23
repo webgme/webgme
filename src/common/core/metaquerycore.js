@@ -112,7 +112,7 @@ define([
                 keys = Object.keys(rules);
                 for (i = 0; i < children.length; i += 1) {
                     for (j = 0; j < keys.length; j += 1) {
-                        if (innerCore.isTypeOf(children[i], metaNodes[keys[j]])) {
+                        if (innerCore.isTypeOfPath(children[i], keys[j])) {
                             typeCounters[keys[j]] += 1;
                         }
                     }
@@ -125,7 +125,7 @@ define([
                         if (rules[keys[j]].max &&
                             rules[keys[j]].max > -1 &&
                             rules[keys[j]].max <= typeCounters[keys[j]] &&
-                            innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
+                            innerCore.isTypeOfPath(validNodes[i], keys[j])) {
                             validNodes.splice(i, 1); //FIXME slow, use only push instead
                             break;
                         }
@@ -145,7 +145,7 @@ define([
                 while (i--) {
                     inAspect = false;
                     for (j = 0; j < keys.length; j += 1) {
-                        if (innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
+                        if (innerCore.isTypeOfPath(validNodes[i], keys[j])) {
                             inAspect = true;
                             break;
                         }
@@ -216,7 +216,7 @@ define([
                 keys = Object.keys(rules);
                 for (i = 0; i < members.length; i += 1) {
                     for (j = 0; j < keys.length; j += 1) {
-                        if (innerCore.isTypeOf(members[i], metaNodes[keys[j]])) {
+                        if (innerCore.isTypeOfPath(members[i], keys[j])) {
                             typeCounters[keys[j]] += 1;
                         }
                     }
@@ -229,7 +229,7 @@ define([
                         if (rules[keys[j]].max &&
                             rules[keys[j]].max > -1 &&
                             rules[keys[j]].max <= typeCounters[keys[j]] &&
-                            innerCore.isTypeOf(validNodes[i], metaNodes[keys[j]])) {
+                            innerCore.isTypeOfPath(validNodes[i], keys[j])) {
                             validNodes.splice(i, 1); //FIXME slow, use only push instead
                             break;
                         }
