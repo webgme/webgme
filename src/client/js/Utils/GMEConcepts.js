@@ -459,7 +459,7 @@ define(['jquery',
         if (aspectName && parentNode) {
             if (aspectName !== CONSTANTS.ASPECT_ALL) {
                 //need to check in aspect
-                aspectTypes = parentNode.getAspectMeta(parentId, aspectName);
+                aspectTypes = parentNode.getAspectMeta(aspectName);
                 if (aspectTypes) {
                     //aspectTypes contains the children types the user specified to participate in this aspect
 
