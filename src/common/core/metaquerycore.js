@@ -98,17 +98,6 @@ define([
                 delete rules.max;
                 delete rules.min;
 
-                //we need to clear nodes that are not on the meta sheet
-                // and we have to initialize the counters
-                keys = Object.keys(rules);
-                for (i = 0; i < keys.length; i += 1) {
-                    if (metaNodes[keys[i]]) {
-                        typeCounters[keys[i]] = 0;
-                    } else {
-                        delete rules[keys[i]];
-                    }
-                }
-
                 keys = Object.keys(rules);
                 for (i = 0; i < children.length; i += 1) {
                     for (j = 0; j < keys.length; j += 1) {

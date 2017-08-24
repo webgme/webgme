@@ -186,7 +186,7 @@ describe('meta query core', function () {
         expect(paths).to.have.members(validPaths);
     });
 
-    it.only('should return every valid meta child and ignore elements of rule outside of the meta', function () {
+    it('should return every valid meta child and ignore elements of rule outside of the meta', function () {
         //model /367050797/1626677559
         //actual port    /1924875415/1359805212
         var validPaths = [
@@ -196,10 +196,13 @@ describe('meta query core', function () {
             ],
             parameters = {
                 node: baseNodes['/1924875415'],
-                multiplicity: true,
                 children: [
-                    baseNodes['/1924875415/1359805212']
-                ]
+                    baseNodes['/1924875415/1059131120'],
+                    baseNodes['/1924875415/1359805212'],
+                    baseNodes['/1924875415/1544821790']
+                ],
+                sensitive: true,
+                multiplicity: true
             },
             paths = [],
             metaNodes = core.getAllMetaNodes(baseNodes['/1924875415/1359805212']),
@@ -216,6 +219,41 @@ describe('meta query core', function () {
         expect(paths).to.have.members(validPaths);
 
         core.delChildMeta(metaNodes['/367050797/1626677559'], '/1924875415/1359805212');
+    });
+
+    it('should return every valid meta child and ignore elements of rule outside of the meta', function () {
+        //model /367050797/1626677559
+        //actual port    /1924875415/1359805212
+        var validPaths = [
+                '/367050797/355480347',
+                '/367050797/625420143',
+                '/367050797/1626677559'
+            ],
+            parameters = {
+                node: baseNodes['/1924875415'],
+                children: [
+                    baseNodes['/1924875415/1059131120'],
+                    baseNodes['/1924875415/1359805212'],
+                    baseNodes['/1924875415/1544821790']
+                ],
+                sensitive: true,
+                multiplicity: true,
+                aspect: 'oneAsp'
+            },
+            paths = [],
+            metaNodes = core.getAllMetaNodes(baseNodes['/1924875415/1359805212']),
+            i,
+            validNodes;
+
+        core.setChildMeta(metaNodes['/367050797/1626677559'], baseNodes['/1924875415/1359805212']);
+        core.setAspectMetaTarget(metaNodes['/367050797/1626677559'], 'oneAsp', baseNodes['/1924875415/1359805212']);
+
+        validNodes = core.getValidChildrenMetaNodes(parameters);
+
+        expect(validNodes).to.have.length(0);
+
+        core.delChildMeta(metaNodes['/367050797/1626677559'], '/1924875415/1359805212');
+        core.delAspectMeta(metaNodes['/367050797/1626677559'], 'oneAsp');
     });
 
     it('should return every possible member type with basic check', function () {
