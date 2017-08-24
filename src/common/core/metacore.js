@@ -29,13 +29,6 @@ define([
         logger.debug('initialized MetaCore');
 
         //<editor-fold=Helper Functions>
-        function sameNode(nodeA, nodeB) {
-            if (self.getPath(nodeA) === self.getPath(nodeB)) {
-                return true;
-            }
-            return false;
-        }
-
         function getMetaNode(node) {
             return self.getChild(node, CONSTANTS.META_NODE);
         }
@@ -133,19 +126,11 @@ define([
         //</editor-fold>
 
         //<editor-fold=Added Methods>
-        this.isTypeOf = function (node, typeNode) {
-            while (node) {
-                if (sameNode(node, typeNode)) {
-                    return true;
-                }
-                node = self.getBase(node);
-            }
-            return false;
-        };
+        this.isTypeOf = function (node, typeNodeOrNode) {
+            var typePath = typeof typeNodeOrNode === 'string' ? typeNodeOrNode : self.getPath(typeNodeOrNode);
 
-        this.isTypeOfPath = function (node, typePath) {
             while (node) {
-                if (self.getPath(node) === typePath) {
+                if (typePath === self.getPath(node)) {
                     return true;
                 }
                 node = self.getBase(node);

@@ -187,8 +187,6 @@ describe('meta query core', function () {
     });
 
     it('should return every valid meta child and ignore elements of rule outside of the meta', function () {
-        //model /367050797/1626677559
-        //actual port    /1924875415/1359805212
         var validPaths = [
                 '/367050797/355480347',
                 '/367050797/625420143',
@@ -201,8 +199,7 @@ describe('meta query core', function () {
                     baseNodes['/1924875415/1359805212'],
                     baseNodes['/1924875415/1544821790']
                 ],
-                sensitive: true,
-                multiplicity: true
+                sensitive: true
             },
             paths = [],
             metaNodes = core.getAllMetaNodes(baseNodes['/1924875415/1359805212']),
