@@ -121,6 +121,14 @@ define(['./ContextMenu'], function (ContextMenu) {
             //  width: <number>
             // }
 
+            function getStartPos(model) {
+                return xPosChange ? model.x : model.y;
+            }
+
+            function getEndPos(model) {
+                return xPosChange ? model.x + model.width: model.y + model.height;
+            }
+
             switch (type) {
                 case CONSTANTS.MOVE_TO_LEFT:
                 case CONSTANTS.MOVE_TO_RIGHT:
@@ -139,12 +147,30 @@ define(['./ContextMenu'], function (ContextMenu) {
                     target = selectedModels[0];
                     break;
                 case CONSTANTS.DISTRIBUTE_HORIZON:
+                    xPosChange = true;
+                    selectedModels.sort(function (p1, p2) {
+                        if (p1.x > p2.x) {
+                            return 1;
+                        } else if (p1.x === p2.x) {
+                            return 0;
+                        } else {
+                            return -1;
+                        }
+                    });
+                    break;
                 case CONSTANTS.DISTRIBUTE_VERTICAL:
-                    throw new Error('Not Implemented');
+                    selectedModels.sort(function (p1, p2) {
+                        if (p1.y > p2.y) {
+                            return 1;
+                        } else if (p1.y === p2.y) {
+                            return 0;
+                        } else {
+                            return -1;
+                        }
+                    });
                     break;
-
                 default:
-                    break;
+                    return {};
             }
 
             if (target) {
@@ -161,6 +187,9 @@ define(['./ContextMenu'], function (ContextMenu) {
                         };
                     }
                 });
+            } else {
+                var start = getEndPos(selectedModels[0]),
+                    end = getStartPos(selectedModels[selectedModels.length - 1]);
             }
 
             return result;
