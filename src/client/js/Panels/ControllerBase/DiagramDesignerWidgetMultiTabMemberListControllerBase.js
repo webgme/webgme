@@ -2004,18 +2004,67 @@ define(['js/logger',
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onAlignSelection = function (selectedIds, type) {
-        var params = {
-            client: this._client,
-            modelId: this._memberListContainerID,
-            idMap: this._ComponentID2GMEID,
-            setName: this._selectedMemberListID,
-            coordinates: this._memberListMemberCoordinates[this._selectedMemberListID]
-        };
+        var self = this,
+            modelId = this._memberListContainerID,
+            selectedModels,
+            allModels,
+            result;
 
-        //TODO: Currently connections are always accounted for, regardless if they are displayed as boxes or not.
-        if (params.coordinates) {
-            this._alignMenu.alignSetSelection(params, selectedIds, type);
+        // Get the gmeIds and filter out connections.
+        selectedModels = selectedIds
+            .reduce(function (arr, itemId) {
+                var gmeId = self._ComponentID2GMEID[itemId],
+                    item = self._widget.items[itemId];
+
+                // FIXME: Determine if item is a connection..
+                if (item) {
+                    arr.push({
+                        id: gmeId,
+                        x: item.positionX,
+                        y: item.positionY,
+                        width: item.width,
+                        height: item.height
+                    });
+                }
+
+                return arr;
+            }, []);
+
+        if (selectedModels.length === 0) {
+            // No models were selected...
+            return;
         }
+
+        allModels = this._memberListMembers[this._selectedMemberListID]
+            .reduce(function (arr, gmeId) {
+                // FIXME: Filter out the Connections in the array.
+                var itemId = self._GMEID2ComponentID[gmeId] && self._GMEID2ComponentID[gmeId][0],
+                    item = self._widget.items[itemId];
+
+                if (item) {
+                    arr.push({
+                        id: gmeId,
+                        x: item.positionX,
+                        y: item.positionY,
+                        width: item.width,
+                        height: item.height
+                    });
+                }
+
+                return arr;
+            }, []);
+
+        result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
+
+        this._client.startTransaction();
+        Object.keys(result).forEach(function (id) {
+            var newPos = result[id];
+
+            self._client.addMember(modelId, id, self._selectedMemberListID);
+            self._client.setMemberRegistry(modelId, id, self._selectedMemberListID, REGISTRY_KEYS.POSITION, newPos);
+        });
+
+        this._client.completeTransaction();
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onDesignerItemsMove = function (repositionDesc) {

@@ -1417,72 +1417,65 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onAlignSelection = function (selectedIds, type) {
-        var selectedModels = [],
-            allModels = [],
-            target,
-            changeXAxis,
+        var self = this,
             modelId = this.currentNodeInfo.id,
-            self = this;
+            selectedModels,
+            allModels,
+            result;
 
         // Get the gmeIds and filter out connections.
-        selectedIds.forEach(function (id) {
-            var gmeId = self._ComponentID2GMEID[id],
-                objDesc;
-            if (self._GMEModels.indexOf(gmeId) > -1) {
-                objDesc = self._getObjectDescriptor(gmeId);
-                if (objDesc) {
-                    selectedModels.push(objDesc);
-                } else {
-                    self.logger.warn('_onAlignSelection, could not get objectDescriptor for a selectedIds', gmeId);
+        selectedModels = selectedIds
+            .reduce(function (arr, itemId) {
+                var gmeId = self._ComponentID2GMEID[itemId],
+                    item = self.designerCanvas.items[itemId];
+
+                if (self._GMEModels.indexOf(gmeId) > -1 && item) {
+                    arr.push({
+                        id: gmeId,
+                        x: item.positionX,
+                        y: item.positionY,
+                        width: item.width,
+                        height: item.height
+                    });
                 }
-            }
-        });
+
+                return arr;
+            }, []);
 
         if (selectedModels.length === 0) {
             // No models were selected...
             return;
         }
 
-        if (type.indexOf('MOVE_TO_') === 0) {
-            self._GMEModels.forEach(function (gmeId) {
-                var objDesc = self._getObjectDescriptor(gmeId);
-                if (objDesc) {
-                    allModels.push(objDesc);
-                } else {
-                    self.logger.warn('_onAlignSelection, could not get objectDescriptor for a _GMEModels', gmeId);
+        allModels = self._GMEModels
+            .reduce(function (arr, gmeId) {
+                var itemId = self._GMEID2ComponentID[gmeId] && self._GMEID2ComponentID[gmeId][0],
+                    item = self.designerCanvas.items[itemId];
+
+                if (item) {
+                    arr.push({
+                        id: gmeId,
+                        x: item.positionX,
+                        y: item.positionY,
+                        width: item.width,
+                        height: item.height
+                    });
                 }
-            });
 
-            target = self._alignMenu.getExtremePosition(allModels, type);
-        } else {
-            target = selectedModels[0];
-        }
+                return arr;
+            }, []);
 
-        if (!target) {
-            return;
-        }
-
-        changeXAxis = self._alignMenu.isXAxisType(type);
+        result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
 
         this._client.startTransaction();
-        selectedModels.forEach(function (modelDesc) {
-            var newPos = modelDesc.position;
-            if (target.id === modelDesc.id) {
-                return;
-            }
-
-            if (changeXAxis === true) {
-                newPos.x = target.position.x;
-            } else {
-                newPos.y = target.position.y;
-            }
+        Object.keys(result).forEach(function (id) {
+            var newPos = result[id];
 
             if (self._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                self._client.setRegistry(modelDesc.id, REGISTRY_KEYS.POSITION, newPos);
+                self._client.setRegistry(id, REGISTRY_KEYS.POSITION, newPos);
             } else {
-                self._client.addMember(modelId, modelDesc.id, self._selectedAspect);
-                self._client.setMemberRegistry(modelId, modelDesc.id, self._selectedAspect, REGISTRY_KEYS.POSITION,
-                    newPos);
+                self._client.addMember(modelId, id, self._selectedAspect);
+                self._client.setMemberRegistry(modelId, id, self._selectedAspect, REGISTRY_KEYS.POSITION, newPos);
             }
         });
 

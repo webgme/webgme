@@ -1039,17 +1039,65 @@ define(['js/logger',
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onAlignSelection = function (selectedIds, type) {
-        var params = {
-            client: this._client,
-            modelId: this.metaAspectContainerNodeID,
-            idMap: this._ComponentID2GMEID,
-            setName: this._selectedMetaAspectSet,
-            coordinates: this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet]
-        };
+        var self = this,
+            modelId = this.metaAspectContainerNodeID,
+            selectedModels,
+            allModels,
+            result;
 
-        if (params.coordinates) {
-            this._alignMenu.alignSetSelection(params, selectedIds, type);
+        // Get the gmeIds and filter out connections.
+        selectedModels = selectedIds
+            .reduce(function (arr, itemId) {
+                var gmeId = self._ComponentID2GMEID[itemId],
+                    item = self.diagramDesigner.items[itemId];
+
+                if (self._GMENodes.indexOf(gmeId) > -1 && item) {
+                    arr.push({
+                        id: gmeId,
+                        x: item.positionX,
+                        y: item.positionY,
+                        width: item.width,
+                        height: item.height
+                    });
+                }
+
+                return arr;
+            }, []);
+
+        if (selectedModels.length === 0) {
+            // No models were selected...
+            return;
         }
+
+        allModels = self._GMENodes
+            .reduce(function (arr, gmeId) {
+                var itemId = self._GMEID2ComponentID[gmeId],
+                    item = self.diagramDesigner.items[itemId];
+
+                if (item) {
+                    arr.push({
+                        id: gmeId,
+                        x: item.positionX,
+                        y: item.positionY,
+                        width: item.width,
+                        height: item.height
+                    });
+                }
+
+                return arr;
+            }, []);
+
+        result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
+
+        this._client.startTransaction();
+        Object.keys(result).forEach(function (id) {
+            var newPos = result[id];
+
+            self._client.addMember(modelId, id, self._selectedMetaAspectSet);
+            self._client.setMemberRegistry(modelId, id, self._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, newPos);
+        });
+
+        this._client.completeTransaction();
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onInconsistencyLinkClicked = function (gmeId) {

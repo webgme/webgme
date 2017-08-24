@@ -11,42 +11,35 @@ define(['./ContextMenu'], function (ContextMenu) {
     function AlignMenu(CONSTANTS, options) {
         options = options || {};
 
-        this.isXAxisType = function (type) {
-            return type === CONSTANTS.MOVE_TO_LEFT || type === CONSTANTS.MOVE_TO_RIGHT ||
-                type === CONSTANTS.ALIGN_VERTICAL;
-        };
-
         this.getExtremePosition = function (allModels, type) {
             var i,
-                position,
                 extreme = {
-                    position: null,
+                    x: null,
+                    y: null,
                     id: null
                 };
 
             for (i = 0; i < allModels.length; i += 1) {
-                position = allModels[i].position;
-
                 if (type === CONSTANTS.MOVE_TO_TOP) {
-                    if (extreme.position === null || extreme.position.y > position.y) {
+                    if (extreme.y === null || extreme.y > allModels[i].y) {
                         extreme = allModels[i];
                     }
                 } else if (type === CONSTANTS.MOVE_TO_BOTTOM) {
-                    if (extreme.position === null || extreme.position.y < position.y) {
+                    if (extreme.y === null || extreme.y < allModels[i].y) {
                         extreme = allModels[i];
                     }
                 } else if (type === CONSTANTS.MOVE_TO_RIGHT) {
-                    if (extreme.position === null || extreme.position.x < position.x) {
+                    if (extreme.x === null || extreme.x < allModels[i].x) {
                         extreme = allModels[i];
                     }
                 } else if (type === CONSTANTS.MOVE_TO_LEFT) {
-                    if (extreme.position === null || extreme.position.x > position.x) {
+                    if (extreme.x === null || extreme.x > allModels[i].x) {
                         extreme = allModels[i];
                     }
                 }
             }
 
-            return extreme.position !== null ? extreme : null;
+            return extreme.id !== null ? extreme : null;
         };
 
         /**
@@ -78,11 +71,22 @@ define(['./ContextMenu'], function (ContextMenu) {
 
             if (selectionIds.length > 1) {
                 menuItems[CONSTANTS.ALIGN_HORIZON] = {
-                    name: 'Align selection horizontally',
+                    name: 'Align selection vertically',
                     icon: 'fa fa-ellipsis-h'
                 };
                 menuItems[CONSTANTS.ALIGN_VERTICAL] = {
-                    name: 'Align selection vertically',
+                    name: 'Align selection horizontally',
+                    icon: 'fa fa-ellipsis-v'
+                };
+            }
+
+            if (selectionIds.length > 2) {
+                menuItems[CONSTANTS.DISTRIBUTE_HORIZON] = {
+                    name: 'Distribute vertically',
+                    icon: 'fa fa-ellipsis-h'
+                };
+                menuItems[CONSTANTS.DISTRIBUTE_VERTICAL] = {
+                    name: 'Distribute horizontally',
                     icon: 'fa fa-ellipsis-v'
                 };
             }
@@ -96,75 +100,70 @@ define(['./ContextMenu'], function (ContextMenu) {
             menu.show(position);
         };
 
-        this.alignSetSelection = function (params, selectedIds, type) {
-            var target,
-                changeXAxis,
-                selectedModels = [],
-                allModels = [],
-                client = params.client,
-                modelId = params.modelId,
-                idMap = params.idMap,
-                coordinates = params.coordinates,
-                setName = params.setName;
+        /**
+         *
+         * @param {object[]} allModels
+         * @param {object[]} selectedModels
+         * @param {string} type - 'MOVE_TO_LEFT', 'MOVE_TO_RIGHT', 'MOVE_TO_TOP', 'MOVE_TO_BOTTOM',
+         * 'ALIGN_HORIZON', 'ALIGN_VERTICAL', 'DISTRIBUTE_HORIZON', 'DISTRIBUTE_VERTICAL'
+         *
+         * @returns {object} - New positions indexed by id (only added if changed).
+         */
+        this.getNewPositions = function (allModels, selectedModels, type) {
+            var result = {},
+                xPosChange,
+                target;
+            // models {
+            //  id: <gmeID>,
+            //  x: <number>,
+            //  y: <number>,
+            //  height: <number>,
+            //  width: <number>
+            // }
 
-            selectedIds.forEach(function (id) {
-                var gmeId = idMap[id];
-                if (gmeId && coordinates[gmeId]) {
+            switch (type) {
+                case CONSTANTS.MOVE_TO_LEFT:
+                case CONSTANTS.MOVE_TO_RIGHT:
+                    xPosChange = true;
+                    target = this.getExtremePosition(allModels, type);
+                    break;
+                case CONSTANTS.MOVE_TO_TOP:
+                case CONSTANTS.MOVE_TO_BOTTOM:
+                    target = this.getExtremePosition(allModels, type);
+                    break;
+                case CONSTANTS.ALIGN_HORIZON:
+                    xPosChange = true;
+                    target = selectedModels[0];
+                    break;
+                case CONSTANTS.ALIGN_VERTICAL:
+                    target = selectedModels[0];
+                    break;
+                case CONSTANTS.DISTRIBUTE_HORIZON:
+                case CONSTANTS.DISTRIBUTE_VERTICAL:
+                    throw new Error('Not Implemented');
+                    break;
 
-                    selectedModels.push({
-                        id: gmeId,
-                        position: {
-                            x: coordinates[gmeId].x,
-                            y: coordinates[gmeId].y
-                        }
-                    });
-                }
-            });
-
-            if (selectedModels.length === 0) {
-                // No models were selected...
-                return;
+                default:
+                    break;
             }
 
-            if (type.indexOf('MOVE_TO_') === 0) {
-                Object.keys(coordinates).forEach(function (gmeId) {
-                    allModels.push({
-                        id: gmeId,
-                        position: {
-                            x: coordinates[gmeId].x,
-                            y: coordinates[gmeId].y
-                        }
-                    });
+            if (target) {
+                selectedModels.forEach(function (model) {
+                    if (xPosChange && model.x !== target.x) {
+                        result[model.id] = {
+                            x: target.x,
+                            y: model.y
+                        };
+                    } else if (model.y !== target.y) {
+                        result[model.id] = {
+                            x: model.x,
+                            y: target.y
+                        };
+                    }
                 });
-
-                target = this.getExtremePosition(allModels, type);
-            } else {
-                target = selectedModels[0];
             }
 
-            if (!target) {
-                return;
-            }
-
-            changeXAxis = this.isXAxisType(type);
-
-            client.startTransaction();
-            selectedModels.forEach(function (modelDesc) {
-                var newPos = modelDesc.position;
-                if (target.id === modelDesc.id) {
-                    return;
-                }
-
-                if (changeXAxis === true) {
-                    newPos.x = target.position.x;
-                } else {
-                    newPos.y = target.position.y;
-                }
-
-                client.setMemberRegistry(modelId, modelDesc.id, setName, 'position', newPos);
-            });
-
-            client.completeTransaction();
+            return result;
         };
     }
 
