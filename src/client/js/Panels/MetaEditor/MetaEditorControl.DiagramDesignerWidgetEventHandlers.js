@@ -1031,73 +1031,51 @@ define(['js/logger',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,
                                                                                                     mousePos) {
         var menuPos = this.diagramDesigner.posToPageXY(mousePos.mX, mousePos.mY),
-            self = this;
+            self = this,
+            itemsIds = selectedIds.filter(function (itemId) {
+                return self.diagramDesigner.itemIds.indexOf(itemId) > -1;
+            });
 
-        this._alignMenu.show(selectedIds, menuPos, function (key) {
-            self._onAlignSelection(selectedIds, key);
+        this._alignMenu.show(itemsIds, menuPos, function (key) {
+            self._onAlignSelection(itemsIds, key);
         });
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onAlignSelection = function (selectedIds, type) {
         var self = this,
-            modelId = this.metaAspectContainerNodeID,
             selectedModels,
             allModels,
             result;
 
-        // Get the gmeIds and filter out connections.
-        selectedModels = selectedIds
-            .reduce(function (arr, itemId) {
-                var gmeId = self._ComponentID2GMEID[itemId],
-                    item = self.diagramDesigner.items[itemId];
+        function getItemData(itemId) {
+            var item = self.diagramDesigner.items[itemId];
 
-                if (self._GMENodes.indexOf(gmeId) > -1 && item) {
-                    arr.push({
-                        id: gmeId,
-                        x: item.positionX,
-                        y: item.positionY,
-                        width: item._width,
-                        height: item._height
-                    });
-                }
+            return {
+                id: itemId,
+                x: item.positionX,
+                y: item.positionY,
+                width: item._width,
+                height: item._height
+            };
+        }
 
-                return arr;
-            }, []);
+        function isItemId(itemId) {
+            return self.diagramDesigner.itemIds.indexOf(itemId) > -1;
+        }
+
+        selectedModels = selectedIds.filter(isItemId).map(getItemData);
 
         if (selectedModels.length === 0) {
             // No models were selected...
             return;
         }
 
-        allModels = self._GMENodes
-            .reduce(function (arr, gmeId) {
-                var itemId = self._GMEID2ComponentID[gmeId],
-                    item = self.diagramDesigner.items[itemId];
-
-                if (item) {
-                    arr.push({
-                        id: gmeId,
-                        x: item.positionX,
-                        y: item.positionY,
-                        width: item._width,
-                        height: item._height
-                    });
-                }
-
-                return arr;
-            }, []);
+        allModels = self.diagramDesigner.itemIds.map(getItemData);
 
         result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
-
-        this._client.startTransaction();
-        Object.keys(result).forEach(function (id) {
-            var newPos = result[id];
-
-            self._client.addMember(modelId, id, self._selectedMetaAspectSet);
-            self._client.setMemberRegistry(modelId, id, self._selectedMetaAspectSet, REGISTRY_KEYS.POSITION, newPos);
-        });
-
-        this._client.completeTransaction();
+        if (Object.keys(result).length > 0) {
+            self._onDesignerItemsMove(result);
+        }
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onInconsistencyLinkClicked = function (gmeId) {

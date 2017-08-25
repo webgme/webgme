@@ -44,32 +44,33 @@ define(['./ContextMenu'], function (ContextMenu) {
 
         /**
          *
-         * @param selectionIds
+         * @param selectedIds
          * @param position
          * @param {function(key)} callback
          */
-        this.show = function (selectionIds, position, callback) {
+        this.show = function (selectedIds, position, callback) {
             var menuItems = {};
 
-            //TODO: Display the short cuts in a prettier way
-            menuItems[CONSTANTS.MOVE_TO_TOP] = {
-                name: 'Move to top [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_TOP + ']',
-                icon: 'glyphicon glyphicon-arrow-up'
-            };
-            menuItems[CONSTANTS.MOVE_TO_BOTTOM] = {
-                name: 'Move to bottom [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_BOTTOM + ']',
-                icon: 'glyphicon glyphicon-arrow-down'
-            };
-            menuItems[CONSTANTS.MOVE_TO_LEFT] = {
-                name: 'Move to left [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_LEFT + ']',
-                icon: 'glyphicon glyphicon-arrow-left'
-            };
-            menuItems[CONSTANTS.MOVE_TO_RIGHT] = {
-                name: 'Move to right [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_RIGHT + ']',
-                icon: 'glyphicon glyphicon-arrow-right'
-            };
+            if (selectedIds.length > 0) {
+                menuItems[CONSTANTS.MOVE_TO_TOP] = {
+                    name: 'Move to top [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_TOP + ']',
+                    icon: 'glyphicon glyphicon-arrow-up'
+                };
+                menuItems[CONSTANTS.MOVE_TO_BOTTOM] = {
+                    name: 'Move to bottom [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_BOTTOM + ']',
+                    icon: 'glyphicon glyphicon-arrow-down'
+                };
+                menuItems[CONSTANTS.MOVE_TO_LEFT] = {
+                    name: 'Move to left [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_LEFT + ']',
+                    icon: 'glyphicon glyphicon-arrow-left'
+                };
+                menuItems[CONSTANTS.MOVE_TO_RIGHT] = {
+                    name: 'Move to right [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_RIGHT + ']',
+                    icon: 'glyphicon glyphicon-arrow-right'
+                };
+            }
 
-            if (selectionIds.length > 1) {
+            if (selectedIds.length > 1) {
                 menuItems[CONSTANTS.ALIGN_HORIZON] = {
                     name: 'Align selection vertically',
                     icon: 'fa fa-ellipsis-h'
@@ -80,7 +81,7 @@ define(['./ContextMenu'], function (ContextMenu) {
                 };
             }
 
-            if (selectionIds.length > 2) {
+            if (selectedIds.length > 2) {
                 menuItems[CONSTANTS.DISTRIBUTE_HORIZON] = {
                     name: 'Distribute horizontally',
                     icon: 'fa fa-arrows-h'
@@ -114,7 +115,7 @@ define(['./ContextMenu'], function (ContextMenu) {
                 xPosChange,
                 target;
             // models {
-            //  id: <gmeID>,
+            //  id: <itemId>,
             //  x: <number>,
             //  y: <number>,
             //  height: <number>,
