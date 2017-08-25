@@ -49,13 +49,22 @@ define([
             oked = false;
 
         // mode selector
-        this._modeSelect = this._dialog.find("#mode_select").first();
-        $(this._modeSelect).val(params.multilineType || COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
-        this._modeSelect.on('change', this.changeMode.bind(this));
+        this._modeSelect = this._dialog.find('#mode_select').first();
 
-        if (params.multilineType && params.multilineType !== COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext) {
-            codemirrorOptions.mode = CONSTANTS.MODE[params.multilineType];
+        Object.keys(COMMON.ATTRIBUTE_MULTILINE_TYPES).forEach(function (type) {
+            self._modeSelect.append($('<option/>').text(type));
+        });
+
+        if (COMMON.ATTRIBUTE_MULTILINE_TYPES.hasOwnProperty(params.multilineType)) {
+            this._modeSelect.val(params.multilineType);
+            if (params.multilineType !== COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext) {
+                codemirrorOptions.mode = CONSTANTS.MODE[params.multilineType];
+            }
+        } else {
+            this._modeSelect.val(COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
         }
+
+        this._modeSelect.on('change', this.changeMode.bind(this));
 
         if (params.iconClass) {
             this._icon.addClass(params.iconClass);
@@ -73,11 +82,6 @@ define([
 
         if (typeof params.cancelLabel === 'string') {
             $(this._cancelBtn).text(params.cancelLabel);
-        }
-
-        switch (params.multilineType) {
-            default:
-
         }
 
         this._editor = CodeMirror.fromTextArea(this._dialog.find('#codemirror-area').first().get(0), codemirrorOptions);
