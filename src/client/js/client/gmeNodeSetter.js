@@ -1001,7 +1001,7 @@ define([], function () {
         function isTypeOf(path, typePath) {
             var node = _getNode(path);
 
-            if (node && typeNode) {
+            if (node) {
                 return state.core.isTypeOf(node, typePath);
             }
 
