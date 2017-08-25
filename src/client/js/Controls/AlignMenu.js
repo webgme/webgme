@@ -71,11 +71,11 @@ define(['./ContextMenu'], function (ContextMenu) {
             }
 
             if (selectedIds.length > 1) {
-                menuItems[CONSTANTS.ALIGN_HORIZON] = {
+                menuItems[CONSTANTS.ALIGN_VERTICAL] = {
                     name: 'Align selection vertically',
                     icon: 'fa fa-ellipsis-h'
                 };
-                menuItems[CONSTANTS.ALIGN_VERTICAL] = {
+                menuItems[CONSTANTS.ALIGN_HORIZON] = {
                     name: 'Align selection horizontally',
                     icon: 'fa fa-ellipsis-v'
                 };
@@ -168,10 +168,10 @@ define(['./ContextMenu'], function (ContextMenu) {
                     target = this.getExtremePosition(allModels, type);
                     break;
                 case CONSTANTS.ALIGN_HORIZON:
+                    xPosChange = true;
                     target = selectedModels[0];
                     break;
                 case CONSTANTS.ALIGN_VERTICAL:
-                    xPosChange = true;
                     target = selectedModels[0];
                     break;
                 case CONSTANTS.DISTRIBUTE_HORIZON:
