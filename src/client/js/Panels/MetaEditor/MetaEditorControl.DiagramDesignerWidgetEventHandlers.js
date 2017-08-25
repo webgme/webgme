@@ -1031,24 +1031,50 @@ define(['js/logger',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,
                                                                                                     mousePos) {
         var menuPos = this.diagramDesigner.posToPageXY(mousePos.mX, mousePos.mY),
-            self = this;
+            self = this,
+            itemsIds = selectedIds.filter(function (itemId) {
+                return self.diagramDesigner.itemIds.indexOf(itemId) > -1;
+            });
 
-        this._alignMenu.show(selectedIds, menuPos, function (key) {
-            self._onAlignSelection(selectedIds, key);
+        this._alignMenu.show(itemsIds, menuPos, function (key) {
+            self._onAlignSelection(itemsIds, key);
         });
     };
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onAlignSelection = function (selectedIds, type) {
-        var params = {
-            client: this._client,
-            modelId: this.metaAspectContainerNodeID,
-            idMap: this._ComponentID2GMEID,
-            setName: this._selectedMetaAspectSet,
-            coordinates: this._metaAspectMembersCoordinatesPerSheet[this._selectedMetaAspectSet]
-        };
+        var self = this,
+            selectedModels,
+            allModels,
+            result;
 
-        if (params.coordinates) {
-            this._alignMenu.alignSetSelection(params, selectedIds, type);
+        function getItemData(itemId) {
+            var item = self.diagramDesigner.items[itemId];
+
+            return {
+                id: itemId,
+                x: item.positionX,
+                y: item.positionY,
+                width: item._width,
+                height: item._height
+            };
+        }
+
+        function isItemId(itemId) {
+            return self.diagramDesigner.itemIds.indexOf(itemId) > -1;
+        }
+
+        selectedModels = selectedIds.filter(isItemId).map(getItemData);
+
+        if (selectedModels.length === 0) {
+            // No models were selected...
+            return;
+        }
+
+        allModels = self.diagramDesigner.itemIds.map(getItemData);
+
+        result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
+        if (Object.keys(result).length > 0) {
+            self._onDesignerItemsMove(result);
         }
     };
 

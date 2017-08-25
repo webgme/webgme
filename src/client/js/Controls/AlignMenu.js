@@ -11,79 +11,84 @@ define(['./ContextMenu'], function (ContextMenu) {
     function AlignMenu(CONSTANTS, options) {
         options = options || {};
 
-        this.isXAxisType = function (type) {
-            return type === CONSTANTS.MOVE_TO_LEFT || type === CONSTANTS.MOVE_TO_RIGHT ||
-                type === CONSTANTS.ALIGN_VERTICAL;
-        };
-
         this.getExtremePosition = function (allModels, type) {
             var i,
-                position,
                 extreme = {
-                    position: null,
+                    x: null,
+                    y: null,
                     id: null
                 };
 
             for (i = 0; i < allModels.length; i += 1) {
-                position = allModels[i].position;
-
                 if (type === CONSTANTS.MOVE_TO_TOP) {
-                    if (extreme.position === null || extreme.position.y > position.y) {
+                    if (extreme.y === null || extreme.y > allModels[i].y) {
                         extreme = allModels[i];
                     }
                 } else if (type === CONSTANTS.MOVE_TO_BOTTOM) {
-                    if (extreme.position === null || extreme.position.y < position.y) {
+                    if (extreme.y === null || extreme.y < allModels[i].y) {
                         extreme = allModels[i];
                     }
                 } else if (type === CONSTANTS.MOVE_TO_RIGHT) {
-                    if (extreme.position === null || extreme.position.x < position.x) {
+                    if (extreme.x === null || extreme.x < allModels[i].x) {
                         extreme = allModels[i];
                     }
                 } else if (type === CONSTANTS.MOVE_TO_LEFT) {
-                    if (extreme.position === null || extreme.position.x > position.x) {
+                    if (extreme.x === null || extreme.x > allModels[i].x) {
                         extreme = allModels[i];
                     }
                 }
             }
 
-            return extreme.position !== null ? extreme : null;
+            return extreme.id !== null ? extreme : null;
         };
 
         /**
          *
-         * @param selectionIds
+         * @param selectedIds
          * @param position
          * @param {function(key)} callback
          */
-        this.show = function (selectionIds, position, callback) {
+        this.show = function (selectedIds, position, callback) {
             var menuItems = {};
 
-            //TODO: Display the short cuts in a prettier way
-            menuItems[CONSTANTS.MOVE_TO_TOP] = {
-                name: 'Move to top [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_TOP + ']',
-                icon: 'glyphicon glyphicon-arrow-up'
-            };
-            menuItems[CONSTANTS.MOVE_TO_BOTTOM] = {
-                name: 'Move to bottom [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_BOTTOM + ']',
-                icon: 'glyphicon glyphicon-arrow-down'
-            };
-            menuItems[CONSTANTS.MOVE_TO_LEFT] = {
-                name: 'Move to left [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_LEFT + ']',
-                icon: 'glyphicon glyphicon-arrow-left'
-            };
-            menuItems[CONSTANTS.MOVE_TO_RIGHT] = {
-                name: 'Move to right [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_RIGHT + ']',
-                icon: 'glyphicon glyphicon-arrow-right'
-            };
-
-            if (selectionIds.length > 1) {
-                menuItems[CONSTANTS.ALIGN_HORIZON] = {
-                    name: 'Align selection horizontally',
-                    icon: 'fa fa-ellipsis-h'
+            if (selectedIds.length > 0) {
+                menuItems[CONSTANTS.MOVE_TO_TOP] = {
+                    name: 'Move to top [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_TOP + ']',
+                    icon: 'glyphicon glyphicon-arrow-up'
                 };
+                menuItems[CONSTANTS.MOVE_TO_BOTTOM] = {
+                    name: 'Move to bottom [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_BOTTOM + ']',
+                    icon: 'glyphicon glyphicon-arrow-down'
+                };
+                menuItems[CONSTANTS.MOVE_TO_LEFT] = {
+                    name: 'Move to left [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_LEFT + ']',
+                    icon: 'glyphicon glyphicon-arrow-left'
+                };
+                menuItems[CONSTANTS.MOVE_TO_RIGHT] = {
+                    name: 'Move to right [' + CONSTANTS.KEY_SHORT_CUT_MOVE_TO_RIGHT + ']',
+                    icon: 'glyphicon glyphicon-arrow-right'
+                };
+            }
+
+            if (selectedIds.length > 1) {
                 menuItems[CONSTANTS.ALIGN_VERTICAL] = {
                     name: 'Align selection vertically',
+                    icon: 'fa fa-ellipsis-h'
+                };
+                menuItems[CONSTANTS.ALIGN_HORIZON] = {
+                    name: 'Align selection horizontally',
                     icon: 'fa fa-ellipsis-v'
+                };
+            }
+
+            if (selectedIds.length > 2) {
+                menuItems[CONSTANTS.DISTRIBUTE_HORIZON] = {
+                    name: 'Distribute horizontally',
+                    icon: 'fa fa-arrows-h'
+                };
+                menuItems[CONSTANTS.DISTRIBUTE_VERTICAL] = {
+                    name: 'Distribute vertically',
+                    icon: 'fa fa-arrows-v'
                 };
             }
 
@@ -96,75 +101,126 @@ define(['./ContextMenu'], function (ContextMenu) {
             menu.show(position);
         };
 
-        this.alignSetSelection = function (params, selectedIds, type) {
-            var target,
-                changeXAxis,
-                selectedModels = [],
-                allModels = [],
-                client = params.client,
-                modelId = params.modelId,
-                idMap = params.idMap,
-                coordinates = params.coordinates,
-                setName = params.setName;
+        /**
+         *
+         * @param {object[]} allModels
+         * @param {object[]} selectedModels
+         * @param {string} type - 'MOVE_TO_LEFT', 'MOVE_TO_RIGHT', 'MOVE_TO_TOP', 'MOVE_TO_BOTTOM',
+         * 'ALIGN_HORIZON', 'ALIGN_VERTICAL', 'DISTRIBUTE_HORIZON', 'DISTRIBUTE_VERTICAL'
+         *
+         * @returns {object} - New positions indexed by id (only added if changed).
+         */
+        this.getNewPositions = function (allModels, selectedModels, type) {
+            var result = {},
+                xPosChange,
+                target;
+            // models {
+            //  id: <itemId>,
+            //  x: <number>,
+            //  y: <number>,
+            //  height: <number>,
+            //  width: <number>
+            // }
 
-            selectedIds.forEach(function (id) {
-                var gmeId = idMap[id];
-                if (gmeId && coordinates[gmeId]) {
-
-                    selectedModels.push({
-                        id: gmeId,
-                        position: {
-                            x: coordinates[gmeId].x,
-                            y: coordinates[gmeId].y
-                        }
-                    });
-                }
-            });
-
-            if (selectedModels.length === 0) {
-                // No models were selected...
-                return;
+            function getPos(model) {
+                return xPosChange ? model.x : model.y;
             }
 
-            if (type.indexOf('MOVE_TO_') === 0) {
-                Object.keys(coordinates).forEach(function (gmeId) {
-                    allModels.push({
-                        id: gmeId,
-                        position: {
-                            x: coordinates[gmeId].x,
-                            y: coordinates[gmeId].y
-                        }
-                    });
+            function getWidth(model) {
+                return xPosChange ? model.width: model.height;
+            }
+
+            function getTotalWidth(models) {
+                return models.reduce(function (tot, model) {
+                    return tot + getWidth(model);
+                }, 0);
+            }
+
+            function calculateDistribution(models) {
+                var start = getPos(models[0]) + getWidth(models.shift()),
+                    end = getPos(models.pop()),
+                    tot = getTotalWidth(models),
+                    d = (end - start - tot) / (models.length + 1);
+
+                models.forEach(function (model) {
+                    var newPos = start + d,
+                        currPos = getPos(model);
+
+                    if (newPos !== currPos) {
+                        result[model.id] = {
+                            x: xPosChange ? Math.round(newPos) : model.x,
+                            y: xPosChange ? model.y : Math.round(newPos)
+                        };
+                    }
+
+                    start = newPos + getWidth(model);
                 });
+            }
 
-                target = this.getExtremePosition(allModels, type);
+            switch (type) {
+                case CONSTANTS.MOVE_TO_LEFT:
+                case CONSTANTS.MOVE_TO_RIGHT:
+                    xPosChange = true;
+                    target = this.getExtremePosition(allModels, type);
+                    break;
+                case CONSTANTS.MOVE_TO_TOP:
+                case CONSTANTS.MOVE_TO_BOTTOM:
+                    target = this.getExtremePosition(allModels, type);
+                    break;
+                case CONSTANTS.ALIGN_HORIZON:
+                    xPosChange = true;
+                    target = selectedModels[0];
+                    break;
+                case CONSTANTS.ALIGN_VERTICAL:
+                    target = selectedModels[0];
+                    break;
+                case CONSTANTS.DISTRIBUTE_HORIZON:
+                    xPosChange = true;
+                    selectedModels.sort(function (p1, p2) {
+                        if (p1.x > p2.x) {
+                            return 1;
+                        } else if (p1.x === p2.x) {
+                            return 0;
+                        } else {
+                            return -1;
+                        }
+                    });
+                    break;
+                case CONSTANTS.DISTRIBUTE_VERTICAL:
+                    selectedModels.sort(function (p1, p2) {
+                        if (p1.y > p2.y) {
+                            return 1;
+                        } else if (p1.y === p2.y) {
+                            return 0;
+                        } else {
+                            return -1;
+                        }
+                    });
+                    break;
+                default:
+                    return {};
+            }
+
+            if (target) {
+                selectedModels.forEach(function (model) {
+                    if (xPosChange && model.x !== target.x) {
+                        result[model.id] = {
+                            x: target.x,
+                            y: model.y
+                        };
+                    } else if (model.y !== target.y) {
+                        result[model.id] = {
+                            x: model.x,
+                            y: target.y
+                        };
+                    }
+                });
             } else {
-                target = selectedModels[0];
+                // Do not mutate the input array
+                calculateDistribution(selectedModels.slice());
             }
 
-            if (!target) {
-                return;
-            }
-
-            changeXAxis = this.isXAxisType(type);
-
-            client.startTransaction();
-            selectedModels.forEach(function (modelDesc) {
-                var newPos = modelDesc.position;
-                if (target.id === modelDesc.id) {
-                    return;
-                }
-
-                if (changeXAxis === true) {
-                    newPos.x = target.position.x;
-                } else {
-                    newPos.y = target.position.y;
-                }
-
-                client.setMemberRegistry(modelId, modelDesc.id, setName, 'position', newPos);
-            });
-
-            client.completeTransaction();
+            return result;
         };
     }
 

@@ -1338,10 +1338,13 @@ define(['js/logger',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionAlignMenu = function (selectedIds,
                                                                                                      mousePos) {
         var menuPos = this.designerCanvas.posToPageXY(mousePos.mX, mousePos.mY),
-            self = this;
+            self = this,
+            itemsIds = selectedIds.filter(function (itemId) {
+                return self.designerCanvas.itemIds.indexOf(itemId) > -1;
+            });
 
-        this._alignMenu.show(selectedIds, menuPos, function (key) {
-            self._onAlignSelection(selectedIds, key);
+        this._alignMenu.show(itemsIds, menuPos, function (key) {
+            self._onAlignSelection(itemsIds, key);
         });
     };
 
@@ -1417,76 +1420,40 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onAlignSelection = function (selectedIds, type) {
-        var selectedModels = [],
-            allModels = [],
-            target,
-            changeXAxis,
-            modelId = this.currentNodeInfo.id,
-            self = this;
+        var self = this,
+            selectedModels,
+            allModels,
+            result;
 
-        // Get the gmeIds and filter out connections.
-        selectedIds.forEach(function (id) {
-            var gmeId = self._ComponentID2GMEID[id],
-                objDesc;
-            if (self._GMEModels.indexOf(gmeId) > -1) {
-                objDesc = self._getObjectDescriptor(gmeId);
-                if (objDesc) {
-                    selectedModels.push(objDesc);
-                } else {
-                    self.logger.warn('_onAlignSelection, could not get objectDescriptor for a selectedIds', gmeId);
-                }
-            }
-        });
+        function getItemData(itemId) {
+            var item = self.designerCanvas.items[itemId];
+
+            return {
+                id: itemId,
+                x: item.positionX,
+                y: item.positionY,
+                width: item._width,
+                height: item._height
+            };
+        }
+
+        function isItemId(itemId) {
+            return self.designerCanvas.itemIds.indexOf(itemId) > -1;
+        }
+
+        selectedModels = selectedIds.filter(isItemId).map(getItemData);
 
         if (selectedModels.length === 0) {
             // No models were selected...
             return;
         }
 
-        if (type.indexOf('MOVE_TO_') === 0) {
-            self._GMEModels.forEach(function (gmeId) {
-                var objDesc = self._getObjectDescriptor(gmeId);
-                if (objDesc) {
-                    allModels.push(objDesc);
-                } else {
-                    self.logger.warn('_onAlignSelection, could not get objectDescriptor for a _GMEModels', gmeId);
-                }
-            });
+        allModels = self.designerCanvas.itemIds.map(getItemData);
 
-            target = self._alignMenu.getExtremePosition(allModels, type);
-        } else {
-            target = selectedModels[0];
+        result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
+        if (Object.keys(result).length > 0) {
+            self._onDesignerItemsMove(result);
         }
-
-        if (!target) {
-            return;
-        }
-
-        changeXAxis = self._alignMenu.isXAxisType(type);
-
-        this._client.startTransaction();
-        selectedModels.forEach(function (modelDesc) {
-            var newPos = modelDesc.position;
-            if (target.id === modelDesc.id) {
-                return;
-            }
-
-            if (changeXAxis === true) {
-                newPos.x = target.position.x;
-            } else {
-                newPos.y = target.position.y;
-            }
-
-            if (self._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                self._client.setRegistry(modelDesc.id, REGISTRY_KEYS.POSITION, newPos);
-            } else {
-                self._client.addMember(modelId, modelDesc.id, self._selectedAspect);
-                self._client.setMemberRegistry(modelId, modelDesc.id, self._selectedAspect, REGISTRY_KEYS.POSITION,
-                    newPos);
-            }
-        });
-
-        this._client.completeTransaction();
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

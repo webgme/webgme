@@ -1996,25 +1996,50 @@ define(['js/logger',
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onSelectionAlignMenu = function (selectedIds,
                                                                                                       mousePos) {
         var menuPos = this._widget.posToPageXY(mousePos.mX, mousePos.mY),
-            self = this;
+            self = this,
+            itemsIds = selectedIds.filter(function (itemId) {
+                return self._widget.itemIds.indexOf(itemId) > -1;
+            });
 
-        this._alignMenu.show(selectedIds, menuPos, function (key) {
-            self._onAlignSelection(selectedIds, key);
+        this._alignMenu.show(itemsIds, menuPos, function (key) {
+            self._onAlignSelection(itemsIds, key);
         });
     };
 
     DiagramDesignerWidgetMultiTabMemberListControllerBase.prototype._onAlignSelection = function (selectedIds, type) {
-        var params = {
-            client: this._client,
-            modelId: this._memberListContainerID,
-            idMap: this._ComponentID2GMEID,
-            setName: this._selectedMemberListID,
-            coordinates: this._memberListMemberCoordinates[this._selectedMemberListID]
-        };
+        var self = this,
+            selectedModels,
+            allModels,
+            result;
 
-        //TODO: Currently connections are always accounted for, regardless if they are displayed as boxes or not.
-        if (params.coordinates) {
-            this._alignMenu.alignSetSelection(params, selectedIds, type);
+        function getItemData(itemId) {
+            var item = self._widget.items[itemId];
+
+            return {
+                id: itemId,
+                x: item.positionX,
+                y: item.positionY,
+                width: item._width,
+                height: item._height
+            };
+        }
+
+        function isItemId(itemId) {
+            return self._widget.itemIds.indexOf(itemId) > -1;
+        }
+
+        selectedModels = selectedIds.filter(isItemId).map(getItemData);
+
+        if (selectedModels.length === 0) {
+            // No models were selected...
+            return;
+        }
+
+        allModels = self._widget.itemIds.map(getItemData);
+
+        result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
+        if (Object.keys(result).length > 0) {
+            self._onDesignerItemsMove(result);
         }
     };
 
