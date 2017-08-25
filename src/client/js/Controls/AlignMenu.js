@@ -82,12 +82,12 @@ define(['./ContextMenu'], function (ContextMenu) {
 
             if (selectionIds.length > 2) {
                 menuItems[CONSTANTS.DISTRIBUTE_HORIZON] = {
-                    name: 'Distribute vertically',
-                    icon: 'fa fa-ellipsis-h'
+                    name: 'Distribute horizontally',
+                    icon: 'fa fa-arrows-h'
                 };
                 menuItems[CONSTANTS.DISTRIBUTE_VERTICAL] = {
-                    name: 'Distribute horizontally',
-                    icon: 'fa fa-ellipsis-v'
+                    name: 'Distribute vertically',
+                    icon: 'fa fa-arrows-v'
                 };
             }
 
@@ -121,12 +121,39 @@ define(['./ContextMenu'], function (ContextMenu) {
             //  width: <number>
             // }
 
-            function getStartPos(model) {
+            function getPos(model) {
                 return xPosChange ? model.x : model.y;
             }
 
-            function getEndPos(model) {
-                return xPosChange ? model.x + model.width: model.y + model.height;
+            function getWidth(model) {
+                return xPosChange ? model.width: model.height;
+            }
+
+            function getTotalWidth(models) {
+                return models.reduce(function (tot, model) {
+                    return tot + getWidth(model);
+                }, 0);
+            }
+
+            function calculateDistribution(models) {
+                var start = getPos(models[0]) + getWidth(models.shift()),
+                    end = getPos(models.pop()),
+                    tot = getTotalWidth(models),
+                    d = (end - start - tot) / (models.length + 1);
+
+                models.forEach(function (model) {
+                    var newPos = start + d,
+                        currPos = getPos(model);
+
+                    if (newPos !== currPos) {
+                        result[model.id] = {
+                            x: xPosChange ? Math.round(newPos) : model.x,
+                            y: xPosChange ? model.y : Math.round(newPos)
+                        };
+                    }
+
+                    start = newPos + getWidth(model);
+                });
             }
 
             switch (type) {
@@ -140,10 +167,10 @@ define(['./ContextMenu'], function (ContextMenu) {
                     target = this.getExtremePosition(allModels, type);
                     break;
                 case CONSTANTS.ALIGN_HORIZON:
-                    xPosChange = true;
                     target = selectedModels[0];
                     break;
                 case CONSTANTS.ALIGN_VERTICAL:
+                    xPosChange = true;
                     target = selectedModels[0];
                     break;
                 case CONSTANTS.DISTRIBUTE_HORIZON:
@@ -188,8 +215,8 @@ define(['./ContextMenu'], function (ContextMenu) {
                     }
                 });
             } else {
-                var start = getEndPos(selectedModels[0]),
-                    end = getStartPos(selectedModels[selectedModels.length - 1]);
+                // Do not mutate the input array
+                calculateDistribution(selectedModels.slice());
             }
 
             return result;

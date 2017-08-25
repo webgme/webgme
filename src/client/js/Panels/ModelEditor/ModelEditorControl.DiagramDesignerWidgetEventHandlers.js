@@ -1434,8 +1434,8 @@ define(['js/logger',
                         id: gmeId,
                         x: item.positionX,
                         y: item.positionY,
-                        width: item.width,
-                        height: item.height
+                        width: item._width,
+                        height: item._height
                     });
                 }
 
@@ -1457,8 +1457,8 @@ define(['js/logger',
                         id: gmeId,
                         x: item.positionX,
                         y: item.positionY,
-                        width: item.width,
-                        height: item.height
+                        width: item._width,
+                        height: item._height
                     });
                 }
 
