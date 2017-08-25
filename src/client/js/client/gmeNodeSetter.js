@@ -999,11 +999,10 @@ define([], function () {
         // TODO: These should be removed at next version bump.
 
         function isTypeOf(path, typePath) {
-            var node = _getNode(path),
-                typeNode = _getNode(typePath);
+            var node = _getNode(path);
 
-            if (node && typeNode) {
-                return state.core.isTypeOf(node, typeNode);
+            if (node) {
+                return state.core.isTypeOf(node, typePath);
             }
 
             return false;

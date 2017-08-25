@@ -1959,21 +1959,21 @@ define([
          * @throws {CoreIllegalOperationError} If the context of the operation is not allowed.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.delMemberAttribute = function (node, setName, path, attrName) {
+        this.delMemberAttribute = function (node, setName, memberPath, attrName) {
             ensureNode(node, 'node');
             ensureType(setName, 'setName', 'string');
-            ensurePath(path, 'path');
+            ensurePath(memberPath, 'memberPath');
             ensureType(attrName, 'attrName', 'string');
             var names = core.getSetNames(node);
             if (names.indexOf(setName) === -1) {
                 throw new CoreIllegalOperationError('Cannot access member information of unknown set.');
             }
             var paths = core.getMemberPaths(node, setName);
-            if (paths.indexOf(path) === -1) {
+            if (paths.indexOf(memberPath) === -1) {
                 throw new CoreIllegalOperationError('Cannot access attributes of an unknown member.');
             }
 
-            return core.delMemberAttribute(node, setName, path, attrName);
+            return core.delMemberAttribute(node, setName, memberPath, attrName);
         };
 
         /**
@@ -2306,20 +2306,24 @@ define([
          * Checks if the given node in any way inherits from the typeNode. In addition to checking if the node
          * "isInstanceOf" of typeNode, this methods also takes mixins into account.
          * @param {module:Core~Node} node - the node in question.
-         * @param {module:Core~Node} typeNode - the type node we want to check.
+         * @param {module:Core~Node | string} typeNodeOrPath - the type node we want to check or its path.
          *
-         * @return {bool} The function returns true if the typeNode is a base node, or a mixin of any of the
-         * base nodes, of the node.
+         * @return {bool} The function returns true if the typeNodeOrPath represents a base node,
+         * or a mixin of any of the base nodes, of the node.
          * Every node is considered to be a type of itself.
          *
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isTypeOf = function (node, typeNode) {
+        this.isTypeOf = function (node, typeNodeOrPath) {
             ensureNode(node, 'node');
-            ensureNode(typeNode, 'typeNode');
+            if (typeof typeNodeOrPath === 'string') {
+                ensurePath(typeNodeOrPath, 'typeNodeOrPath');
+            } else {
+                ensureNode(typeNodeOrPath, 'typeNodeOrPath');
+            }
 
-            return core.isTypeOf(node, typeNode);
+            return core.isTypeOf(node, typeNodeOrPath);
         };
 
         /**
@@ -3027,7 +3031,7 @@ define([
         /**
          * Checks if the node is an instance of base.
          * @param {module:Core~Node} node - the node in question.
-         * @param {module:Core~Node} base - a potential base of the node
+         * @param {module:Core~Node | string} baseNodeOrPath - a potential base node (or its path) of the node
          *
          * @return {bool} Returns true if the base is on the inheritance chain of node.
          * A node is considered to be an instance of itself here.
@@ -3035,15 +3039,19 @@ define([
          * @throws {CoreIllegalArgumentError} If some of the parameters doesn't match the input criteria.
          * @throws {CoreAssertError} If some internal error took place inside the core layers.
          */
-        this.isInstanceOf = function (node, base) {
+        this.isInstanceOf = function (node, baseNodeOrPath) {
+            var noPath;
             ensureNode(node, 'node');
-            if (typeof base === 'string') {
-                return core.isInstanceOfDeprecated(node, base);
+            if (typeof baseNodeOrPath === 'string') {
+                noPath = ensurePath(baseNodeOrPath, 'baseNodeOrPath', true);
+                if (noPath) {
+                    return core.isInstanceOfDeprecated(node, baseNodeOrPath);
+                }
+            } else {
+                ensureNode(baseNodeOrPath, 'baseNodeOrPath');
             }
 
-            ensureNode(base, 'base');
-
-            return core.isInstanceOf(node, base);
+            return core.isInstanceOf(node, baseNodeOrPath);
         };
 
         /**

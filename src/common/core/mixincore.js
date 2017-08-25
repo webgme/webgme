@@ -300,7 +300,7 @@ define([
             return ['containment'];
         }
 
-        function isTypeOf(node, typeNode, alreadyVisited) {
+        function isTypeOf(node, typeNodeOrPath, alreadyVisited) {
             var base, mixins, i,
                 path = self.getPath(node);
 
@@ -310,47 +310,18 @@ define([
 
             alreadyVisited[path] = true;
 
-            if (innerCore.isTypeOf(node, typeNode)) {
+            if (innerCore.isTypeOf(node, typeNodeOrPath)) {
                 return true;
             }
 
             base = self.getBase(node);
-            if (base && isTypeOf(base, typeNode, alreadyVisited)) {
+            if (base && isTypeOf(base, typeNodeOrPath, alreadyVisited)) {
                 return true;
             }
 
             mixins = getOrderedMixinList(node);
             for (i = 0; i < mixins.length; i += 1) {
-                if (isTypeOf(mixins[i], typeNode, alreadyVisited)) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        function isTypeOfPath(node, typePath, alreadyVisited) {
-            var base, mixins, i,
-                path = self.getPath(node);
-
-            if (alreadyVisited[path]) {
-                return false;
-            }
-
-            alreadyVisited[path] = true;
-
-            if (innerCore.isTypeOfPath(node, typePath)) {
-                return true;
-            }
-
-            base = self.getBase(node);
-            if (base && isTypeOfPath(base, typePath, alreadyVisited)) {
-                return true;
-            }
-
-            mixins = getOrderedMixinList(node);
-            for (i = 0; i < mixins.length; i += 1) {
-                if (isTypeOfPath(mixins[i], typePath, alreadyVisited)) {
+                if (isTypeOf(mixins[i], typeNodeOrPath, alreadyVisited)) {
                     return true;
                 }
             }
@@ -382,20 +353,12 @@ define([
 
         //<editor-fold=Modified Methods>
 
-        this.isTypeOf = function (node, typeNode) {
+        this.isTypeOf = function (node, typeNodeOrPath) {
             if (!realNode(node)) {
                 return false;
             }
 
-            return isTypeOf(node, typeNode, {});
-        };
-
-        this.isTypeOfPath = function (node, typePath) {
-            if (!realNode(node)) {
-                return false;
-            }
-
-            return isTypeOfPath(node, typePath, {});
+            return isTypeOf(node, typeNodeOrPath, {});
         };
 
         this.isValidChildOf = function (node, parentNode) {
@@ -613,7 +576,7 @@ define([
                 i;
 
             for (i = 0; i < aspectMeta.length; i += 1) {
-                if (self.isTypeOfPath(node, aspectMeta[i])) {
+                if (self.isTypeOf(node, aspectMeta[i])) {
                     return true;
                 }
             }
