@@ -26,7 +26,7 @@ ul.split-panel-dropdown-list {
       top: 0px;
       width: 40px;
       height: 40px;
-      z-index: 1; }
+      z-index: 999999; }
     .split-panel .split-panel-panel-container .maximize-btn {
       position: absolute;
       top: 7px;
@@ -36,7 +36,8 @@ ul.split-panel-dropdown-list {
       opacity: 0.75;
       cursor: pointer; }
       .split-panel .split-panel-panel-container .maximize-btn:hover {
-        opacity: 1; }
+        opacity: 1;
+        text-shadow: -2px 2px #9ecaed, 2px -2px #9ecaed, -1px 1px #9ecaed, 1px -1px #9ecaed; }
   .split-panel .splitter {
     z-index: 1000;
     position: absolute;
