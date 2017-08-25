@@ -139,13 +139,13 @@ define(['js/logger',
         }
 
         //let's update the one that has not been changed but their position might have
-        //diff = putConnectionsToBeHandledLast(_.intersection(actualMembers, currentlyDisplayedMembers));
-        //len = diff.length;
-        //this._widget.beginUpdate();
-        //while (len--) {
-        //    this._onUpdate(diff[len]);
-        //}
-        //this._widget.endUpdate();
+        diff = putConnectionsToBeHandledLast(_.intersection(actualMembers, currentlyDisplayedMembers));
+        len = diff.length;
+        this._widget.beginUpdate();
+        while (len--) {
+           this._onUpdate(diff[len]);
+        }
+        this._widget.endUpdate();
 
         //save current list of members
         this._selectedMemberListMembers = actualMembers;
