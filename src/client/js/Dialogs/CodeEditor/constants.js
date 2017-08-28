@@ -9,7 +9,6 @@ define([], function () {
 
     return {
         MODE: {
-            plaintext: 'generic',
             html: 'htmlmixed',
             c: 'clike',
             cpp: 'clike',

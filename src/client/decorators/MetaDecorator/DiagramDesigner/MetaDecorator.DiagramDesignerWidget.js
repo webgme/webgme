@@ -161,7 +161,7 @@ define([
 
                 if (attrMeta.multiline) {
                     desc.multiline = true;
-                    desc.multilineType = attrMeta.multilineType || 'generic';
+                    desc.multilineType = attrMeta.multilineType;
                 }
 
                 if (attrMeta.enum && attrMeta.enum.length > 0) {
@@ -573,7 +573,7 @@ define([
 
         if (attrDesc.multiline) {
             attrSchema.multiline = true;
-            attrSchema.multilineType = attrDesc.multilineType || 'generic';
+            attrSchema.multilineType = attrDesc.multilineType;
         }
 
         if (attrDesc.isEnum) {

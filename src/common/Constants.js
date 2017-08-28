@@ -89,22 +89,22 @@ define(['common/core/constants', 'common/storage/constants'], function (CORE, ST
 
         ATTRIBUTE_MULTILINE_TYPES: {
             plaintext: 'plaintext',
-            html: 'html',
             c: 'c',
             cpp: 'cpp',
             csharp: 'csharp',
             css: 'css',
             erlang: 'erlang',
+            html: 'html',
             java: 'java',
             javascript: 'javascript',
+            latex: 'latex',
+            lua: 'lua',
             markdown: 'markdown',
             mathematica: 'mathematica',
             modelica: 'modelica',
-            tex: 'tex',
-            latex: 'latex',
-            lua: 'lua',
-            sql: 'sql',
             python: 'python',
+            sql: 'sql',
+            tex: 'tex',
             ttcn: 'ttcn',
             yaml: 'yaml'
         }

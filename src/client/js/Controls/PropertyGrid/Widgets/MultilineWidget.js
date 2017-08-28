@@ -12,7 +12,7 @@ define([
     'use strict';
 
     var MultilineWidget,
-        BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-link btn-sm">edit content</a>');
+        BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-link btn-sm">Edit content ...</a>');
 
     MultilineWidget = function (propertyDesc) {
         var self = this;
@@ -28,6 +28,13 @@ define([
 
         this._readOnly = false;
         this.__btnDialogOpen = BTN_DIALOG_OPEN_BASE.clone();
+        this.__btnDialogOpen.css({
+            'font-size': '11px',
+            'color': '#3160ab',
+            'padding-left': '0',
+            'padding-right': '0'
+        });
+
         this.el.append(this.__btnDialogOpen);
 
         this.__btnDialogOpen.on('click', function (e) {
@@ -36,8 +43,8 @@ define([
             e.stopPropagation();
             e.preventDefault();
 
-            propertyDesc.onHideFn = saving;
             propertyDesc.readOnly = self._readOnly;
+            propertyDesc.title = 'Edit Attribute "' + propertyDesc.name + '"';
 
             dialog.show(propertyDesc);
         });
@@ -56,10 +63,10 @@ define([
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         this._readOnly = isReadOnly;
-        if(isReadOnly){
-            this.__btnDialogOpen.text('view content');
+        if (isReadOnly) {
+            this.__btnDialogOpen.text('View content ...');
         } else {
-            this.__btnDialogOpen.text('edit content');
+            this.__btnDialogOpen.text('Edit content ...');
         }
     };
 

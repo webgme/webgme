@@ -41,12 +41,7 @@ define([
 
     AttributeDetailsDialog.prototype._initDialog = function (attributeDesc, attributeNames, saveCallBack,
                                                              deleteCallBack) {
-        var self = this,
-            closeSave,
-            closeDelete,
-            isValidAttributeName,
-            selectedTypeChanged,
-            getTypeConvertedValue;
+        var self = this;
 
         function isValidRegExp(val) {
             var result = true;
@@ -60,12 +55,44 @@ define([
             return result;
         }
 
+        function isValidAttributeName(name) {
+            return !(name === '' ||
+            name === 'name' ||
+            attributeNames.indexOf(name) !== -1 ||
+            REGEXP.DOCUMENT_KEY.test(name) === false);
+        }
+
+        function getTypeConvertedValue(value, type) {
+            var result;
+
+            switch (type) {
+                case 'integer':
+                    result = parseInt(value, 10);
+                    if (isNaN(result)) {
+                        result = undefined;
+                    }
+                    break;
+                case 'float':
+                    result = parseFloat(value, 10);
+                    if (isNaN(result)) {
+                        result = undefined;
+                    }
+                    break;
+                case 'boolean':
+                    break;
+                default:
+                    break;
+            }
+
+            return result;
+        }
+
         function enumSelectionChanged(checked) {
-            var multiChecked = self._cbMultiLine.is(':checked');
+            var multiChecked = self._cbMultiline.is(':checked');
 
             if (checked) {
                 if (multiChecked) {
-                    self._cbMultiLine.attr('checked', false);
+                    self._cbMultiline.attr('checked', false);
                     multiLineSelectionChanged(false);
                 }
                 self._pEnumValues.show();
@@ -94,17 +121,18 @@ define([
                     self._cbEnum.attr('checked', false);
                     enumSelectionChanged(false);
                 }
-                self._pMultiLineSubTypes.show();
-                self._pRegExp.hide();
-                self._pRegExpValue.val('');
+                self._pMultilineSubTypes.show();
+                self._pDefaultValueMultiline.show();
+                self._pDefaultValue.hide();
             } else {
-                self._multilineType.val(CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plaintext);
-                self._pMultiLineSubTypes.hide();
-                self._pRegExp.show();
+                self._multilineType.val('');
+                self._pMultilineSubTypes.hide();
+                self._pDefaultValueMultiline.hide();
+                self._pDefaultValue.show();
             }
         }
 
-        closeSave = function () {
+        function closeSave() {
             var i,
                 len,
                 eValues,
@@ -116,11 +144,6 @@ define([
                     readonly: self._cbReadonly.is(':checked'),
                 },
                 cValue;
-
-            if (self._cbMultiLine.is(':checked')) {
-                attrDesc.multiline = true;
-                attrDesc.multilineType = self._multilineType.val() || CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plaintext;
-            }
 
             if (attrDesc.isEnum) {
                 attrDesc.enumValues = self._inputEnumValues.val().split('\n');
@@ -164,6 +187,14 @@ define([
                 if (self._pRegExpValue.val()) {
                     attrDesc.regexp = self._pRegExpValue.val();
                 }
+
+                if (self._cbMultiline.is(':checked')) {
+                    attrDesc.multiline = true;
+                    attrDesc.defaultValue = self._inputDefaultValueMultiline.val();
+                    if (self._multilineType.val()) {
+                        attrDesc.multilineType = self._multilineType.val();
+                    }
+                }
             }
 
             self._dialog.modal('hide');
@@ -171,51 +202,29 @@ define([
             if (saveCallBack) {
                 saveCallBack.call(self, attrDesc);
             }
-        };
+        }
 
-        closeDelete = function () {
+        function closeDelete() {
             self._dialog.modal('hide');
 
             if (deleteCallBack) {
                 deleteCallBack.call(self);
             }
-        };
+        }
 
-        getTypeConvertedValue = function (value, type) {
-            var result;
-
-            switch (type) {
-                case 'integer':
-                    result = parseInt(value, 10);
-                    if (isNaN(result)) {
-                        result = undefined;
-                    }
-                    break;
-                case 'float':
-                    result = parseFloat(value, 10);
-                    if (isNaN(result)) {
-                        result = undefined;
-                    }
-                    break;
-                case 'boolean':
-                    break;
-                default:
-                    break;
-            }
-
-            return result;
-        };
-
-        selectedTypeChanged = function (newType) {
+        function selectedTypeChanged(newType) {
             self._pDefaultValue.show();
+            self._pDefaultValueBoolean.hide();
+            self._pDefaultValueMultiline.hide();
+
             self._pEnum.show();
             if (self._cbEnum.is(':checked')) {
                 self._pEnumValues.show();
             }
-            self._pDefaultValueBoolean.hide();
-            self._pMultiLine.hide();
-            if (self._cbMultiLine.is(':checked')) {
-                self._pMultiLineSubTypes.hide();
+
+            self._pMultiline.hide();
+            if (self._cbMultiline.is(':checked')) {
+                self._pMultilineSubTypes.hide();
             }
 
             switch (newType) {
@@ -245,20 +254,15 @@ define([
                 default:
                     self._pRegExp.show();
                     self._pRange.hide();
-                    self._pMultiLine.show();
-                    if (self._cbMultiLine.is(':checked')) {
-                        self._pMultiLineSubTypes.show();
+                    self._pMultiline.show();
+                    if (self._cbMultiline.is(':checked')) {
+                        self._pDefaultValue.hide();
+                        self._pDefaultValueMultiline.show();
+                        self._pMultilineSubTypes.show();
                     }
                     break;
             }
-        };
-
-        isValidAttributeName = function (name) {
-            return !(name === '' ||
-                name === 'name' ||
-                attributeNames.indexOf(name) !== -1 ||
-                REGEXP.DOCUMENT_KEY.test(name) === false);
-        };
+        }
 
         this._dialog = $(attributeDetailsDialogTemplate);
 
@@ -266,12 +270,19 @@ define([
         this._el = this._dialog.find('.modal-body').first();
         this._cbEnum = this._el.find('#cbEnum').first();
         this._pEnum = this._el.find('#pEnum').first();
-        this._cbMultiLine = this._el.find('#cbMultiline').first();
+        this._cbMultiline = this._el.find('#cbMultiline').first();
 
-        this._pMultiLine = this._el.find('#pMultiline').first();
-        this._pMultiLineSubTypes = this._el.find('#pMultilineSubtypes').first();
-        this._pMultiLineSubTypes.hide();
+        this._pMultiline = this._el.find('#pMultiline').first();
+        this._pMultiline.hide();
+        this._pMultilineSubTypes = this._el.find('#pMultilineSubtypes').first();
+        this._pMultilineSubTypes.hide();
         this._multilineType = this._el.find('#multilineType').first();
+
+        this._multilineType.append($('<option></option>'));
+
+        Object.keys(CONSTANTS.ATTRIBUTE_MULTILINE_TYPES).forEach(function (type) {
+            self._multilineType.append($('<option></option>').text(type));
+        });
 
         this._pEnumValues = this._el.find('#pEnumValues').first();
         this._pEnumValues.hide();
@@ -281,8 +292,14 @@ define([
 
         this._inputName = this._el.find('#inputName').first();
         this._inputType = this._el.find('#inputType').first();
+
+        // Default value controls
         this._inputDefaultValue = this._el.find('#inputDefaultValue').first();
         this._pDefaultValue = this._el.find('#pDefaultValue').first();
+
+        this._inputDefaultValueMultiline = this._el.find('#inputDefaultValueMultiline').first();
+        this._pDefaultValueMultiline = this._el.find('#pDefaultValueMultiline').first();
+        this._pDefaultValueMultiline.hide();
 
         this._pDefaultValueBoolean = this._el.find('#pDefaultValueBoolean').first();
         this._pDefaultValueBoolean.hide();
@@ -347,7 +364,7 @@ define([
             enumSelectionChanged($(this).is(':checked'));
         });
 
-        this._cbMultiLine.on('change', null, function () {
+        this._cbMultiline.on('change', null, function () {
             multiLineSelectionChanged($(this).is(':checked'));
         });
 
@@ -386,11 +403,11 @@ define([
         if (attributeDesc.readonly) {
             this._cbReadonly.attr('checked', true);
         }
+
         if (attributeDesc.type === 'boolean') {
             //boolean type
             this._pDefaultValue.hide();
             this._pEnum.hide();
-            this._pMultiLine.hide();
             this._pDefaultValueBoolean.show();
             this._pRange.hide();
             this._pRegExp.hide();
@@ -400,7 +417,6 @@ define([
         } else if (attributeDesc.type === ASSET_TYPE) {
             this._pDefaultValue.hide();
             this._pEnum.hide();
-            this._pMultiLine.hide();
             this._pRange.hide();
             this._pRegExp.hide();
         } else {
@@ -414,17 +430,25 @@ define([
             if (attributeDesc.type === 'string') {
                 this._pRange.hide();
                 this._pRegExp.show();
+                this._pMultiline.show();
                 if (attributeDesc.regexp) {
                     this._pRegExpValue.val(attributeDesc.regexp);
                 }
 
                 if (attributeDesc.multiline) {
-                    this._cbMultiLine.attr('checked', true);
+                    this._pDefaultValue.hide();
+                    this._pDefaultValueMultiline.show();
+                    this._inputDefaultValueMultiline.val(attributeDesc.defaultValue);
+
+                    this._cbMultiline.attr('checked', true);
 
                     if (CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.hasOwnProperty(attributeDesc.multilineType)) {
                         this._multilineType.val(attributeDesc.multilineType);
+                    } else if (attributeDesc.multilineType) {
+                        this._multilineType.append($('<option></option>').text(attributeDesc.multilineType));
+                        this._multilineType.val(attributeDesc.multilineType);
                     } else {
-                        this._multilineType.val(CONSTANTS.ATTRIBUTE_MULTILINE_TYPES.plaintext);
+                        this._multilineType.val('');
                     }
 
                     multiLineSelectionChanged(true);
