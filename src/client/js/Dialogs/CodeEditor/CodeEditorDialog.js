@@ -52,9 +52,24 @@ define([
             client,
             activeObject;
 
+        function hasDifferentValue() {
+            var editorValue = self._editor.getValue(),
+                nodeObj,
+                i;
+
+            for (i = 0; i < self._activeSelection.length; i += 1) {
+                nodeObj = client.getNode(self._activeSelection[i]);
+                if (nodeObj && nodeObj.getOwnAttribute(params.name) !== editorValue) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         function save() {
 
-            if (params.readOnly) {
+            if (params.readOnly || hasDifferentValue() === false) {
                 return;
             }
 
@@ -67,27 +82,12 @@ define([
             client.completeTransaction();
         }
 
-        function promptIfToToSave(cb) {
-            var editorValue = self._editor.getValue(),
-                hasDifferentValue = false,
-                dialog,
-                i,
-                nodeObj;
+        function promptIfToSave(cb) {
+            var dialog;
 
-            if (params.readOnly) {
+            if (params.readOnly || hasDifferentValue() === false) {
                 cb(false);
-                return;
-            }
-
-            for (i = 0; i < self._activeSelection.length; i += 1) {
-                nodeObj = client.getNode(self._activeSelection[i]);
-                if (nodeObj && nodeObj.getOwnAttribute(params.name) !== editorValue) {
-                    hasDifferentValue = true;
-                    break;
-                }
-            }
-
-            if (hasDifferentValue) {
+            } else {
                 dialog = new ConfirmDialog();
                 dialog.show({
                     severity: 'info',
@@ -103,8 +103,6 @@ define([
                 }, function () {
 
                 });
-            } else {
-                cb(false);
             }
         }
 
@@ -196,7 +194,7 @@ define([
                 close();
             } else {
                 // If accidentally closed prompt to save if saved values are different.
-                promptIfToToSave(function (save) {
+                promptIfToSave(function (save) {
                     doSave = save;
                     close();
                 });
