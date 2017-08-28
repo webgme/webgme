@@ -1,5 +1,44 @@
 # Change Log
 
+## [v2.17.0](https://github.com/webgme/webgme/tree/v2.17.0) (2017-08-28)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.16.0...v2.17.0)
+
+**Implemented enhancements:**
+
+- Multi-line string attributes [\#1483](https://github.com/webgme/webgme/issues/1483)
+- Meta-readonly attributes [\#1482](https://github.com/webgme/webgme/issues/1482)
+- Propagate meta-rule removal [\#1481](https://github.com/webgme/webgme/issues/1481)
+- Feature Request: UI: allow full-screen the current active split panel without destroying all other split-panels [\#1479](https://github.com/webgme/webgme/issues/1479)
+- Codemirror popup for editing multi-line attributes in the property editor [\#1451](https://github.com/webgme/webgme/issues/1451)
+- Deleting a project resets the order [\#773](https://github.com/webgme/webgme/issues/773)
+- GUI enhancements and minor fixes [\#1500](https://github.com/webgme/webgme/pull/1500) ([pmeijer](https://github.com/pmeijer))
+- Improve descriptions of meta renaming actions [\#1494](https://github.com/webgme/webgme/pull/1494) ([pmeijer](https://github.com/pmeijer))
+- Maximize active panel in split panel [\#1493](https://github.com/webgme/webgme/pull/1493) ([kecso](https://github.com/kecso))
+- Add one-click library update at new version detection [\#1492](https://github.com/webgme/webgme/pull/1492) ([pmeijer](https://github.com/pmeijer))
+- Delay and batch part-browser updates from state changes [\#1490](https://github.com/webgme/webgme/pull/1490) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#773 Projects sorted after table changes [\#1487](https://github.com/webgme/webgme/pull/1487) ([pmeijer](https://github.com/pmeijer))
+- Meta attribute enhancements [\#1485](https://github.com/webgme/webgme/pull/1485) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Dragging from Part Browser fails on any Aspect != CONSTANTS.ASPECT\_ALL [\#1495](https://github.com/webgme/webgme/issues/1495)
+- Non-meta nodes in aspects throws exception in getValidChildrenMetaNodes [\#1489](https://github.com/webgme/webgme/issues/1489)
+- Read-only mode is not triggered properly [\#1480](https://github.com/webgme/webgme/issues/1480)
+- Client error in meta visualizer when dragging containment over the object from which the drag originated. [\#1358](https://github.com/webgme/webgme/issues/1358)
+- Make sure regular item updates are handled in cross cut editor [\#1499](https://github.com/webgme/webgme/pull/1499) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1489 Non-meta nodes in aspects throws exception in getValidChildrenMetaNodes [\#1497](https://github.com/webgme/webgme/pull/1497) ([kecso](https://github.com/kecso))
+- Fixes \#1495 Failing to create nodes in aspects [\#1496](https://github.com/webgme/webgme/pull/1496) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1358 Errors when drawing containment in meta editor [\#1486](https://github.com/webgme/webgme/pull/1486) ([pmeijer](https://github.com/pmeijer))
+- Meta attribute enhancements [\#1485](https://github.com/webgme/webgme/pull/1485) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- In addition to 'alignment' support 'distribute' [\#870](https://github.com/webgme/webgme/issues/870)
+
+**Merged pull requests:**
+
+- Fixes \#870 add distribute to diagram designers [\#1498](https://github.com/webgme/webgme/pull/1498) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.16.0](https://github.com/webgme/webgme/tree/v2.16.0) (2017-07-31)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.15.1...v2.16.0)
 
@@ -21,6 +60,7 @@
 
 **Fixed bugs:**
 
+- Attribute Minimum / Maximum does not persist '0' [\#1484](https://github.com/webgme/webgme/issues/1484)
 - delAspectMetaTarget should remove aspect if empty [\#1469](https://github.com/webgme/webgme/issues/1469)
 - Hiding part-browser and navigating sometimes stops the updates once shown again [\#1457](https://github.com/webgme/webgme/issues/1457)
 - Concurrent tag creation \(although different\) revokes one insert [\#1473](https://github.com/webgme/webgme/pull/1473) ([pmeijer](https://github.com/pmeijer))
@@ -142,7 +182,6 @@
 
 **Implemented enhancements:**
 
-- Crosscut inheritance is not working as it should [\#1266](https://github.com/webgme/webgme/issues/1266)
 - Expose project export on REST API [\#1381](https://github.com/webgme/webgme/issues/1381)
 - Notifications panel doesn't have a maximum width, so it can display outside the bounds of the window and can't be deleted. [\#1375](https://github.com/webgme/webgme/issues/1375)
 - Small feature request: Add un-filled composition arrow head [\#1368](https://github.com/webgme/webgme/issues/1368)
@@ -356,6 +395,7 @@
 
 **Implemented enhancements:**
 
+- Crosscut inheritance is not working as it should [\#1266](https://github.com/webgme/webgme/issues/1266)
 - Provide Additional Promise versions for methods [\#1259](https://github.com/webgme/webgme/issues/1259)
 - Fail gracefully when can't find asset [\#1255](https://github.com/webgme/webgme/issues/1255)
 - Multiple locations added to browser history per one user action [\#1226](https://github.com/webgme/webgme/issues/1226)
@@ -1096,6 +1136,7 @@
 - BlobClient getObjectAsString and getObjectAsJSON methods. [\#798](https://github.com/webgme/webgme/issues/798)
 - Using zip file for testing seed fails [\#795](https://github.com/webgme/webgme/issues/795)
 - Expose getHistory on project classes. [\#793](https://github.com/webgme/webgme/issues/793)
+- Use the autorouter from the webgme/autorouter repository [\#774](https://github.com/webgme/webgme/issues/774)
 - Executor feedback during execution [\#686](https://github.com/webgme/webgme/issues/686)
 - Closes \#795 Add option to import from zip in \_globals. [\#796](https://github.com/webgme/webgme/pull/796) ([pmeijer](https://github.com/pmeijer))
 - Revise and improve documentation. Fix inconsistencies found: closes \#792 \#793 \#798 [\#794](https://github.com/webgme/webgme/pull/794) ([pmeijer](https://github.com/pmeijer))
@@ -1126,10 +1167,6 @@
 
 ## [v1.3.2](https://github.com/webgme/webgme/tree/v1.3.2) (2016-01-08)
 [Full Changelog](https://github.com/webgme/webgme/compare/v1.3.1...v1.3.2)
-
-**Implemented enhancements:**
-
-- Use the autorouter from the webgme/autorouter repository [\#774](https://github.com/webgme/webgme/issues/774)
 
 **Fixed bugs:**
 
