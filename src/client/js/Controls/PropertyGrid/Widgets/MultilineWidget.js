@@ -12,7 +12,7 @@ define([
     'use strict';
 
     var MultilineWidget,
-        BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-link btn-sm">edit content</a>');
+        BTN_DIALOG_OPEN_BASE = $('<a class="btn btn-link btn-sm">Edit content ...</a>');
 
     MultilineWidget = function (propertyDesc) {
         var self = this;
@@ -43,7 +43,6 @@ define([
             e.stopPropagation();
             e.preventDefault();
 
-            propertyDesc.onHideFn = saving;
             propertyDesc.readOnly = self._readOnly;
             propertyDesc.title = 'Edit Attribute "' + propertyDesc.name + '"';
 
