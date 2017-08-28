@@ -37,15 +37,17 @@ ul.split-panel-dropdown-list {
     }
     .maximize-btn {
       position: absolute;
-      top: 7px;
-      right: 5px;
-      font-size: 1.3em;
+      top: 3px;
+      right: 2px;
+      border-radius: 50%;
       color: #00235b;
+      background-color: #fff;
+      border: 6px solid #fff;
       opacity: 0.75;
       cursor: pointer;
+      //text-shadow: -1px 0 #9ecaed, 0 1px #9ecaed, 1px 0 #9ecaed, 0 -1px #9ecaed;
       &:hover {
         opacity: 1;
-        text-shadow: -2px 2px #9ecaed, 2px -2px #9ecaed, -1px 1px #9ecaed, 1px -1px #9ecaed;
       }
     }
   }

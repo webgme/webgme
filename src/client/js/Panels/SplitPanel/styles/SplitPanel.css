@@ -29,15 +29,16 @@ ul.split-panel-dropdown-list {
       z-index: 999999; }
     .split-panel .split-panel-panel-container .maximize-btn {
       position: absolute;
-      top: 7px;
-      right: 5px;
-      font-size: 1.3em;
+      top: 3px;
+      right: 2px;
+      border-radius: 50%;
       color: #00235b;
+      background-color: #fff;
+      border: 6px solid #fff;
       opacity: 0.75;
       cursor: pointer; }
       .split-panel .split-panel-panel-container .maximize-btn:hover {
-        opacity: 1;
-        text-shadow: -2px 2px #9ecaed, 2px -2px #9ecaed, -1px 1px #9ecaed, 1px -1px #9ecaed; }
+        opacity: 1; }
   .split-panel .splitter {
     z-index: 1000;
     position: absolute;
