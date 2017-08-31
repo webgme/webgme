@@ -18,11 +18,20 @@ WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPo
 // configure require path and modules
 require.config({
     baseUrl: './',
+    map: {
+        '*': {
+            // Map old paths to webgme-engine client path
+            'js/client': 'client/client',
+            'js/logger': 'client/logger',
+            'js/Utils/SaveToDisk': 'client/SaveToDisk',
+            'js/client/constants': 'client/constants'
+        }
+    },
     paths: {
         css: 'bower_components/require-css/css',
-        text: 'lib/require/require-text/text',
+        text: 'common/lib/text',
 
-        //jQuery and stuff
+        //jQuery stuff
         jquery: 'bower_components/jquery/dist/jquery',
         'jquery-ui': 'bower_components/jquery-ui/jquery-ui',
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
@@ -43,7 +52,7 @@ require.config({
         //Other modules
         AutoRouterActionApplier: 'lib/autorouter/action-applier',
         underscore: 'bower_components/underscore/underscore',
-        chance: 'bower_components/chance/chance',
+        chance: 'common/lib/chance/chance',
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
@@ -67,9 +76,9 @@ require.config({
 
         //node_modules
         jszip: 'bower_components/jszip/dist/jszip',
-        superagent: 'lib/superagent/superagent',
-        debug: 'lib/debug/debug',
-        q: 'bower_components/q/q',
+        superagent: 'common/lib/superagent/superagent',
+        debug: 'common/lib/debug/debug',
+        q: 'common/lib/q/q',
 
         //codemirror: 'bower_components/codemirror/',
 
