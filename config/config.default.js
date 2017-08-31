@@ -7,6 +7,9 @@
 var path = require('path'),
     config = require('webgme-engine/config/config.default');
 
+config.authentication.logOutUrl = '/profile/login';
+config.authentication.logInUrl = '/profile/login';
+
 config.client.appDir = path.join(__dirname, '../src/client');
 config.client.defaultConnectionRouter = 'basic3'; //'basic', 'basic2', 'basic3'
 config.client.errorReporting = {

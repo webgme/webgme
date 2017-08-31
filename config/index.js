@@ -7,7 +7,7 @@
 var env = process.env.NODE_ENV || 'default',
     configFilename = __dirname + '/config.' + env + '.js',
     config = require(configFilename),
-    validateConfig = require(__dirname + '/validator');
+    validateConfig = require('webgme-engine/config/validator');
 
 console.info('Using configuration from ' + configFilename);
 validateConfig(configFilename);
