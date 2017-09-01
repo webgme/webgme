@@ -29,7 +29,7 @@ require.config({
     },
     paths: {
         css: 'bower_components/require-css/css',
-        text: 'common/lib/text',
+        text: 'common/lib/requirejs/text',
 
         //jQuery stuff
         jquery: 'bower_components/jquery/dist/jquery',

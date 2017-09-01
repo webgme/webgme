@@ -4,7 +4,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-describe('configuration and components', function () {
+describe.skip('configuration and components', function () {
     'use strict';
 
     var should = require('chai').should(),

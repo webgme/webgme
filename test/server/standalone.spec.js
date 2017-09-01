@@ -19,9 +19,6 @@ describe('standalone server', function () {
 
         agent = superagent.agent(),
 
-        http = require('http'),
-        fs = require('fs'),
-
         serverBaseUrl,
 
         scenarios,
