@@ -24,8 +24,11 @@
   "license": "MIT",
   "dependencies": {
     "bower": "1.8.0",
-    "webgme-user-management-page": "^0.3.0",
-    "webgme-engine": "webgme/webgme-engine"
+    "q": "1.5.0",
+    "requirejs": "2.1.20",
+    "require-uncached": "1.0.3",
+    "webgme-engine": "webgme/webgme-engine",
+    "webgme-user-management-page": "^0.3.0"
   },
   "devDependencies": {
     "chai": "3.5.0",
@@ -47,6 +50,8 @@
   "typings": "typings/webgme.d.ts",
   "scripts": {
     "start": "node app.js",
+    "prepublish": "node ./utils/prepublish.js",
+    "postinstall": "node ./utils/postinstall.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
     "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",
     "test_cover": "node ./node_modules/istanbul/lib/cli.js --hook-run-in-context cover node_modules/mocha/bin/_mocha -- -R spec --timeout 10000 --recursive test",

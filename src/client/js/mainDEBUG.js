@@ -52,7 +52,7 @@ require.config({
         //Other modules
         AutoRouterActionApplier: 'lib/autorouter/action-applier',
         underscore: 'bower_components/underscore/underscore',
-        chance: 'common/lib/chance/chance',
+        jszip: 'bower_components/jszip/dist/jszip',
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
@@ -74,13 +74,11 @@ require.config({
         layout: '/layout',
         panel: '/panel',
 
-        //node_modules
-        jszip: 'bower_components/jszip/dist/jszip',
-        superagent: 'common/lib/superagent/superagent',
+        // common libs
+        chance: 'common/lib/chance/chance',
         debug: 'common/lib/debug/debug',
         q: 'common/lib/q/q',
-
-        //codemirror: 'bower_components/codemirror/',
+        superagent: 'common/lib/superagent/superagent',
 
         moment: 'bower_components/moment/moment',
         blockies: 'lib/blockies/blockies',
