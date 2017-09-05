@@ -1,7 +1,7 @@
 /*globals require,importScripts*/
 // This is the code for using the autorouter as a web worker.
 
-importScripts('../../../lib/require/require.min.js');
+importScripts('/common/lib/requirejs/require.js');
 
 var worker = this,
     window = {},  //jshint ignore: line
@@ -25,11 +25,9 @@ var startWorker = function() {
     require({
         baseUrl: '.',
         paths: {
-            common: '../../../../common',
-            assert: '../../../../common/util/assert',
-            js: '../..',
+            client: '/client',
             underscore: '../../../bower_components/underscore/underscore-min',
-            debug: '../../../lib/debug/debug',
+            debug: '/common/lib/debug/debug',
             AutoRouterActionApplier: '../../../lib/autorouter/action-applier.min' // create a map file for debugging
         },
         shim: {
@@ -40,7 +38,7 @@ var startWorker = function() {
     },
     [
         'AutoRouterActionApplier',
-        'js/logger',
+        'client/logger',
         'underscore'
     ],
     function(
