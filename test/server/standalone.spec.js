@@ -51,7 +51,7 @@ describe('standalone server', function () {
             {code: 200, url: '/panel/ModelEditor/ModelEditorControl.js'},
             {code: 200, url: '/panel/ModelEditor/ModelEditorControl'},
             {code: 200, url: '/panel/SplitPanel/SplitPanel.js'},
-            {code: 200, url: '/layout/DefaultLayout/DefaultLayout.js'}
+            {code: 200, url: '/layout/DefaultLayout/DefaultLayout/DefaultLayout.js'}
         ]
     }];
 
@@ -198,7 +198,8 @@ describe('standalone server', function () {
                     'BluePort.svg',
                     'Chain.svg'
                 ]);
-                expect(Object.keys(res.body) > 60).to.equal(true);
+
+                expect(Object.keys(res.body).length > 60).to.equal(true);
                 done();
             });
         });

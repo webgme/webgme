@@ -4,11 +4,8 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-var testFixture = require('webgme/test/_globals'),
+var testFixture = require('webgme-engine/test/_globals'),
     WEBGME_CONFIG_PATH = '../config';
-
-// This flag will make sure the config.test.js is being used
-// process.env.NODE_ENV = 'test'; // This is set by the require above, overwrite it here.
 
 var WebGME = testFixture.WebGME,
     gmeConfig = require(WEBGME_CONFIG_PATH),

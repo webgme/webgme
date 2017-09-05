@@ -12,20 +12,21 @@ function prepublish() {
     console.log('Installing bower components...');
     bower.commands.install(undefined, undefined, {cwd: process.cwd()})
         .on('end', function (/*installed*/) {
-            console.log('Done with bower components!');
+            console.log('Done with bower components.');
 
             if (process.env.TEST_FOLDER) {
                 console.warn('TEST_FOLDER environment variable is set, skipping distribution scripts.');
             } else {
                 var webgmeDist = require('./build/dist/build.js');
 
+                console.log('Generating webgme.dist.build.js...');
                 webgmeDist(function (err/*, data*/) {
                     if (err) {
                         console.error('Failed generating webgme.dist.build.js!', err);
                         process.exit(1);
                     } else {
                         //console.log(data);
-                        console.log('Done with webgme.dist.build.js!');
+                        console.log('Done with webgme.dist.build.js.');
                     }
                 });
             }
