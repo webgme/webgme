@@ -118,7 +118,7 @@ define([
             panelContainer: panelContainer,
             instance: null,
             eventHandler: self._attachActivateHandler(panelContainer),
-            maximizeButton: null,
+            toolbar: null,
             splitters: {
                 top: null,
                 right: null,
@@ -203,7 +203,7 @@ define([
             panelContainer: panelContainer,
             instance: null,
             eventHandler: self._attachActivateHandler(panelContainer),
-            maximizeButton: null,
+            toolbar: null,
             splitters: {
                 // Initially set splitters to same as panel splitting from.
                 top: this._panels[this._activePanelId].splitters.top,

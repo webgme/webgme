@@ -393,7 +393,7 @@ define([
         //call our own resize handler
         this._resizeItemContainer();
 
-        this._refreshTabTabsScrollOnResize();
+        // this._refreshTabTabsScrollOnResize();
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
