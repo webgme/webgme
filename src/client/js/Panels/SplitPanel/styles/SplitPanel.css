@@ -27,8 +27,8 @@ ul.split-panel-dropdown-list {
       width: 40px;
       height: 40px;
       z-index: 999999;
-      padding-top: 3px;
-      padding-right: 10px; }
+      padding-top: 2px;
+      padding-right: 3px; }
       .split-panel .split-panel-panel-container .split-panel-toolbar .split-panel-toolbar-btn {
         position: relative;
         float: right;

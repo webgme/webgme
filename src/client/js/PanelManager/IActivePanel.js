@@ -39,8 +39,10 @@ define([], function () {
     };
 
     /**
-     * 
-     * @returns {jQuery|HTMLElement}
+     * Toolbar handled by split-panel. It adds maximize btns to it.
+     * If no toolbar should be displayed - overwrite and return null.
+     *
+     * @returns {jQuery|null}
      */
     IActivePanel.prototype.getSplitPanelToolbarEl = function () {
         return $('<div class="split-panel-toolbar"></div>');

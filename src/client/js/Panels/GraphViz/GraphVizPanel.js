@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal, $*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -55,6 +55,33 @@ define(['js/PanelBase/PanelBaseWithHeader',
         });
 
         this.onActivate();
+    };
+
+    GraphVizPanel.prototype.getSplitPanelToolbarEl = function () {
+        this._splitPanelToolbarEl = IActivePanel.prototype.getSplitPanelToolbarEl.call(this);
+
+        // Set the size bigger than 40 x 40 and add some padding for the scroll-bar.
+        this._splitPanelToolbarEl.css({
+            width: '100px',
+            height: '100px',
+            'padding-right': '10px'
+        });
+
+        this.control._addSplitPanelToolbarBtns(this._splitPanelToolbarEl);
+
+        return this._splitPanelToolbarEl;
+    };
+
+    GraphVizPanel.prototype.afterAppend = function () {
+        PanelBaseWithHeader.prototype.afterAppend.call(this);
+        // At this point the split-panel has added its buttons (the maximize)
+        // and we can modify the look of all btns.
+
+        this._splitPanelToolbarEl.children().each(function () {
+            $(this).css({
+                'font-size': '16px'
+            });
+        });
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

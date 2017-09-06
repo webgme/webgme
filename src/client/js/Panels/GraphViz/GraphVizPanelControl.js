@@ -1,4 +1,4 @@
-/*globals define, _, WebGMEGlobal*/
+/*globals define, _, WebGMEGlobal, $*/
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -306,28 +306,55 @@ define(['js/logger',
     };
 
     GraphVizControl.prototype._initializeToolbar = function () {
-        var toolBar = WebGMEGlobal.Toolbar,
-            self = this;
+        var toolBar = WebGMEGlobal.Toolbar;
 
         this._toolbarItems = [];
 
         this._toolbarItems.push(toolBar.addSeparator());
         /************** MODEL / CONNECTION filter *******************/
-
-        this.$cbShowConnection = toolBar.addCheckBox({
-            title: 'Show connection',
-            icon: 'gme icon-gme_diagonal-arrow',
-            checkChangedFn: function (data, checked) {
-                self._displayModelsOnly = !checked;
-                self._generateData();
-            }
-        });
-
-        this._toolbarItems.push(this.$cbShowConnection);
+        //
+        // this.$cbShowConnection = toolBar.addCheckBox({
+        //     title: 'Show connection',
+        //     icon: 'gme icon-gme_diagonal-arrow',
+        //     checkChangedFn: function (data, checked) {
+        //         self._displayModelsOnly = !checked;
+        //         self._generateData();
+        //     }
+        // });
+        //
+        // this._toolbarItems.push(this.$cbShowConnection);
         /************** END OF - MODEL / CONNECTION filter *******************/
 
         this._toolbarInitialized = true;
     };
+
+    GraphVizControl.prototype._addSplitPanelToolbarBtns = function (toolbarEl) {
+        var self = this,
+            connBtn = $('<span class="split-panel-toolbar-btn no-print glyphicon glyphicon-filter"></span>');
+
+        connBtn.on('click', function () {
+            self._displayModelsOnly = !self._displayModelsOnly;
+            if (self._displayModelsOnly) {
+                connBtn.attr('title', 'Show connections');
+            } else {
+                connBtn.attr('title', 'Hide connections');
+            }
+            self._generateData();
+        });
+
+        if (self._displayModelsOnly) {
+            connBtn.attr('title', 'Show connections');
+        } else {
+            connBtn.attr('title', 'Hide connections');
+        }
+
+        toolbarEl.append(connBtn);
+
+        connBtn.hide();
+
+        return toolbarEl;
+    };
+
 
     return GraphVizControl;
 });
