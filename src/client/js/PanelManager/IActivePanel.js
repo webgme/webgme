@@ -1,4 +1,4 @@
-/*globals define*/
+/*globals define, $*/
 /*jshint browser: true*/
 
 /**
@@ -36,6 +36,14 @@ define([], function () {
     IActivePanel.prototype.getNodeID = function () {
         this.logger.warn('IActivePanel.prototype.getNodeID IS NOT IMPLEMENTED!!!');
         return undefined;
+    };
+
+    /**
+     * 
+     * @returns {jQuery|HTMLElement}
+     */
+    IActivePanel.prototype.getSplitPanelToolbarEl = function () {
+        return $('<div class="split-panel-toolbar"></div>');
     };
 
     return IActivePanel;

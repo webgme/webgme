@@ -7,19 +7,21 @@
 define([], function () {
     'use strict';
 
-    function SplitMaximizeButton(id, splitPanelManager, container) {
+    function SplitMaximizeButton(id, splitPanelManager, container, toolbarEl) {
         this._id = id;
         this._manager = splitPanelManager;
-        this.$el = $('<div class="toolbar"></div>');
-        this._button = $('<span class="maximize-btn no-print glyphicon glyphicon-resize-full"></span>');
+        this._toolbarEl = toolbarEl;
+        this._button = $('<span class="split-panel-toolbar-btn maximize-btn no-print glyphicon glyphicon-resize-full">' +
+            '</span>');
 
-        this.$el.append(this._button);
+        // Since float it right this should come first (i.e. top right corner).
+        toolbarEl.prepend(this._button);
 
         this._button.hide();
 
         this._initialize();
 
-        container.append(this.$el);
+        container.append(toolbarEl);
     }
 
     SplitMaximizeButton.prototype._initialize = function () {
@@ -43,7 +45,8 @@ define([], function () {
             }
         });
 
-        this.$el.on('mouseenter', function () {
+        this._toolbarEl.on('mouseenter', function () {
+            self._toolbarEl.children().show();
             if (self._manager._maximized === false && Object.keys(self._manager._panels).length > 1 ||
                 self._manager._maximized) {
                 if (self._manager._maximized) {
@@ -55,12 +58,13 @@ define([], function () {
                     self._button.addClass('glyphicon-resize-full');
                     self._button.attr('title', 'Maximize panel');
                 }
-                self._button.show();
+            } else {
+                self._button.hide();
             }
         });
 
-        this.$el.on('mouseleave', function () {
-            self._button.hide();
+        this._toolbarEl.on('mouseleave', function () {
+            self._toolbarEl.children().hide();
         });
     };
 
