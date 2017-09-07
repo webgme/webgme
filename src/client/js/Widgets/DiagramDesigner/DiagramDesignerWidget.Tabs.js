@@ -15,7 +15,7 @@ define([
         TABS_CONTAINER = 'diagram-designer-tabs-container',
         ADD_TAB_CONTAINER_CLASS = 'add-tab-container',
         TAB_LIST_CONTAINER_CLASS = 'tab-list-container',
-        //TAB_SCROLL = 200,
+        TAB_SCROLL = 200,
         TAB_ID = 'TAB_ID',
         TAB_RENAME = 'TAB_RENAME',
         WITH_TABS_CLASS = 'w-tabs',
@@ -60,23 +60,23 @@ define([
         });
         this.$divAddTab.append(this.$ddlTabsList.el);
 
-        // this.$btnScrollLeft = new ToolbarButton({
-        //     title: 'Scroll left',
-        //     icon: 'glyphicon glyphicon-chevron-left',
-        //     clickFn: function (/*data*/) {
-        //         self._tabsScrollLeft();
-        //     }
-        // });
-        // this.$divAddTab.append(this.$btnScrollLeft.el);
-        //
-        // this.$btnScrollRight = new ToolbarButton({
-        //     title: 'Scroll right',
-        //     icon: 'glyphicon glyphicon-chevron-right',
-        //     clickFn: function (/*data*/) {
-        //         self._tabsScrollRight();
-        //     }
-        // });
-        // this.$divAddTab.append(this.$btnScrollRight.el);
+        this.$btnScrollLeft = new ToolbarButton({
+            title: 'Scroll left',
+            icon: 'glyphicon glyphicon-chevron-left',
+            clickFn: function (/*data*/) {
+                self._tabsScrollLeft();
+            }
+        });
+        this.$divAddTab.append(this.$btnScrollLeft.el);
+
+        this.$btnScrollRight = new ToolbarButton({
+            title: 'Scroll right',
+            icon: 'glyphicon glyphicon-chevron-right',
+            clickFn: function (/*data*/) {
+                self._tabsScrollRight();
+            }
+        });
+        this.$divAddTab.append(this.$btnScrollRight.el);
 
 
         this.$divTabList = $('<div/>', {class: TAB_LIST_CONTAINER_CLASS});
@@ -88,7 +88,7 @@ define([
         this.$tabsContainer.append(this.$divAddTab);
         this.$tabsContainer.append(this.$divTabList);
 
-        // this._tabScrollValue = 0;
+        this._tabScrollValue = 0;
 
         //hook up tab rename
         // set title editable on double-click
@@ -140,7 +140,7 @@ define([
         this.$ddlTabsList.clear();
         this._tabCounter = 0;
         this._selectedTab = undefined;
-        //this._scrollTabListBy(0 - this._tabScrollValue);
+        this._scrollTabListBy(0 - this._tabScrollValue);
     };
 
     DiagramDesignerWidgetTabs.prototype._makeTabsSortable = function () {
@@ -199,7 +199,7 @@ define([
         });
 
         if (this._addingMultipleTabs !== true) {
-            //this._refreshTabScrollButtons();
+            this._refreshTabScrollButtons();
         }
 
         return li.data(TAB_ID);
@@ -214,33 +214,33 @@ define([
     DiagramDesignerWidgetTabs.prototype.addMultipleTabsEnd = function () {
         this.$ulTabTab.show();
 
-        //this._refreshTabScrollButtons();
+        this._refreshTabScrollButtons();
 
         this._addingMultipleTabs = false;
     };
 
-    // DiagramDesignerWidgetTabs.prototype._tabsScrollLeft = function () {
-    //     if (this._tabScrollValue < 0) {
-    //         this._scrollTabListBy(Math.min(Math.abs(this._tabScrollValue), TAB_SCROLL));
-    //     }
-    // };
-    //
-    // DiagramDesignerWidgetTabs.prototype._tabsScrollRight = function () {
-    //     var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) +
-    //         this._tabScrollValue;
-    //
-    //     if (overflowRightBy > 0) {
-    //         overflowRightBy = Math.min(overflowRightBy, TAB_SCROLL);
-    //         this._scrollTabListBy(-overflowRightBy);
-    //     }
-    // };
-    //
-    // DiagramDesignerWidgetTabs.prototype._scrollTabListBy = function (value) {
-    //     this._tabScrollValue += value;
-    //     this.$ulTabTab.css('left', this._tabScrollValue);
-    //
-    //     this._refreshTabScrollButtons();
-    // };
+    DiagramDesignerWidgetTabs.prototype._tabsScrollLeft = function () {
+        if (this._tabScrollValue < 0) {
+            this._scrollTabListBy(Math.min(Math.abs(this._tabScrollValue), TAB_SCROLL));
+        }
+    };
+
+    DiagramDesignerWidgetTabs.prototype._tabsScrollRight = function () {
+        var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) +
+            this._tabScrollValue;
+
+        if (overflowRightBy > 0) {
+            overflowRightBy = Math.min(overflowRightBy, TAB_SCROLL);
+            this._scrollTabListBy(-overflowRightBy);
+        }
+    };
+
+    DiagramDesignerWidgetTabs.prototype._scrollTabListBy = function (value) {
+        this._tabScrollValue += value;
+        this.$ulTabTab.css('left', this._tabScrollValue);
+
+        this._refreshTabScrollButtons();
+    };
 
     DiagramDesignerWidgetTabs.prototype.selectTab = function (tabID) {
         var liToSelect,
@@ -288,36 +288,36 @@ define([
                 liToSelect.find('a').prepend(DDL_SELECTED_TAB_ICON_BASE.clone());
             }
 
-            //this._scrollSelectedTabIntoView();
+            this._scrollSelectedTabIntoView();
 
             //fire event...
             this.onSelectedTabChanged(this._selectedTab);
         }
     };
 
-    // DiagramDesignerWidgetTabs.prototype._scrollSelectedTabIntoView = function () {
-    //     //scroll selected tab's tab into view
-    //     var li = this.$ulTabTab.find('li.active').first();
-    //     var liPos = li.position();
-    //     var visibleWidth = this.$tabsContainer.width() - this.$divAddTab.outerWidth(true);
-    //     var visibleMin = -this._tabScrollValue;
-    //     var visibleMax = -this._tabScrollValue + visibleWidth;
-    //     if (liPos) {
-    //         if (liPos.left < visibleMin) {
-    //             this._scrollTabListBy(visibleMin - liPos.left);
-    //         } else if (liPos.left + li.width() > visibleMax) {
-    //             this._scrollTabListBy(visibleMax - (liPos.left + li.width()));
-    //         }
-    //     }
-    // };
-    //
-    // DiagramDesignerWidgetTabs.prototype._refreshTabScrollButtons = function () {
-    //     var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) +
-    //         this._tabScrollValue;
-    //
-    //     this.$btnScrollLeft.enabled(this._tabScrollValue < 0);
-    //     this.$btnScrollRight.enabled(overflowRightBy > 0);
-    // };
+    DiagramDesignerWidgetTabs.prototype._scrollSelectedTabIntoView = function () {
+        //scroll selected tab's tab into view
+        var li = this.$ulTabTab.find('li.active').first();
+        var liPos = li.position();
+        var visibleWidth = this.$tabsContainer.width() - this.$divAddTab.outerWidth(true);
+        var visibleMin = -this._tabScrollValue;
+        var visibleMax = -this._tabScrollValue + visibleWidth;
+        if (liPos) {
+            if (liPos.left < visibleMin) {
+                this._scrollTabListBy(visibleMin - liPos.left);
+            } else if (liPos.left + li.width() > visibleMax) {
+                this._scrollTabListBy(visibleMax - (liPos.left + li.width()));
+            }
+        }
+    };
+
+    DiagramDesignerWidgetTabs.prototype._refreshTabScrollButtons = function () {
+        var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() + this.$divAddTab.outerWidth(true) +
+            this._tabScrollValue;
+
+        this.$btnScrollLeft.enabled(this._tabScrollValue < 0);
+        this.$btnScrollRight.enabled(overflowRightBy > 0);
+    };
 
     DiagramDesignerWidgetTabs.prototype._onTabsSortStop = function () {
         var ul = this.$ulTabTab,
@@ -336,19 +336,19 @@ define([
         }
     };
 
-    // DiagramDesignerWidgetTabs.prototype._refreshTabTabsScrollOnResize = function () {
-    //     if (this._tabsEnabled === true) {
-    //         var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() +
-    //             this.$divAddTab.outerWidth(true) + this._tabScrollValue;
-    //
-    //         if (overflowRightBy < 0) {
-    //             this._scrollTabListBy(-overflowRightBy);
-    //         }
-    //
-    //         this._scrollSelectedTabIntoView();
-    //         this._refreshTabScrollButtons();
-    //     }
-    // };
+    DiagramDesignerWidgetTabs.prototype._refreshTabTabsScrollOnResize = function () {
+        if (this._tabsEnabled === true) {
+            var overflowRightBy = this.$ulTabTab.width() - this.$tabsContainer.width() +
+                this.$divAddTab.outerWidth(true) + this._tabScrollValue;
+
+            if (overflowRightBy < 0) {
+                this._scrollTabListBy(-overflowRightBy);
+            }
+
+            this._scrollSelectedTabIntoView();
+            this._refreshTabScrollButtons();
+        }
+    };
 
     DiagramDesignerWidgetTabs.prototype.onTabDeleteClicked = function (tabID) {
         this.logger.warn('onTabDeleteClicked not implemented: "' + tabID + '"');
