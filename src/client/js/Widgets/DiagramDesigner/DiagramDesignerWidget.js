@@ -393,7 +393,10 @@ define([
         //call our own resize handler
         this._resizeItemContainer();
 
-        this._refreshTabTabsScrollOnResize();
+        if (this.$ulTabTab.width() !== 0) {
+            // Do not refresh the tabs if they aren't shown.
+            this._refreshTabTabsScrollOnResize();
+        }
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
