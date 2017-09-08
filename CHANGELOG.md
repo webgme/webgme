@@ -1,5 +1,17 @@
 # Change Log
 
+## [v2.17.1](https://github.com/webgme/webgme/tree/v2.17.1) (2017-09-08)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.17.0...v2.17.1)
+
+**Implemented enhancements:**
+
+- Fixes \#1501 Add method on IActivePanel to give visualizer control of inner toolbar [\#1504](https://github.com/webgme/webgme/pull/1504) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Maximize split screen button blocks other UI elements when hidden [\#1501](https://github.com/webgme/webgme/issues/1501)
+- Disable the caching of distribution files [\#1505](https://github.com/webgme/webgme/pull/1505) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.17.0](https://github.com/webgme/webgme/tree/v2.17.0) (2017-08-28)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.16.0...v2.17.0)
 
