@@ -118,7 +118,7 @@ define([
             panelContainer: panelContainer,
             instance: null,
             eventHandler: self._attachActivateHandler(panelContainer),
-            maximizeButton: new SplitMaximizeButton(this._activePanelId, this, panelContainer),
+            toolbar: null,
             splitters: {
                 top: null,
                 right: null,
@@ -156,11 +156,26 @@ define([
     };
 
     SplitPanel.prototype.updateActivePanel = function (panel) {
-        var activePanel = this._panels[this._activePanelId];
+        var self = this,
+            activePanel = this._panels[this._activePanelId],
+            toolbar;
 
         // activePanel.panelContainer.empty();
         activePanel.instance = panel;
         activePanel.panelContainer.append(panel.$pEl);
+
+        if (activePanel.toolbar) {
+            activePanel.toolbar.remove();
+            delete activePanel.toolbar;
+        }
+
+        toolbar = panel.getSplitPanelToolbarEl();
+
+        if (toolbar) {
+            (new SplitMaximizeButton(this._activePanelId, self, activePanel.panelContainer, toolbar));
+            activePanel.toolbar = toolbar;
+        }
+
         panel.afterAppend();
 
         WebGMEGlobal.PanelManager.setActivePanel(panel);
@@ -188,7 +203,7 @@ define([
             panelContainer: panelContainer,
             instance: null,
             eventHandler: self._attachActivateHandler(panelContainer),
-            maximizeButton: new SplitMaximizeButton(newPanelId, self, panelContainer),
+            toolbar: null,
             splitters: {
                 // Initially set splitters to same as panel splitting from.
                 top: this._panels[this._activePanelId].splitters.top,

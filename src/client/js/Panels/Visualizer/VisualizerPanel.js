@@ -114,6 +114,19 @@ define(['js/logger',
                 self._toolbarBtn.clear();
 
                 self._toolbarBtn.addButton({
+                    text: maximized ? 'Exit maximize' : 'Maximize active panel',
+                    title: maximized ? 'Shows all split panels' : 'Maximizes the active panel',
+                    icon: 'split-panel-dropdown-icon glyphicon ' +
+                    (maximized ? 'glyphicon-resize-small' : 'glyphicon-resize-full'),
+                    disabled: self._splitPanel.getNumberOfPanels() === 1,
+                    clickFn: function () {
+                        self._splitPanel.maximize(!maximized, self._splitPanel._activePanelId);
+                    }
+                });
+
+                self._toolbarBtn.addDivider();
+
+                self._toolbarBtn.addButton({
                     text: 'Split vertically',
                     title: 'Splits the active panel vertically',
                     icon: 'fa fa-columns split-panel-dropdown-icon',

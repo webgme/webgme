@@ -26,28 +26,29 @@ ul.split-panel-dropdown-list {
     position: absolute;
     overflow: hidden;
 
-    .toolbar {
+    .split-panel-toolbar {
       position: absolute;
-      right: 0px;
-      top: 0px;
+      right: 0;
+      top: 0;
       width: 40px;
       height: 40px;
       z-index: 999999;
+      padding-top: 2px;
+      padding-right: 3px;
 
-    }
-    .maximize-btn {
-      position: absolute;
-      top: 3px;
-      right: 2px;
-      border-radius: 50%;
-      color: #00235b;
-      background-color: #fff;
-      border: 6px solid #fff;
-      opacity: 0.75;
-      cursor: pointer;
-      //text-shadow: -1px 0 #9ecaed, 0 1px #9ecaed, 1px 0 #9ecaed, 0 -1px #9ecaed;
-      &:hover {
-        opacity: 1;
+      .split-panel-toolbar-btn {
+        position: relative;
+        float: right;
+        border-radius: 50%;
+        color: #00235b;
+        background-color: #fff;
+        border: 6px solid #fff;
+        opacity: 0.75;
+        cursor: pointer;
+        //text-shadow: -1px 0 #9ecaed, 0 1px #9ecaed, 1px 0 #9ecaed, 0 -1px #9ecaed;
+        &:hover {
+          opacity: 1;
+        }
       }
     }
   }
