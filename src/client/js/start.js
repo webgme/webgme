@@ -30,13 +30,14 @@ require(
 
         'use strict';
         var gmeConfig = JSON.parse(gmeConfigJson),
+            webgmeEnginePackage = JSON.parse(packageJson),
             log = Logger.create('gme:main', gmeConfig.client.log),
             domDeferred = Q.defer(),
             defaultRavenOpts;
 
         WebGMEGlobal.gmeConfig = gmeConfig;
         WebGMEGlobal.version = gmeConfig.client.appVersion;
-        WebGMEGlobal.webgmeVersion = packageJson.version;
+        WebGMEGlobal.webgmeVersion = webgmeEnginePackage.version;
 
         defaultRavenOpts = { release: WebGMEGlobal.version };
 
