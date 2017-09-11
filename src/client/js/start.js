@@ -32,18 +32,20 @@ require(
         var gmeConfig = JSON.parse(gmeConfigJson),
             log = Logger.create('gme:main', gmeConfig.client.log),
             domDeferred = Q.defer(),
-            defaultRavenOpts = { release: gmeConfigJson.client.appVersion };
+            defaultRavenOpts;
 
-        if (gmeConfig.client.errorReporting.enable === true) {
+        WebGMEGlobal.gmeConfig = gmeConfig;
+        WebGMEGlobal.version = gmeConfig.client.appVersion;
+        WebGMEGlobal.webgmeVersion = packageJson.version;
+
+        defaultRavenOpts = { release: WebGMEGlobal.version };
+
+        if (gmeConfig.client.errorReporting && gmeConfig.client.errorReporting.enable === true) {
             Raven.config(
                 gmeConfig.client.errorReporting.DSN,
                 gmeConfig.client.errorReporting.ravenOptions || defaultRavenOpts
             ).install();
         }
-
-        WebGMEGlobal.gmeConfig = gmeConfig;
-        WebGMEGlobal.version = gmeConfigJson.client.appVersion;
-        WebGMEGlobal.webgmeVersion = packageJson.version;
 
         // Set the referrer in the session store (if not already set)
         if (typeof window.sessionStorage.getItem('originalReferrer') !== 'string') {
