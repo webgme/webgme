@@ -7,7 +7,7 @@
 
 define([
         'js/logger',
-        'js/client',
+        'client/client',
         'js/Constants',
         'js/Panels/MetaEditor/MetaEditorConstants',
         'js/Utils/GMEConcepts',

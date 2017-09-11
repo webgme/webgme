@@ -15,31 +15,7 @@ var testFixture = require('./test/_globals.js'),
     server,
     logger = testFixture.logger.fork('karma.conf'),
     PROJECTS_TO_IMPORT = [
-        {name: 'ProjectAndBranchOperationsTest', path: './test-karma/client/js/client/basicProject.webgmex'},
-        {name: 'noBranchSeedProject', path: './test-karma/client/js/client/pluginProject.webgmex'},
-        {name: 'alreadyExists', path: './test-karma/client/js/client/pluginProject.webgmex'},
-        {name: 'createGenericBranch', path: './test-karma/client/js/client/pluginProject.webgmex'},
-        {name: 'removeGenericBranch', path: './test-karma/client/js/client/pluginProject.webgmex'},
-        {name: 'metaQueryAndManipulationTest', path: './test-karma/client/js/client/metaTestProject.webgmex'},
-        {name: 'ClientNodeInquiryTests', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
-        {name: 'nodeManipulationProject', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
-        {name: 'RESTLikeTests', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
-        {name: 'undoRedoTests', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
-        {name: 'territoryProject', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
-        {name: 'projectSeedSingleMaster', path: './test-karma/client/js/client/clientNodeTestProject.webgmex'},
-        {
-            name: 'projectSeedSingleNonMaster',
-            path: './test-karma/client/js/client/clientNodeTestProject.webgmex',
-            branches: ['other']
-        },
-        {
-            name: 'projectSeedMultiple',
-            path: './test-karma/client/js/client/clientNodeTestProject.webgmex',
-            branches: ['master', 'other']
-        },
-        {name: 'pluginProject', path: './test-karma/client/js/client/pluginProject.webgmex'},
-        {name: 'branchWatcher', path: './test-karma/client/js/client/pluginProject.webgmex'},
-        {name: 'branchStatus', path: './test-karma/client/js/client/pluginProject.webgmex'}
+        {name: 'GMEConcepts', path: './node_modules/webgme-engine/seeds/EmptyProject.webgmex'}
     ];
 
 (function initializeServer() {
@@ -140,26 +116,19 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         files: [
             // {pattern: 'src/**/*.js', included: false}, // THIS IS SLOW: SPECIFY EXPLICITLY WHAT WE NEED.
-            {pattern: 'src/common/**/*.js', included: false},
-            {pattern: 'src/client/js/*.js', included: false},
             {pattern: 'src/client/js/**/*.js', included: false},
-            {pattern: 'src/client/lib/debug/debug.js', included: false},
-            {pattern: 'src/client/lib/jquery/*.js', included: false},
-            {pattern: 'src/client/lib/require/**/*.js', included: false},
-            {pattern: 'src/client/lib/superagent/*.js', included: false},
-            {pattern: 'src/client/bower_components/q/*.js', included: false},
-            {pattern: 'src/client/bower_components/underscore/underscore.js', included: false},
-            {pattern: 'src/client/bower_components/chance/chance.js', included: false},
-            {pattern: 'src/plugin/*.js', included: false},
-            {pattern: 'src/plugin/coreplugins/MinimalWorkingExample/**/*', included: false},
-            {pattern: 'src/plugin/coreplugins/PluginGenerator/**/*', included: false},
-            {pattern: 'src/*.js', included: false},
-            {pattern: 'utils/build/empty/empty.js', included: false},
-            {pattern: 'test/plugin/scenarios/plugins/**/*', included: false},
-            {pattern: 'seeds/*.webgmex', included: false}, //seeds
+
+            // webgme app specific libraries (add as needed)
+            {pattern: 'src/client/bower_components/jquery/dist/*.js', included: false},
+            {pattern: 'src/client/lib/purl/*.js', included: false},
+
+            // webgme engine stuff
+            {pattern: 'node_modules/webgme-engine/src/common/**/*.js', included: false},
+            {pattern: 'node_modules/webgme-engine/src/client/*.js', included: false},
+            {pattern: 'node_modules/webgme-engine/src/plugin/*.js', included: false},
+            {pattern: 'node_modules/webgme-engine/src/*.js', included: false},
+            {pattern: 'node_modules/webgme-engine/seeds/**/*.webgmex', included: false},
             {pattern: 'test-karma/**/*.spec.js', included: false},
-            // {pattern: 'test-karma/**/*.inc.js', included: false}, //test include scripts
-            {pattern: 'test-karma/**/*.json', included: false}, //test assets
             'test-main.js'
         ],
 

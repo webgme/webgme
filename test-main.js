@@ -22,39 +22,30 @@ require.config({
     baseUrl: '/base',
 
     paths: {
-        // plugin base classes
-        plugin: './src/plugin',
-        text: './src/client/lib/require/require-text/text',
+        js: './src/client/js',
+        client: './node_modules/webgme-engine/src/client',
+        plugin: './node_modules/webgme-engine/src/plugin',
+        text: './node_modules/webgme-engine/src/common/lib/requirejs/text',
 
         // plugins
-        // TODO: populate plugin list dynamically based on config.json
-        'plugin/MinimalWorkingExample': './src/plugin/coreplugins',
-        'plugin/PluginForked': './test/plugin/scenarios/plugins',
+        // 'plugin/MinimalWorkingExample': './src/plugin/coreplugins',
 
-        executor: './src/common/executor',
-        blob: './src/common/blob',
-        common: './src/common',
+        executor: './node_modules/webgme-engine/src/common/executor',
+        blob: './node_modules/webgme-engine/src/common/blob',
+        common: './node_modules/webgme-engine/src/common',
 
-        js: './src/client/js',
+        // common libs
+        superagent: './node_modules/webgme-engine/src/common/lib/superagent/superagent',
+        debug: './node_modules/webgme-engine/src/common/lib/debug/debug',
+        chance: './node_modules/webgme-engine/src/common/lib/chance/chance',
+        q: './node_modules/webgme-engine/src/common/lib/q/q',
 
-        superagent: './src/client/lib/superagent/superagent',
-        jszip: './src/client/bower_components/jszip/dist/jszip',
-        debug: './src/client/lib/debug/debug',
-        chance: './src/client/bower_components/chance/chance',
-        underscore: './src/client/bower_components/underscore/underscore',
-        q: './src/client/bower_components/q/q',
 
-        karmatest: './test-karma',
-        aRtestCases: './test-karma/client/js/AutoRouter/testCases'
+        // webgme app specific libs
+        jquery: './src/client/bower_components/jquery/dist/jquery',
+        urlparse: './src/client/lib/purl/purl.min',
 
-        // external libraries used by plugins
-        //'ejs': './support/ejs/ejs.min',
-        //'xmljsonconverter': './lib/xmljsonconverter',
-        //'sax': './support/sax/sax',
-
-        // modules used by test cases
-        //'mocks': './test/mocks',
-        //'models': './test/models'
+        karmatest: './test-karma'
     },
 
 
@@ -66,37 +57,37 @@ require.config({
 });
 
 function done(err) {
-  if (err) {
-    console.error(err);
-  }
-  window.__karma__.start();
+    if (err) {
+        console.error(err);
+    }
+    window.__karma__.start();
 }
 
 function testServerConnection () {
-  requirejs(['superagent'], function (superagent) {
+    requirejs(['superagent'], function (superagent) {
 
-      var maxTries = 20,
-          i = 0,
-          timeout = 300;
+        var maxTries = 20,
+            i = 0,
+            timeout = 300;
 
-      function tryToGetGmeConfig() {
-        console.log('Trying to get gmeConfig.json ... ', i, i * timeout / 1000);
-        superagent.get('/base/gmeConfig.json')
-            .end(function (err, res) {
-                if (res && res.status === 200) {
-                  console.log('Got gmeConfig.json');
-                  done();
-                } else {
-                  i += 1;
-                  if (i < maxTries) {
-                    setTimeout(tryToGetGmeConfig, timeout);
-                  } else {
-                    done(err, res);
-                  }
-                }
-            });
-      }
+        function tryToGetGmeConfig() {
+            console.log('Trying to get gmeConfig.json ... ', i, i * timeout / 1000);
+            superagent.get('/base/gmeConfig.json')
+                .end(function (err, res) {
+                    if (res && res.status === 200) {
+                        console.log('Got gmeConfig.json');
+                        done();
+                    } else {
+                        i += 1;
+                        if (i < maxTries) {
+                            setTimeout(tryToGetGmeConfig, timeout);
+                        } else {
+                            done(err, res);
+                        }
+                    }
+                });
+        }
 
-      tryToGetGmeConfig();
-  });
+        tryToGetGmeConfig();
+    });
 }

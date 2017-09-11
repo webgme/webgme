@@ -6,8 +6,8 @@
  */
 
 define([
-    'js/logger',
-    'js/client/constants',
+    'client/logger',
+    'client/constants',
     'css!./styles/ProjectTitleWidget.css'
 ], function (Logger, CLIENT_CONSTANTS) {
     'use strict';

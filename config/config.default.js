@@ -9,7 +9,10 @@ var path = require('path'),
 
 config.authentication.userManagementPage = require.resolve('webgme-user-management-page');
 
+// Overwrite the appDir from webgme-engine (it only provides a dummy app).
 config.client.appDir = path.join(__dirname, '../src/client');
+
+// These client options are added by the webgme app
 config.client.appVersion = require(path.join(__dirname, '../package.json')).version;
 config.client.defaultConnectionRouter = 'basic3'; //'basic', 'basic2', 'basic3'
 config.client.errorReporting = {
@@ -20,7 +23,8 @@ config.client.errorReporting = {
             };
 
 config.client.allowUserDefinedSVG = true;
-config.seedProjects.basePaths.push(path.join(__dirname, '../seeds'));
+
+// The webgme-engine does not populate any of these
 config.visualization.svgDirs = [path.join(__dirname, '../src/client/assets/DecoratorSVG')];
 config.visualization.decoratorPaths = [path.join(__dirname, '../src/client/decorators')];
 config.visualization.visualizerDescriptors = [path.join(__dirname, '../src/client/js/Visualizers.json')];
