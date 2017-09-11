@@ -44,7 +44,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - If given the webgme server will not spawn a child process for running add-ons and instead post the related events to the url. Use [addon_handler.js](../src/bin/addon_handler.js) for a machine handling such requests.
 - `config.addOn.monitorTimeout = 120000`
  - In milliseconds, the waiting time before add-ons are stopped after no activity (new clients joined or hash updates) in the branch.
-- `config.addOn.basePaths = ['./src/addon/core']`
+- `config.addOn.basePaths = ['node_modules/webgme-engine/src/addon/core']`
  - Note, this is handled by [webgme-cli](https://github.com/webgme/webgme-cli). Array of paths to custom add-ons. If you have an add-on at `C:/SomeAddOns/MyAddOn/MyAddOn.js` the path to append would be `C:/SomeAddOns` or a relative path (from the current working directory). N.B. this will also expose any other add-on in that directory, e.g. `C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js`.
 
 ##### authentication
@@ -70,7 +70,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  Given router will be mounted at `/profile`.
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
-- `config.authentication.authorizer.path = './src/server/middleware/auth/defaultauthorizer'`
+- `config.authentication.authorizer.path = 'node_modules/webgme-engine/src/server/middleware/auth/defaultauthorizer'`
  - Path (absolute) to module implementing `AuthorizerBase` (located next to `deafultauthorizer`) for getting and setting authorization regarding projects and project creation.
 - `config.authentication.authorizer.options = {}`
  - Optional options passed to authorizer module at initialization (via gmeConfig).
@@ -80,18 +80,18 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Lifetime of tokens in seconds.
 - `config.authentication.jwt.renewBeforeExpires = 3600`
  - Interval in seconds, if there is less time until expiration the token will be automatically renewed. (Set this to less or equal to 0 to disabled automatic renewal.)
-- `config.authentication.jwt.privateKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
+- `config.authentication.jwt.privateKey = 'node_modules/webgme-engine/src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
  - Private RSA256 key used when generating tokens (N.B. if authentication is turned on - the defaults must be changed and the keys must reside outside of the app's root-directory or alt. a rule should be added to `config.server.extlibExcludes`).
-- `config.authentication.jwt.publicKey = './src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
+- `config.authentication.jwt.publicKey = 'node_modules/webgme-engine/src/server/middleware/auth/EXAMPLE_PRIVATE_KEY'`
  - Public RSA256 key used when evaluating tokens.
 - `config.authentication.jwt.algorithm = 'RS256'`
  - The algorithm used for encryption (should not be edited w/o changing keys appropriately).
-- `config.authentication.jwt.tokenGenerator = './src/server/middleware/auth/localtokengenerator.js'`
+- `config.authentication.jwt.tokenGenerator = 'node_modules/webgme-engine/src/server/middleware/auth/localtokengenerator.js'`
  - Replaceable module for generating tokens in case webgme should not generated new tokens by itself.
 
 ##### bin
 
-- `config.bin.log = see config`
+- `config.bin.log = see webgme-engine config.default`
  - Logger settings when running bin scripts.
 
 ##### blob
@@ -154,7 +154,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 ##### mongo
 - `config.mongo.uri = 'mongodb://127.0.0.1:27017/multi'`
  - MongoDB connection [uri](http://docs.mongodb.org/manual/reference/connection-string/)
-- `config.mongo.options = see config`
+- `config.mongo.options = see webgme-engine config.default`
  - Options for [MongoClient.connect](https://mongodb.github.io/node-mongodb-native/api-generated/mongoclient.html#connect)
 
 ##### plugin
@@ -162,7 +162,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - If true will enable execution of plugins in the browser.
 - `config.plugin.allowServerExecution = false`
  - If true will enable execution of plugins on the server.
-- `config.plugin.basePaths = ['./src/plugin/coreplugins']`
+- `config.plugin.basePaths = ['node_modules/webgme-engine/src/plugin/coreplugins']`
  - Note, this is handled by [webgme-cli](https://github.com/webgme/webgme-cli).
 - `config.plugin.displayAll = false`
  - If true there is no need to register plugins on the root-node of project - all will be available from the drop-down.
@@ -189,7 +189,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Enables duplication of entire project with full history (requires at least mongodb 2.6).
 - `config.seedProjects.defaultProject = 'EmptyProject'`
  - Used by the GUI when highlighting/selecting the default project to seed from.
-- `config.seedProjects.basePaths = ['./seeds']`
+- `config.seedProjects.basePaths = ['node_modules/webgme-engine/seeds']`
  - List of directories where project seeds are stored.
 
 ##### server
@@ -201,11 +201,11 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - If greater than -1 will set the [timeout property of the http-server](https://nodejs.org/api/http.html#http_server_timeout). (This can be used to enable large, > 1Gb, file uploads.)
 - `config.server.maxWorkers = 10`
  - Maximum number of child processes spawned by the default worker manager.
-- `config.server.workerManager.path = 'src/server/worker/serverworkermanager'`
- - Path to module (implementing `src/server/worker/WorkerManagerBase`) handling worker requests.
+- `config.server.workerManager.path = 'node_modules/webgme-engine/src/server/worker/serverworkermanager'`
+ - Path to module (implementing `node_modules/webgme-engine/src/server/worker/WorkerManagerBase`) handling worker requests.
 - `config.server.workerManager.options = {}`
  - Options for non-default workerManager (valid fields depend on type of worker-manager). 
-- `config.server.log = see config`
+- `config.server.log = see webgme-engine default.config`
  - Transports and options for the server (winston) logger.
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
  - Array of regular expressions that will hinder access to files via the '/extlib/' route. Requests to files matching any of the provided pattern will result in 403.
@@ -213,9 +213,9 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Indicate if the webgme server is behind a secure proxy (needed for adding correct OG Metadata in index.html).
  
 ##### socketIO
-- `config.socketIO.clientOptions = see config`
+- `config.socketIO.clientOptions = see webgme-engine default.config`
  - Options passed to the [socketIO client](https://github.com/socketio/socket.io-client#managerurlstring-optsobject) when connecting to the sever.
-- `config.socketIO.serverOptions = see config`
+- `config.socketIO.serverOptions = see webgme-engine default.config`
  - Options passed to the [socketIO server](https://github.com/socketio/engine.io#methods-1) when attaching to the server.
 
 ##### storage
@@ -245,7 +245,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Options passed to database client (unless mongo is specified, in that case `config.mongo.options` are used).
 
 ##### visualization
-- `config.visualization.decoratorPaths = ['./src/client/decorators']`
+- `config.visualization.decoratorPaths = ['../src/client/decorators']`
  - Array of paths to decorators that should be available.
 - `config.visualization.decoratorToPreload = null`
  - Array of decorators (by id) that should be downloaded from the server before the editor starts - when set to null all available decorators will be downloaded.

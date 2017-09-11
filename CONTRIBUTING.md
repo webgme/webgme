@@ -79,10 +79,6 @@ Use [JSDoc](http://en.wikipedia.org/wiki/JSDoc) syntax to annotate source code w
  */
 ```
 
-### Branch naming conventions
-
-FILL IN...
-
 # Tools
 
 * [online](http://www.regexr.com) regexp tester
@@ -91,9 +87,6 @@ FILL IN...
 # Creating a release
 
 This section is for maintainers of webgme.
-
-FILL IN...
-
 Update CHANGELOG.md file using [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator) (Note: a single run eats up to 1500 requests, the rate limit is 5000/hour)
 - New release: `github_changelog_generator --future-release <next_release> -t <your_github_token>`
 - Generating for existing releases: `github_changelog_generator --no-unreleased -t <your_github_token>`

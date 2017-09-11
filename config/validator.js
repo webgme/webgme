@@ -19,6 +19,8 @@ function validateConfig(configOrFileName) {
     validator.assertObject('config.client.errorReporting.ravenOptions', config.client.errorReporting.ravenOptions, true);
     validator.assertBoolean('config.client.allowUserDefinedSVG', config.client.allowUserDefinedSVG);
 
+    validator.assertArray('config.visualization.extraCss', config.visualization.extraCss);
+
     validator.warnDeprecated('config.visualization.layout.default', config.visualization.layout.default,
         'Since v2.11.0 this is a component setting of GenericUIWebGMEStart.layout and can be configured for projects ' +
         'based on kind, name and ID. The value in gmeConfig.visualization.layout.default will right now be used for ' +
