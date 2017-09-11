@@ -10,6 +10,7 @@ var path = require('path'),
 config.authentication.userManagementPage = require.resolve('webgme-user-management-page');
 
 config.client.appDir = path.join(__dirname, '../src/client');
+config.client.appVersion = require(path.join(__dirname, '../package.json')).version;
 config.client.defaultConnectionRouter = 'basic3'; //'basic', 'basic2', 'basic3'
 config.client.errorReporting = {
                 enable: false,

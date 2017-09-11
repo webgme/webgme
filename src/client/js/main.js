@@ -15,8 +15,9 @@ var DEBUG = false,
 
 for (i = 0; i < metaElms.length; i += 1) {
     if (metaElms[i].getAttribute('property') === 'webgme-version') {
+        WebGMEGlobal.webgmeVersion = metaElms[i].getAttribute('content');
+    } else if (metaElms[i].getAttribute('property') === 'app-version') {
         WebGMEGlobal.version = metaElms[i].getAttribute('content');
-        break;
     }
 }
 
