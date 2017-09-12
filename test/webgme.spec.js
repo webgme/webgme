@@ -27,7 +27,7 @@ describe('webgme', function () {
     });
 
     it('should export public API functions and classes when requiring webgme', function () {
-        var webGME = require('webgme');
+        var webGME = require('../webgme');
 
         expect(webGME).to.have.property('standaloneServer');
         expect(webGME).to.have.property('addToRequireJsPaths');
