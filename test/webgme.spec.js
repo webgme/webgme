@@ -42,4 +42,8 @@ describe('webgme', function () {
         expect(typeof webGME.AuthorizerBase.prototype.getAccessRights).to.equal('function');
     });
 
+    it('all webgme-engine/index should be forwarded to webgme.js', function () {
+        expect(Object.keys(require('../webgme'))).to.have.members(Object.keys(require('webgme-engine')));
+    });
+
 });
