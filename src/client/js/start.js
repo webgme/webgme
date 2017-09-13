@@ -30,31 +30,22 @@ require(
 
         'use strict';
         var gmeConfig = JSON.parse(gmeConfigJson),
-            npmJSON = JSON.parse(packageJson),
+            webgmeEnginePackage = JSON.parse(packageJson),
             log = Logger.create('gme:main', gmeConfig.client.log),
             domDeferred = Q.defer(),
-            defaultRavenOpts = { release: npmJSON.version }, // This is the webgme version
-            npmJSONFromSplit;
+            defaultRavenOpts;
 
-        if (gmeConfig.client.errorReporting.enable === true) {
+        WebGMEGlobal.gmeConfig = gmeConfig;
+        WebGMEGlobal.version = gmeConfig.client.appVersion;
+        WebGMEGlobal.webgmeVersion = webgmeEnginePackage.version;
+
+        defaultRavenOpts = { release: WebGMEGlobal.version };
+
+        if (gmeConfig.client.errorReporting && gmeConfig.client.errorReporting.enable === true) {
             Raven.config(
                 gmeConfig.client.errorReporting.DSN,
                 gmeConfig.client.errorReporting.ravenOptions || defaultRavenOpts
             ).install();
-        }
-
-        WebGMEGlobal.gmeConfig = gmeConfig;
-        if (WebGMEGlobal.version !== 'DEBUG' && WebGMEGlobal.version !== npmJSON.version) {
-            // If the index.html was cached from a previous version force a reload of the page.
-            window.location.reload();
-        }
-
-        WebGMEGlobal.version = npmJSON.version;
-        WebGMEGlobal.NpmVersion = npmJSON.dist ? npmJSON.version : '';
-        WebGMEGlobal.GitHubVersion = '';
-        if (npmJSON._from) {
-            npmJSONFromSplit = npmJSON._from.split('/');
-            WebGMEGlobal.GitHubVersion = npmJSONFromSplit[npmJSONFromSplit.length - 1];
         }
 
         // Set the referrer in the session store (if not already set)

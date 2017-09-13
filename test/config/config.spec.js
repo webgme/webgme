@@ -4,16 +4,15 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-describe('configuration and components', function () {
+describe.skip('configuration and components', function () {
     'use strict';
 
-    var should = require('chai').should(),
+    var __should = require('chai').should(),
         expect = require('chai').expect,
         oldNodeEnv = process.env.NODE_ENV || '',
         oldCwd = process.cwd(),
         path = require('path'),
         webgme = require('../../webgme'),
-        getClientConfig = require('../../config/getclientconfig'),
         configPath = path.join(__dirname, '..', '..', 'config'),
         validateConfig,
         unloadConfigs = function () {
@@ -127,68 +126,6 @@ describe('configuration and components', function () {
             expect(err.message).to.equal('Cannot set config.storage.disableHashChecks and requireHashesToMatch ' +
                 'to true at the same time!');
         }
-    });
-
-    it('clientconfig should not expose mongo', function () {
-        var config,
-            clientConfig;
-        process.env.NODE_ENV = '';
-        config = require('../../config');
-        clientConfig = getClientConfig(config);
-
-        should.equal(clientConfig.hasOwnProperty('mongo'), false);
-    });
-
-    it('clientconfig should not expose executor.nonce', function () {
-        var config,
-            clientConfig;
-        process.env.NODE_ENV = '';
-        config = require('../../config');
-        clientConfig = getClientConfig(config);
-
-        should.equal(clientConfig.executor.hasOwnProperty('nonce'), false);
-    });
-
-    it('clientconfig should only expose the port of the server', function () {
-        var config,
-            clientConfig;
-        process.env.NODE_ENV = '';
-        config = require('../../config');
-        clientConfig = getClientConfig(config);
-
-        expect(clientConfig.server).to.deep.equal({port: config.server.port});
-    });
-
-    it('clientconfig should not expose authentication.jwt.private/publicKey', function () {
-        var config,
-            clientConfig;
-        process.env.NODE_ENV = '';
-        config = require('../../config');
-        clientConfig = getClientConfig(config);
-
-        should.equal(clientConfig.authentication.jwt.hasOwnProperty('privateKey'), false);
-        should.equal(clientConfig.authentication.jwt.hasOwnProperty('publicKey'), false);
-    });
-
-    it('clientconfig should not expose storage.database', function () {
-        var config,
-            clientConfig;
-        process.env.NODE_ENV = '';
-        config = require('../../config');
-        clientConfig = getClientConfig(config);
-
-        should.equal(clientConfig.storage.hasOwnProperty('database'), false);
-    });
-
-    it('clientconfig should not expose socketIO.serverOptions nor socketIO.adapter', function () {
-        var config,
-            clientConfig;
-        process.env.NODE_ENV = '';
-        config = require('../../config');
-        clientConfig = getClientConfig(config);
-
-        should.equal(clientConfig.socketIO.hasOwnProperty('serverOptions'), false);
-        should.equal(clientConfig.socketIO.hasOwnProperty('adapter'), false);
     });
 
     // These really only show up in the coverage..

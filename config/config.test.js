@@ -19,14 +19,13 @@ config.executor.clearOldDataAtStartUp = true;
 
 config.authentication.salts = 1;
 
-//FIXME: Have a common dir for this..
-config.plugin.basePaths.push(path.join(__dirname, '../test/plugin/scenarios/plugins'));
+//config.plugin.basePaths.push(path.join(__dirname, '../test/plugin/scenarios/plugins'));
 config.plugin.allowServerExecution = true;
 config.storage.database.options = {
     //port: 6666
 };
 
-config.addOn.basePaths.push(path.join(__dirname, '../test/addon/addOns'));
+//config.addOn.basePaths.push(path.join(__dirname, '../test/addon/addOns'));
 
 config.server.log = {
     transports: [{

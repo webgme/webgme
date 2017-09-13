@@ -5,6 +5,9 @@
 
 # WebGME - Web-based Generic Modeling Environment
 
+Note that this repository contains the full webgme app including a highly extendable graphical user interface and is the typical dependency a webgme app will depend on.
+To use the webgme framework without any GU - check out [webgme-engine](https://github.com/webgme/webgme-engine).
+
 Create your own Domain Specific Modeling Languages (DSML) right in the browser. Specify modeling concepts, their relationships, attributes, and aspects by drawing a UML class diagram-based metamodel and WebGME automatically configures itself to support the DSML.
 
 WebGME promotes collaboration where each change is translated into a micro-commit broadcast to all connected users. A lightweight branching scheme is transparently supported by the infrastructure. Code generators and externals tools can work on consistent snapshots (specific commits) while users can continue editing the models.
@@ -29,11 +32,11 @@ We aim to support all the major modern browsers. However we recommend using Chro
 You can always try out webgme at our public deployment at [webgme.org](https://webgme.org). After a certain point you probably want to host your own server with custom running code and visualization. At this point follow the instructions at 1.
 
 1. [webgme-cli](https://github.com/webgme/webgme-cli). This is the preferred way of using webgme as it allows you to:
- * Automatically generate boilerplate code for [extension components](#extension-components) (w/o manually configuring paths etc.).
+ * Automatically generate boilerplate code for [extensions](#extensions) (w/o manually configuring paths etc.).
  * Reuse components from other users.
  * Publish and share your work with others.
  * Updating to newer webgme releases only requires a `npm install webgme` and won't cause any conflicts.
- * **Note that** if cloning an existing repository constructed with webgme-cli, it is only neccessary to install webgme-cli if you intend to create/import new components.
+ * **Note that** if cloning an existing repository constructed with webgme-cli, it is only necessary to install webgme-cli if you intend to create/import new components.
 
 2. For webgme developers, clone this repo.
  * install packages with npm `npm install`
@@ -45,32 +48,18 @@ To view the available documentation visit `<host>/api`.
 
 # Command line interface
 
-All runnable javascript programs are stored in the `src/bin` directory, you should start them with node from the root directory of the repository, e.g. `node src/bin/start_server.js` starts the web server.
-Each script supports the `--help` or `-h` command line parameter, which will list all possible parameters.
+The webgme-engine provides a range of bin scripts, [see here for list of all](https://github.com/webgme/webgme-engine#command-line-interface).
 
-* `start_server.js`: it starts a web server, which opens a connection to the configured MongoDB.
-* `run_plugin.js`: executes a plugin via a direct MongoDB connection.
-* `merge.js`: merges two branches if there are no conflicts.
-* `usermanager.js`: manages users, organizations, and project authorization (read, write, delete).
-* `clean_up.js`: lists/removes projects based on supplied criteria (commits, branches, regex etc.).
-* `export.js`: exports a (snapshot of a) branch into a webgmex-file.
-* `import.js`: imports a (snapshot of a) branch (from webgmex-file) into a webgme project.
-* `addon_handler.js`: starts a server that handles running addons (see `config.addOn.workerUrl`).
-* `manage_webhooks.js`: add/update/remove webhooks to and from projects.
-* `blob_fs_clean_up.js`: cleans up blobs from the filesystem that are not referenced from any projects.
-* `plugin_hook.js`: plugin developer utility for triggering plugin on changes made to a project.
-* `storage_stats.js`: outputs statistics about the projects in the database. 
-* `connected_webhook_handler.js`: webhook example illustrating how to create an authenticated remote connection to the storage (models).
-
-# Extension Components
-* [Plugins](./src/plugin/README.md) - Model interpretation for e.g. code generation.
-* [AddOns](./src/addon/README.md) - Continuous model interpretation for e.g. constraint evaluation.
-* [Executor](./src/server/middleware/executor/Readme.md) - Code execution framework.
-* [Rest Routers](./src/server/middleware/ExampleRestRouter.js) - Add custom REST API routes.
-* [Layouts](./src/plugin/coreplugins/LayoutGenerator/LayoutGenerator.js) - Configure the layout of the generic UI.
-* [Visualizers](./src/plugin/coreplugins/VisualizerGenerator/VisualizerGenerator.js) - Add complete visualizers to the generic UI.
-* [Decorators](./src/plugin/coreplugins/DecoratorGenerator/DecoratorGenerator.js) - Add custom decoration to the nodes in the model editor.
-* [Constraints](./src/plugin/coreplugins/ConstraintEvaluator/ConstraintEvaluator.js) - Add custom constraints based on meta-types.
+# Extensions
+* [Plugins](https://github.com/webgme/webgme/wiki/GME-Plugins) - Model interpretation for e.g. code generation.
+* [Executor](https://github.com/webgme/webgme/wiki/GME-Executor-Framework) - Job execution framework over multiple worker nodes.
+* [Rest Routers](https://github.com/webgme/webgme/wiki/REST-Routers) - Add custom REST API routes with access to gme-auth and storage APIs.
+* [Constraints](https://github.com/webgme/webgme/wiki/GME-Constraints) - Add custom constraints based on meta-types.
+* [AddOns](https://github.com/webgme/webgme/wiki/GME-Add-Ons) - Continuous model interpretation for e.g. constraint evaluation.
+* [Webhooks](https://github.com/webgme/webgme/wiki/GME-WebHooks) - External event emitting based on changes in storage/models.
+* [Layouts](./src/client/js/Layouts/DefaultLayout) - Configure the layout of the generic UI.
+* [Visualizers](https://github.com/webgme/webgme/wiki/GME-Visualizers) - Add complete visualizers to the generic UI.
+* [Decorators](https://github.com/webgme/webgme/wiki/GME-Decorators) - Add custom decoration to the nodes in the model editor.
 
 See [gme-config](./config/README.md) for available configuration parameters.
 

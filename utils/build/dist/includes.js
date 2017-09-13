@@ -7,7 +7,6 @@ define([
     'js/jquery.WebGME',
     'js/WebGME',
     'js/util',
-    'js/logger',
 
     //layout
     'js/Layouts/DefaultLayout/DefaultLayout',

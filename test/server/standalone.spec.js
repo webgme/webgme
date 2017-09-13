@@ -19,156 +19,11 @@ describe('standalone server', function () {
 
         agent = superagent.agent(),
 
-        http = require('http'),
-        fs = require('fs'),
-
         serverBaseUrl,
 
         scenarios,
         i,
         j;
-
-    it('should start and stop and start and stop', function (done) {
-        this.timeout(5000);
-        // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig(),
-            server;
-
-        server = WebGME.standaloneServer(gmeConfig);
-        server.start(function (err) {
-            if (err) {
-                done(err);
-                return;
-            }
-            server.stop(function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                server.start(function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-                    server.stop(done);
-                });
-            });
-        });
-    });
-
-    // it.skip('should start and start and stop', function (done) {
-    //     this.timeout(5000);
-    //     // we have to set the config here
-    //     var gmeConfig = testFixture.getGmeConfig();
-    //
-    //     server = WebGME.standaloneServer(gmeConfig);
-    //     server.start(function () {
-    //         server.start(function () {
-    //             server.stop(done);
-    //         });
-    //     });
-    // });
-    //
-    // it.skip('should stop if not started', function (done) {
-    //     this.timeout(5000);
-    //     // we have to set the config here
-    //     var gmeConfig = testFixture.getGmeConfig();
-    //
-    //     server = WebGME.standaloneServer(gmeConfig);
-    //     server.stop(done);
-    // });
-
-
-    it('should fail to start http server if port is in use', function (done) {
-        this.timeout(5000);
-        // we have to set the config here
-        var gmeConfig = testFixture.getGmeConfig(),
-            httpServer = http.createServer(),
-            server;
-
-        gmeConfig.server.port = gmeConfig.server.port + 1;
-
-        httpServer.listen(gmeConfig.server.port, function (err) {
-            expect(err).to.equal(undefined);
-
-            server = WebGME.standaloneServer(gmeConfig);
-            server.start(function (err) {
-                expect(err.code).to.equal('EADDRINUSE');
-                httpServer.close(function (err1) {
-                    server._setIsRunning(true); //This ensures stopping modules.
-                    server.stop(function (err2) {
-                        done(err1 || err2 || null);
-                    });
-                });
-            });
-        });
-    });
-
-    describe('[https]', function () {
-        var nodeTLSRejectUnauthorized;
-
-        before(function () {
-            nodeTLSRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-        });
-
-        after(function () {
-            process.env.NODE_TLS_REJECT_UNAUTHORIZED = nodeTLSRejectUnauthorized;
-        });
-
-        it('should get main page with an https reverse proxy', function (done) {
-            var gmeConfig = testFixture.getGmeConfig(),
-                httpProxy = require('http-proxy'),
-                path = require('path'),
-                proxyServerPort = gmeConfig.server.port - 1,
-                server,
-                proxy;
-
-            server = WebGME.standaloneServer(gmeConfig);
-            //
-            // Create the HTTPS proxy server in front of a HTTP server
-            //
-            proxy = new httpProxy.createServer({
-                target: {
-                    host: 'localhost',
-                    port: gmeConfig.server.port
-                },
-                ssl: {
-                    key: fs.readFileSync(path.join(__dirname, '..', 'certificates', 'sample-key.pem'), 'utf8'),
-                    cert: fs.readFileSync(path.join(__dirname, '..', 'certificates', 'sample-cert.pem'), 'utf8')
-                }
-            });
-
-            server.start(function (err) {
-                if (err) {
-                    done(err);
-                    return;
-                }
-                proxy.listen(proxyServerPort, function (err) {
-                    if (err) {
-                        done(err);
-                        return;
-                    }
-
-                    agent.get('https://localhost:' + proxyServerPort + '/index.html').end(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        should.equal(res.status, 200, err);
-                        should.equal(/WebGME/.test(res.text), true, 'Index page response must contain WebGME');
-
-                        server.stop(function (err) {
-                            proxy.close(function (err1) {
-                                done(err || err1);
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
-
 
     scenarios = [{
         type: 'http',
@@ -176,19 +31,13 @@ describe('standalone server', function () {
         port: 9008,
         requests: [
             {code: 200, url: '/'},
-            {code: 404, url: '/login'},
-            //{code: 200, url: '/login/google/return', redirectUrl: '/'},
-            {code: 404, url: '/logout'},
-            {code: 200, url: '/bin/getconfig.js'},
             {code: 200, url: '/gmeConfig.json'},
             {code: 200, url: '/package.json'},
             {code: 200, url: '/index.html'},
-            //{code: 200, url: '/docs/tutorial.html'},
             {code: 200, url: '/plugin/PluginBase.js'},
-            {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator'},
-            {code: 404, url: '/plugin/PluginGenerator/PluginGenerator'},
-            {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/PluginGenerator.js'},
-            {code: 200, url: '/plugin/PluginGenerator/PluginGenerator/Templates/plugin.js.ejs'},
+            {code: 200, url: '/common/blob/BlobClient.js'},
+            {code: 200, url: '/client/logger.js'},
+
             {code: 200, url: '/decorators/DefaultDecorator/DefaultDecorator.js'},
             {code: 200, url: '/decorators/DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget.css'},
             {
@@ -201,79 +50,8 @@ describe('standalone server', function () {
             },
             {code: 200, url: '/panel/ModelEditor/ModelEditorControl.js'},
             {code: 200, url: '/panel/ModelEditor/ModelEditorControl'},
-            {code: 200, url: '/panel/ModelEditor/ModelEditorControl'},
-            {code: 404, url: '/panel/ModelEditor/ModelEditorControlDoesNotExist'},
             {code: 200, url: '/panel/SplitPanel/SplitPanel.js'},
-            {code: 404, url: '/panel/DoesNotExist/ModelEditorControl'},
-            //{code: 200, url: '/rest/unknown'},
-            //{code: 200, url: '/rest/does_not_exist'},
-            //{code: 200, url: '/rest/help'},
-            {code: 200, url: '/api/decorators'},
-            {code: 200, url: '/api/plugins'},
-            {code: 200, url: '/api/visualizers'},
-            {code: 200, url: '/api/seeds'},
-
-            //{code: 401, url: '/login/client/fail'},
-
-            {code: 404, url: '/login/forge'},
-            {code: 404, url: '/extlib/does_not_exist'}, // ending without a forward slash
-            {code: 404, url: '/extlib/does_not_exist/'}, // ending with a forward slash
-            //{code: 404, url: '/pluginoutput/does_not_exist'},
-            {code: 404, url: '/plugin'},
-            {code: 404, url: '/plugin/'},
-            {code: 404, url: '/plugin/PluginGenerator'},
-            {code: 404, url: '/plugin/PluginGenerator/PluginGenerator'},
-            {code: 404, url: '/plugin/does_not_exist'},
-            {code: 404, url: '/decorators/'},
-            {code: 404, url: '/decorators/DefaultDecorator'},
-            {code: 404, url: '/decorators/DefaultDecorator/does_not_exist'},
-            {code: 404, url: '/rest'},
-            {code: 404, url: '/rest/etf'},
-            {code: 404, url: '/worker/simpleResult'},
-            {code: 404, url: '/docs/'},
-            {code: 404, url: '/index2.html'},
-            {code: 404, url: '/does_not_exist'},
-            {code: 404, url: '/does_not_exist.js'},
-            {code: 404, url: '/asdf'},
-
-            {code: 200, url: '/extlib/config/index.js'},
-            {code: 404, url: '/extlib/src'},
-            //excluded extlib paths.
-            {code: 403, url: '/extlib/config/config.default.js'},
-
-            //{code: 410, url: '/getToken'},
-            //{code: 410, url: '/checktoken/does_not_exist'},
-
-            {code: 404, url: '/worker/simpleResult/bad_parameter'}
-        ]
-    }, {
-        type: 'http',
-        authentication: true,
-        port: 9009,
-        requests: [
-            // should not allow access without auth
-            {code: 200, url: '/', redirectUrl: '/login'},
-            {code: 200, url: '/package.json', redirectUrl: '/login'},
-            {code: 200, url: '/file._js', redirectUrl: '/login'},
-            {code: 200, url: '/file.html', redirectUrl: '/login'},
-            {code: 200, url: '/file.gif', redirectUrl: '/login'},
-            {code: 200, url: '/file.png', redirectUrl: '/login'},
-            {code: 200, url: '/file.bmp', redirectUrl: '/login'},
-            {code: 200, url: '/file.svg', redirectUrl: '/login'},
-            {code: 200, url: '/file.json', redirectUrl: '/login'},
-            {code: 200, url: '/file.map', redirectUrl: '/login'},
-
-            // should allow access without auth
-            {code: 200, url: '/lib/require/require.min.js'},
-            {code: 200, url: '/plugin/PluginResult.js'},
-            {code: 200, url: '/common/storage/browserstorage.js'},
-            {code: 200, url: '/common/storage/constants.js'},
-            {code: 200, url: '/common/blob/BlobClient.js'},
-            {code: 200, url: '/gmeConfig.json'},
-
-            {code: 401, url: '/api/plugins'},
-            {code: 401, url: '/api/decorators'},
-            {code: 401, url: '/api/visualizers'}
+            {code: 200, url: '/layout/DefaultLayout/DefaultLayout/DefaultLayout.js'}
         ]
     }];
 
@@ -388,14 +166,13 @@ describe('standalone server', function () {
     }
 
 
-    describe('http server decorators and svgs', function () {
+    describe('http svgs', function () {
         var server;
 
         before(function (done) {
             // we have to set the config here
             var gmeConfig = testFixture.getGmeConfig();
             gmeConfig.visualization.decoratorPaths = [];
-            gmeConfig.visualization.svgDirs.push(testFixture.path.join(__dirname, 'extra-svgs'));
 
             server = WebGME.standaloneServer(gmeConfig);
             serverBaseUrl = server.getUrl();
@@ -417,10 +194,12 @@ describe('standalone server', function () {
             agent.get(serverBaseUrl + '/assets/decoratorSVGList.json').end(function (err, res) {
                 expect(res.status).to.equal(200);
                 expect(res.body).to.include.members([
-                    'extra-svgs/level1.svg',
-                    'extra-svgs/nested/level2.svg',
-                    'extra-svgs/nested/nested/level3.svg'
+                    'Attribute.svg',
+                    'BluePort.svg',
+                    'Chain.svg'
                 ]);
+
+                expect(Object.keys(res.body).length > 60).to.equal(true);
                 done();
             });
         });
@@ -430,167 +209,6 @@ describe('standalone server', function () {
                 expect(res.status).to.equal(200);
                 expect(res.body.toString('utf8')).to.contain('</svg>');
                 done();
-            });
-        });
-
-        it('should return svg file if exists /assets/DecoratorSVG/extra-svgs/level1.svg', function (done) {
-            agent.get(serverBaseUrl + '/assets/DecoratorSVG/extra-svgs/level1.svg').end(function (err, res) {
-                expect(res.status).to.equal(200);
-                expect(res.body.toString('utf8')).to.contain('</svg>');
-                done();
-            });
-        });
-
-        it('should return svg file if exists /assets/DecoratorSVG/extra-svgs/nested/nested/level3.svg',
-            function (done) {
-                agent.get(serverBaseUrl + '/assets/DecoratorSVG/extra-svgs/nested/nested/level3.svg')
-                    .end(function (err, res) {
-                        expect(res.status).to.equal(200);
-                        expect(res.body.toString('utf8')).to.contain('</svg>');
-                        done();
-                    });
-            }
-        );
-
-        it('should return 404 if svg file does not exist /assets/DecoratorSVG/NoSuchSvg.svg', function (done) {
-            agent.get(serverBaseUrl + '/assets/DecoratorSVG/NoSuchSvg.sv').end(function (err, res) {
-                expect(res.status).to.equal(404);
-                done();
-            });
-        });
-    });
-
-    describe('http server svgs with relative paths', function () {
-        var server;
-
-        before(function (done) {
-            // we have to set the config here
-            var gmeConfig = testFixture.getGmeConfig();
-            gmeConfig.visualization.svgDirs.push(testFixture.path.join('./test', 'server', 'extra-svgs'));
-            // Make sure we clear standalone and utlis from the cache so we get a new svgMap.
-            delete require.cache[require.resolve('../../src/server/standalone')];
-            delete require.cache[require.resolve('../../src/utils')];
-            server = WebGME.standaloneServer(gmeConfig);
-            serverBaseUrl = server.getUrl();
-            server.start(done);
-        });
-
-        after(function (done) {
-            server.stop(done);
-        });
-
-        it('should return svg file if exists and relative path given /assets/DecoratorSVG/extra-svgs/level1.svg',
-            function (done) {
-                agent.get(serverBaseUrl + '/assets/DecoratorSVG/extra-svgs/level1.svg').end(function (err, res) {
-                    expect(res.status).to.equal(200);
-                    expect(res.body.toString('utf8')).to.contain('</svg>');
-                    done();
-                });
-            }
-        );
-    });
-
-    describe('http server with authentication', function () {
-        describe('logOutUrl set', function () {
-            var server;
-
-            before(function (done) {
-                // we have to set the config here
-                var gmeConfig = testFixture.getGmeConfig();
-                gmeConfig.authentication.enable = true;
-                gmeConfig.authentication.logOutUrl = '/profile/login';
-
-                server = WebGME.standaloneServer(gmeConfig);
-                serverBaseUrl = server.getUrl();
-                server.start(done);
-            });
-
-            after(function (done) {
-                server.stop(done);
-            });
-
-            it('should redirect to given logOutUrl when no referrer set', function (done) {
-                agent.get(serverBaseUrl + '/logout').end(function (err, res) {
-                    try {
-                        expect(err).to.equal(null);
-                        expect(res.status).to.equal(200);
-                        expect(res.redirects.length).to.equal(1);
-                        expect(res.redirects[0]).to.equal(serverBaseUrl + '/profile/login');
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                });
-            });
-
-            it('should redirect to logOutUrl even when redirectUrl set', function (done) {
-                agent.get(serverBaseUrl + '/logout')
-                    .query({
-                        redirectUrl: '/gmeConfig.json'
-                    })
-                    .end(function (err, res) {
-                    try {
-                        expect(err).to.equal(null);
-                        expect(res.status).to.equal(200);
-                        expect(res.redirects.length).to.equal(1);
-                        expect(res.redirects[0]).to.equal(serverBaseUrl + '/profile/login');
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                });
-            });
-        });
-
-        describe('logOutUrl not set', function () {
-            var server;
-
-            before(function (done) {
-                // we have to set the config here
-                var gmeConfig = testFixture.getGmeConfig();
-                gmeConfig.authentication.enable = true;
-                gmeConfig.authentication.logOutUrl = '';
-                gmeConfig.authentication.logInUrl = '/profile/login';
-
-                server = WebGME.standaloneServer(gmeConfig);
-                serverBaseUrl = server.getUrl();
-                server.start(done);
-            });
-
-            after(function (done) {
-                server.stop(done);
-            });
-
-            it('should redirect to given logInUrl when no referrer set', function (done) {
-                agent.get(serverBaseUrl + '/logout').end(function (err, res) {
-                    try {
-                        expect(err).to.equal(null);
-                        expect(res.status).to.equal(200);
-                        expect(res.redirects.length).to.equal(1);
-                        expect(res.redirects[0]).to.equal(serverBaseUrl + '/profile/login');
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                });
-            });
-
-            it('should redirect to redirectUrl when query set', function (done) {
-                agent.get(serverBaseUrl + '/logout')
-                    .query({
-                        redirectUrl: '/gmeConfig.json'
-                    })
-                    .end(function (err, res) {
-                        try {
-                            expect(err).to.equal(null);
-                            expect(res.status).to.equal(200);
-                            expect(res.redirects.length).to.equal(1);
-                            expect(res.redirects[0]).to.equal(serverBaseUrl + '/gmeConfig.json');
-                            done();
-                        } catch (e) {
-                            done(e);
-                        }
-                    });
             });
         });
     });

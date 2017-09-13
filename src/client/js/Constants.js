@@ -8,7 +8,7 @@
 
 define([
     'common/Constants',
-    'js/client/constants'
+    'client/constants'
 ], function (COMMON_CONSTANTS, CLIENT_CONSTANTS) {
 
     'use strict';

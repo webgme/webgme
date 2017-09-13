@@ -15,8 +15,9 @@ var DEBUG = false,
 
 for (i = 0; i < metaElms.length; i += 1) {
     if (metaElms[i].getAttribute('property') === 'webgme-version') {
+        WebGMEGlobal.webgmeVersion = metaElms[i].getAttribute('content');
+    } else if (metaElms[i].getAttribute('property') === 'app-version') {
         WebGMEGlobal.version = metaElms[i].getAttribute('content');
-        break;
     }
 }
 
@@ -29,6 +30,12 @@ require.config({
     waitSeconds: 12,
     map: {
         '*': {
+            // Map old paths to webgme-engine client path
+            'js/client': 'client/client',
+            'js/logger': 'client/logger',
+            'js/Utils/SaveToDisk': 'client/SaveToDisk',
+            'js/client/constants': 'client/constants',
+
             //layout
             'layout/DefaultLayout': 'js/Layouts',
             //panels from default layout
@@ -48,7 +55,7 @@ require.config({
     },
     paths: {
         css: 'bower_components/require-css/css.min',
-        text: 'lib/require/require-text/text',
+        text: 'common/lib/requirejs/text',
 
         //jQuery and stuff
         jquery: 'bower_components/jquery/dist/jquery',
@@ -71,7 +78,7 @@ require.config({
         //Other modules
         AutoRouterActionApplier: 'lib/autorouter/action-applier',
         underscore: 'bower_components/underscore/underscore',
-        chance: 'bower_components/chance/chance',
+        jszip: 'bower_components/jszip/dist/jszip',
         backbone: 'bower_components/backbone/backbone',
         d3: 'bower_components/d3/d3',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
@@ -93,13 +100,11 @@ require.config({
         layout: '/layout',
         panel: '/panel',
 
-        //node_modules
-        jszip: 'bower_components/jszip/dist/jszip',
-        superagent: 'lib/superagent/superagent',
-        debug: 'lib/debug/debug',
-        q: 'bower_components/q/q',
-
-        //codemirror: 'bower_components/codemirror/',
+        // common libs
+        superagent: 'common/lib/superagent/superagent',
+        debug: 'common/lib/debug/debug',
+        q: 'common/lib/q/q',
+        chance: 'common/chance/chance',
 
         moment: 'bower_components/moment/moment',
         blockies: 'lib/blockies/blockies',

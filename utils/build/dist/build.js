@@ -3,9 +3,8 @@
 /**
  *
  *
- * node ./node_modules/requirejs/bin/r.js -o ./utils/build/dist/build.js
+ * node ./utils/build/dist/build.js
  *
- * nodemon -i dist ./node_modules/requirejs/bin/r.js -o ./utils/build/dist/build.js
  *
  * @author pmeijer / https://github.com/pmeijer
  */
@@ -16,18 +15,31 @@ var requirejs = require('requirejs'),
     fs = require('fs'),
     Q = require('q'),
     webgmeVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', '..', 'package.json'), 'utf8')).version,
+    webgmeEngineSrc = path.join(path.dirname(require.resolve('webgme-engine')), 'src'),
     config = {
         baseUrl: path.join(__dirname, '../../../src'),
+        map: {
+            '*': {
+                // Map old paths to webgme-engine client path
+                'js/client': 'client/client',
+                'js/logger': 'client/logger',
+                'js/Utils/SaveToDisk': 'client/SaveToDisk',
+                'js/client/constants': 'client/constants'
+            }
+        },
         paths: {
             js: 'client/js',
             decorators: 'client/decorators',
 
             assets: 'empty:',
 
-            blob: 'common/blob',
-            executor: 'common/executor',
+            blob: path.join(webgmeEngineSrc, 'common/blob'),
+            client: path.join(webgmeEngineSrc, 'client'),
+            common: path.join(webgmeEngineSrc, 'common'),
+            executor: path.join(webgmeEngineSrc, 'common/executor'),
+            plugin: path.join(webgmeEngineSrc, 'plugin'),
 
-            text: 'client/lib/require/require-text/text',
+            text: path.join(webgmeEngineSrc, 'common/lib/requirejs/text'),
             css: 'client/bower_components/require-css/css',
             // Temporary fix to ensure that the CSS plugins internal modules are loaded correctly.
             // https://github.com/requirejs/r.js/issues/289
@@ -82,10 +94,10 @@ var requirejs = require('requirejs'),
         include: [
             '../utils/build/dist/includes',
         ],
-        out: path.join(__dirname, '../../../dist/webgme.' + webgmeVersion + '.dist.build.js'),
-        optimize: 'uglify2',
+        out: path.join(__dirname, '../../../src/client/dist/webgme.' + webgmeVersion + '.dist.build.js'),
+        // optimize: 'uglify2',
         //optimize: 'none',
-        generateSourceMaps: true,
+        // generateSourceMaps: true,
         preserveLicenseComments: false,
         inlineText: true,
         wrap: {
@@ -95,33 +107,27 @@ var requirejs = require('requirejs'),
     cssConfig = {
         optimizeCss: 'standard',
         cssIn: path.join(__dirname, '../../../src/client/css/main.css'),
-        out: path.join(__dirname, '../../../dist/webgme.' + webgmeVersion + '.dist.main.css'),
+        out: path.join(__dirname, '../../../src/client/dist/webgme.' + webgmeVersion + '.dist.main.css'),
     },
     libConfig = {
         baseUrl: path.join(__dirname, '../../../src'),
         paths: {
-            js: 'client/js',
-            decorators: 'client/decorators',
 
-            assets: 'empty:',
-
-            blob: 'common/blob',
-            executor: 'common/executor',
-
-            text: 'client/lib/require/require-text/text',
+            text: path.join(webgmeEngineSrc, 'common/lib/requirejs/text'),
             css: 'client/bower_components/require-css/css',
             // Temporary fix to ensure that the CSS plugins internal modules are loaded correctly.
             // https://github.com/requirejs/r.js/issues/289
             'css-builder': 'client/bower_components/require-css/css-builder',
             normalize: 'client/bower_components/require-css/normalize',
 
-            q: 'client/bower_components/q/q',
-            superagent: 'client/lib/superagent/superagent',
+            q: path.join(webgmeEngineSrc, 'common/lib/q/q'),
+            superagent: path.join(webgmeEngineSrc, 'common/lib/superagent/superagent'),
+            debug: path.join(webgmeEngineSrc, 'common/lib/debug/debug'),
+            chance: path.join(webgmeEngineSrc, 'common/lib/chance/chance'),
+
             jszip: 'client/bower_components/jszip/dist/jszip',
-            debug: 'client/lib/debug/debug',
             urlparse: 'client/lib/purl/purl.min',
             underscore: 'client/bower_components/underscore/underscore',
-            chance: 'client/bower_components/chance/chance',
             ravenjs: 'client/bower_components/raven-js/dist/raven',
             backbone: 'client/bower_components/backbone/backbone',
             moment: 'client/bower_components/moment/moment',
@@ -163,7 +169,7 @@ var requirejs = require('requirejs'),
         exclude: ['normalize'],
         optimize: 'uglify2',
         preserveLicenseComments: false,
-        out: path.join(__dirname, '../../../dist/webgme.' + webgmeVersion + '.lib.build.js')
+        out: path.join(__dirname, '../../../src/client/dist/webgme.' + webgmeVersion + '.lib.build.js')
     };
 
 function doBuilds(callback) {

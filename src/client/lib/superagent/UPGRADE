@@ -1,5 +1,0 @@
-Bump the npm version and install
-
-npm install -g browserify
-
-browserify -r superagent -o src/client/lib/superagent/superagent.js -s superagent
