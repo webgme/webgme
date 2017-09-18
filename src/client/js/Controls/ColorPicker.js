@@ -18,6 +18,7 @@ define(['jquery-spectrum',
             initColor = params.color || '#dd3333';
 
         this.el = params.el;
+        this.destroyed = false;
 
         this.el.spectrum({
             color: initColor,
@@ -29,7 +30,7 @@ define(['jquery-spectrum',
             allowEmpty: true,
             //jscs:disable maximumLineLength
             palette: [
-                ['rgb(255, 255, 255)', 'rgb(242, 242, 242);', 'rgb(230, 230, 230);', 'rgb(204, 204, 204);', 'rgb(179, 179, 179);', 'rgb(153, 153, 153);', 'rgb(128, 128, 128);', 'rgb(102, 102, 102);', 'rgb(77, 77, 77);', 'rgb(51, 51, 51);', 'rgb(26, 26, 26);', 'rgb(0, 0, 0);'  ],
+                ['rgb(255, 255, 255)', 'rgb(242, 242, 242);', 'rgb(230, 230, 230);', 'rgb(204, 204, 204);', 'rgb(179, 179, 179);', 'rgb(153, 153, 153);', 'rgb(128, 128, 128);', 'rgb(102, 102, 102);', 'rgb(77, 77, 77);', 'rgb(51, 51, 51);', 'rgb(26, 26, 26);', 'rgb(0, 0, 0);'],
                 ['rgb(255, 204, 204);', 'rgb(255, 230, 204);', 'rgb(255, 255, 204);', 'rgb(230, 255, 204);', 'rgb(204, 255, 204);', 'rgb(204, 255, 230);', 'rgb(204, 255, 255);', 'rgb(204, 229, 255);', 'rgb(204, 204, 255);', 'rgb(229, 204, 255);', 'rgb(255, 204, 255);', 'rgb(255, 204, 230);'],
                 ['rgb(255, 153, 153);', 'rgb(255, 204, 153);', 'rgb(255, 255, 153);', 'rgb(204, 255, 153);', 'rgb(153, 255, 153);', 'rgb(153, 255, 204);', 'rgb(153, 255, 255);', 'rgb(153, 204, 255);', 'rgb(153, 153, 255);', 'rgb(204, 153, 255);', 'rgb(255, 153, 255);', 'rgb(255, 153, 204);'],
                 ['rgb(255, 102, 102);', 'rgb(255, 179, 102);', 'rgb(255, 255, 102);', 'rgb(179, 255, 102);', 'rgb(102, 255, 102);', 'rgb(102, 255, 179);', 'rgb(102, 255, 255);', 'rgb(102, 178, 255);', 'rgb(102, 102, 255);', 'rgb(178, 102, 255);', 'rgb(255, 102, 255);', 'rgb(255, 102, 179);'],
@@ -56,6 +57,9 @@ define(['jquery-spectrum',
                 self._destroy();
             },
             change: function (color) {
+                if (self.destroyed) {
+                    return;
+                }
                 self._destroy();
                 if (color) {
                     self.onColorChanged(color.toHexString());
@@ -77,6 +81,8 @@ define(['jquery-spectrum',
     };
 
     ColorPicker.prototype._destroy = function () {
+        this.destroyed = true;
+        /* FIXME we have to use this override as the spectrum's own destroy doesn't clear the event handling. */
         this.el.spectrum('destroy');
     };
 
