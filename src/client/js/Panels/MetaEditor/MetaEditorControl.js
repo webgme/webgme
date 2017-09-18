@@ -1380,9 +1380,8 @@ define(['js/logger',
 
         if (sourceNode && targetNode) {
             confirmDialog.show({
-                title: 'Propagate Meta ' + (isSet ? 'set' : 'pointer') + 'target remove',
-                question: 'Do you wish to propagate the ' + (isSet ? 'set' : 'pointer') +
-                ' target removal throughout the project?',
+                title: title,
+                question: question,
                 okLabel: 'Propagate',
                 cancelLabel: 'Don\'t propagate',
                 onHideFn: function (oked) {
