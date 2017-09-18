@@ -29,7 +29,6 @@ define([
     DiagramDesignerWidgetDecoratorBaseConnectionArea = function () {
     };
 
-
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._initializeConnectionAreaUserSelection = function () {
         var self = this;
 
@@ -46,7 +45,6 @@ define([
             }
         });
     };
-
 
     DiagramDesignerWidgetDecoratorBaseConnectionArea.prototype._editConnectionAreas = function () {
         var w = this.$el.outerWidth(true),
@@ -195,14 +193,9 @@ define([
                 decoratorID = this.DECORATORID,
                 regKey = DIAGRAM_DESIGNER_WIDGET_DECORATOR_DISABLED_CONNECTION_AREAS_REGISTRY_KEY + decoratorID;
 
-            if (disabledAreaIdList.length === 0) {
-                this.preferencesHelper.delRegistry(objID, regKey);
-            } else {
-                this.preferencesHelper.setRegistry(objID, regKey, disabledAreaIdList.slice(0));
-            }
+            this.preferencesHelper.setRegistry(objID, regKey, disabledAreaIdList.slice(0));
 
         };
-
 
     return DiagramDesignerWidgetDecoratorBaseConnectionArea;
 });
