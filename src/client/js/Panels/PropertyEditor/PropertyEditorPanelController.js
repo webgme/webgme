@@ -673,7 +673,7 @@ define(['js/logger',
 
     PropertyEditorController.prototype._getPointerInfo = function (node) {
         var result = {},
-            availablePointers = node.getPointerNames(),
+            availablePointers = _.union(node.getValidPointerNames() || [], node.getPointerNames() || []),
             len = availablePointers.length,
             ptrTo;
 
