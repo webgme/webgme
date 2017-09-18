@@ -233,17 +233,17 @@ define(['js/logger',
             }
         }
 
-        if (selectedObjIDs.length === 1) {
+        if (selectedNodes.length === 1) {
+            cNode = selectedNodes[0];
             propList[' ID/Path'] = {
                 name: 'ID',
-                value: selectedObjIDs[0],
+                value: cNode.getId(),
                 valueType: 'string',
                 isCommon: true,
                 readOnly: true,
                 clipboard: true
             };
 
-            cNode = self._client.getNode(selectedObjIDs[0]);
             if (cNode) {
                 propList[' GUID'] = {
                     name: 'GUID',
