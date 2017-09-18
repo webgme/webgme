@@ -548,9 +548,10 @@ define(['js/logger',
 
             for (i = 0; i < metaNodes.length; i += 1) {
                 if (metaNodes[i].isReadOnly()) {
-                    //library node
+                    // library node
                     continue;
                 }
+
                 allMeta.push({
                     node: metaNodes[i],
                     metaJson: metaNodes[i].getOwnJsonMeta()
@@ -579,15 +580,13 @@ define(['js/logger',
 
                                 client.delPointerMetaTarget(sourceID, prtOrSetName, id);
 
-                                // Check if this were the last rule.
+                                // Check if this is the last rule.
                                 pointerMetaDescriptor = client.getValidTargetItems(sourceID, prtOrSetName);
                                 if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
                                     if (isSet === false) {
-                                        self._client.delPointerMeta(sourceID, prtOrSetName);
-                                        self._client.delPointer(sourceID, prtOrSetName);
+                                        client.delPointer(sourceID, prtOrSetName);
                                     } else {
-                                        self._client.delPointerMeta(sourceID, prtOrSetName);
-                                        self._client.deleteSet(sourceID, prtOrSetName);
+                                        client.deleteSet(sourceID, prtOrSetName);
                                     }
                                 }
                             }
@@ -597,8 +596,8 @@ define(['js/logger',
                 if (metaInfo.metaJson.aspects) {
                     Object.keys(metaInfo.metaJson.aspects)
                         .forEach(function (aspectName) {
-                            if (metaInfo.metaJson.aspects[aspectName].items.indexOf(id) > -1) {
-                                // TODO: Remove validAspectTarget.
+                            if (metaInfo.metaJson.aspects[aspectName].indexOf(id) > -1) {
+                                client.delAspectMetaTarget(sourceID, aspectName, id);
                             }
                         });
                 }
@@ -643,10 +642,10 @@ define(['js/logger',
                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
                         nodeObj = client.getNode(gmeID);
                         if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
-                            //library elements will not be lost at all
-                            // TODO: If no longer present - shouldn't we clean-up the inverse relations?
+                            // Library elements should not be removed.
+                            clearAllMetaReferences(gmeID);
                         } else {
-                            // TODO: Clean up all meta-nodes with rules referencing this node.
+                            clearAllMetaReferences(gmeID);
 
                             toRemoveFromMeta.push(gmeID);
                         }
