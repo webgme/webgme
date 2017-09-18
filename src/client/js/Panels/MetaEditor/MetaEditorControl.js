@@ -573,10 +573,10 @@ define(['js/logger',
                 connectionID = aConns.src[len];
                 if (this._connectionListByID[connectionID]) {
                     //save the connection to the waiting list, since the destination is still there
-                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId,
-                        this._connectionListByID[connectionID].GMEDstId,
-                        this._connectionListByID[connectionID].type,
-                        this._connectionListByID[connectionID].connTexts);
+                    // this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId,
+                    //     this._connectionListByID[connectionID].GMEDstId,
+                    //     this._connectionListByID[connectionID].type,
+                    //     this._connectionListByID[connectionID].connTexts);
                     this._removeConnection(this._connectionListByID[connectionID].GMESrcId,
                         this._connectionListByID[connectionID].GMEDstId,
                         this._connectionListByID[connectionID].type);
@@ -588,10 +588,10 @@ define(['js/logger',
                 connectionID = aConns.dst[len];
                 if (this._connectionListByID[connectionID]) {
                     //save the connection to the waiting list, since the destination is still there
-                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId,
-                        this._connectionListByID[connectionID].GMEDstId,
-                        this._connectionListByID[connectionID].type,
-                        this._connectionListByID[connectionID].connTexts);
+                    // this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId,
+                    //     this._connectionListByID[connectionID].GMEDstId,
+                    //     this._connectionListByID[connectionID].type,
+                    //     this._connectionListByID[connectionID].connTexts);
                     this._removeConnection(this._connectionListByID[connectionID].GMESrcId,
                         this._connectionListByID[connectionID].GMEDstId,
                         this._connectionListByID[connectionID].type);
