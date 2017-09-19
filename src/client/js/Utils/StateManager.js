@@ -51,7 +51,7 @@ define([
             registerActiveSelection: function (objIdList, opts) {
                 ASSERT(_.isArray(objIdList));
                 opts = opts || {};
-                this.set(CONSTANTS.STATE_ACTIVE_SELECTION, objIdList, opts);
+                this.set(CONSTANTS.STATE_ACTIVE_SELECTION, objIdList.slice(), opts);
             },
 
             getActiveSelection: function () {
