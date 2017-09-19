@@ -121,8 +121,8 @@ define([
 
         if (this.borderColor) {
             this.$el.css({
-                'border-color': this.borderColor,
-                'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'
+                'border-color': this.borderColor
+                // 'box-shadow': '0px 0px 7px 0px ' + this.borderColor + ' inset'
             });
             this.skinParts.$name.css({'border-color': this.borderColor});
         } else {
