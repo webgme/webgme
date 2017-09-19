@@ -532,11 +532,77 @@ define(['js/logger',
             deleteConnection,
             self = this,
             metaInfoToBeLost = [],
+            toRemoveFromMeta = [],
             doDelete,
             confirmDialog,
             confirmMsg,
             itemNames,
             nodeObj;
+
+        function clearAllMetaReferences(id) {
+            var allMeta = [],
+                i,
+                metaNodes;
+
+            metaNodes = client.getAllMetaNodes();
+
+            for (i = 0; i < metaNodes.length; i += 1) {
+                if (metaNodes[i].isReadOnly()) {
+                    // library node
+                    continue;
+                }
+
+                allMeta.push({
+                    node: metaNodes[i],
+                    metaJson: metaNodes[i].getOwnJsonMeta()
+                });
+            }
+
+            allMeta.forEach(function (metaInfo) {
+                var sourceID = metaInfo.node.getId();
+
+                if (metaInfo.metaJson.children && metaInfo.metaJson.children.items.indexOf(id) > -1) {
+                    client.delChildMeta(sourceID, id);
+                }
+
+                if (metaInfo.metaJson.pointers) {
+                    Object.keys(metaInfo.metaJson.pointers)
+                        .forEach(function (prtOrSetName) {
+                            var isSet = true,
+                                pointerMetaDescriptor;
+
+                            if (metaInfo.metaJson.pointers[prtOrSetName].items.indexOf(id) > -1) {
+                                if (metaInfo.metaJson.pointers[prtOrSetName].min === 1 &&
+                                    metaInfo.metaJson.pointers[prtOrSetName].max === 1) {
+                                    // Pointer
+                                    isSet = false;
+                                }
+
+                                client.delPointerMetaTarget(sourceID, prtOrSetName, id);
+
+                                // Check if this is the last rule.
+                                pointerMetaDescriptor = client.getValidTargetItems(sourceID, prtOrSetName);
+                                if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
+                                    if (isSet === false) {
+                                        client.delPointer(sourceID, prtOrSetName);
+                                    } else {
+                                        client.deleteSet(sourceID, prtOrSetName);
+                                    }
+                                }
+                            }
+                        });
+                }
+
+                if (metaInfo.metaJson.aspects) {
+                    Object.keys(metaInfo.metaJson.aspects)
+                        .forEach(function (aspectName) {
+                            if (metaInfo.metaJson.aspects[aspectName].indexOf(id) > -1) {
+                                client.delAspectMetaTarget(sourceID, aspectName, id);
+                            }
+                        });
+                }
+            });
+        }
 
         this.logger.debug('_onSelectionDelete', idList);
 
@@ -576,10 +642,12 @@ define(['js/logger',
                     if (self._metaAspectSheetsPerMember[gmeID].length === 1) {
                         nodeObj = client.getNode(gmeID);
                         if (nodeObj && (nodeObj.isLibraryElement() || nodeObj.isLibraryRoot())) {
-                            //library elements will not be lost at all
+                            // Library elements should not be removed.
+                            clearAllMetaReferences(gmeID);
                         } else {
-                            client.removeMember(aspectNodeID, gmeID, MetaEditorConstants.META_ASPECT_SET_NAME);
-                            client.setMeta(gmeID, {});
+                            clearAllMetaReferences(gmeID);
+
+                            toRemoveFromMeta.push(gmeID);
                         }
                     }
                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
@@ -587,6 +655,12 @@ define(['js/logger',
                     deleteConnection(itemsToDelete[len]);
                 }
             }
+
+            // Here we remove all nodes from the meta (after meta-nodes referring to them have been cleaned).
+            toRemoveFromMeta.forEach(function (id) {
+                client.removeMember(aspectNodeID, id, MetaEditorConstants.META_ASPECT_SET_NAME);
+                client.setMeta(id, {});
+            });
 
             client.completeTransaction();
         };
@@ -1183,7 +1257,7 @@ define(['js/logger',
         if (selectedIds.length === 1) {
             if (self._connectionListByID.hasOwnProperty(selectedIds[0]) &&
                 (self._connectionListByID[selectedIds[0]].type === 'pointer' ||
-                    self._connectionListByID[selectedIds[0]].type === 'set')) {
+                self._connectionListByID[selectedIds[0]].type === 'set')) {
                 type = self._connectionListByID[selectedIds[0]].type;
                 srcPath = self._connectionListByID[selectedIds[0]].GMESrcId;
                 dstPath = self._connectionListByID[selectedIds[0]].GMEDstId;
