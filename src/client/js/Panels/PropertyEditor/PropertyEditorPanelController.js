@@ -93,10 +93,11 @@ define(['js/logger',
         this._logger.debug('Created');
     };
 
-    // Prototypical inheritance from PluginBase.
+    // Prototypical inheritance from PropertyEditorPanelControllerHelpers.
     PropertyEditorController.prototype = Object.create(PropertyEditorPanelControllerHelpers.prototype);
     PropertyEditorController.prototype.constructor = PropertyEditorController;
 
+    // Event handling and update triggering
     PropertyEditorController.prototype._initEventHandlers = function () {
         var self = this;
 
@@ -233,6 +234,7 @@ define(['js/logger',
 
                 flattenedPointers = self._getPointerInfo(cNode);
                 this._filterCommon(commonAttrMeta, commonPointers, flattenedPointers, isFirstNode);
+                isFirstNode = false;
             }
         }
 
