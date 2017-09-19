@@ -81,7 +81,15 @@ define(['js/logger',
         this._client = client;
         this._propertyGrid = propertyGrid;
         this.NON_INVALID_PTRS = NON_INVALID_PTRS;
-        this._type = type || null; // CONSTANTS.PROPERTY_GROUP_ATTRIBUTES ...
+        if ([CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                CONSTANTS.PROPERTY_GROUP_POINTERS,
+                CONSTANTS.PROPERTY_GROUP_META,
+                CONSTANTS.PROPERTY_GROUP_PREFERENCES].indexOf(type) === -1) {
+
+            throw new Error('No valid type given for property controller!');
+        }
+
+        this._type = type; // CONSTANTS.PROPERTY_GROUP_ATTRIBUTES ...
         this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
             WebGMEGlobal.gmeConfig.client.log);
         //it should be sorted alphabetically
@@ -224,18 +232,31 @@ define(['js/logger',
 
             if (cNode) {
                 selectedNodes.push(cNode);
-                flattenedAttrs = this._getNodeAttributeValues(cNode);
-                this._buildCommonAttrMeta(commonAttrMeta, cNode, isFirstNode);
-                this._filterCommon(commonAttrMeta, commonAttrs, flattenedAttrs, isFirstNode);
 
-                flattenedPreferences = this._getNodeRegistryValues(cNode, PREFERENCES_REGISTRY_KEYS);
-                this._filterCommon(commonAttrMeta, commonPreferences, flattenedPreferences, isFirstNode);
+                switch (self._type) {
+                    case CONSTANTS.PROPERTY_GROUP_ATTRIBUTES:
+                        flattenedAttrs = this._getNodeAttributeValues(cNode);
+                        this._buildCommonAttrMeta(commonAttrMeta, cNode, isFirstNode);
+                        this._filterCommon(commonAttrMeta, commonAttrs, flattenedAttrs, isFirstNode);
+                        break;
+                    case CONSTANTS.PROPERTY_GROUP_PREFERENCES:
+                        //
+                        flattenedPreferences = this._getNodeRegistryValues(cNode, PREFERENCES_REGISTRY_KEYS);
+                        this._filterCommon(commonAttrMeta, commonPreferences, flattenedPreferences, isFirstNode);
+                        break;
+                    case CONSTANTS.PROPERTY_GROUP_META:
+                        flattenedMeta = this._getNodeRegistryValues(cNode, META_REGISTRY_KEYS);
+                        this._filterCommon(commonAttrMeta, commonMeta, flattenedMeta, isFirstNode);
+                        break;
+                    case CONSTANTS.PROPERTY_GROUP_POINTERS:
+                        flattenedPointers = self._getPointerInfo(cNode);
+                        this._filterCommon(commonAttrMeta, commonPointers, flattenedPointers, isFirstNode);
+                        break;
+                    default:
+                        // Should not happen as it is check in constructor.
+                        self._logger.error('Unknown type', self._type);
+                }
 
-                flattenedMeta = this._getNodeRegistryValues(cNode, META_REGISTRY_KEYS);
-                this._filterCommon(commonAttrMeta, commonMeta, flattenedMeta, isFirstNode);
-
-                flattenedPointers = self._getPointerInfo(cNode);
-                this._filterCommon(commonAttrMeta, commonPointers, flattenedPointers, isFirstNode);
                 isFirstNode = false;
             }
         }
@@ -285,57 +306,59 @@ define(['js/logger',
             }
         }
 
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
-            propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
-                name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                value: undefined,
-                isFolder: true
-            };
+        switch (self._type) {
+            case CONSTANTS.PROPERTY_GROUP_ATTRIBUTES:
+                propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
+                    name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                    text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                    value: undefined,
+                    isFolder: true
+                };
 
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
-        }
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
+                break;
+            case CONSTANTS.PROPERTY_GROUP_PREFERENCES:
+                propList[PREFERENCES_BASIC_SUB_GROUP] = {
+                    name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                    text: PREFERENCES_BASIC_SUB_GROUP,
+                    value: undefined,
+                    isFolder: true
+                };
 
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_PREFERENCES) {
-            propList[PREFERENCES_BASIC_SUB_GROUP] = {
-                name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                text: PREFERENCES_BASIC_SUB_GROUP,
-                value: undefined,
-                isFolder: true
-            };
+                if (commonPointers.hasOwnProperty(CONSTANTS.POINTER_CONSTRAINED_BY)) {
+                    commonPreferences[CONSTANTS.POINTER_CONSTRAINED_BY] = commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
+                    delete commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
+                }
 
-            if (commonPointers.hasOwnProperty(CONSTANTS.POINTER_CONSTRAINED_BY)) {
-                commonPreferences[CONSTANTS.POINTER_CONSTRAINED_BY] = commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
-                delete commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
-            }
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
+                break;
+            case CONSTANTS.PROPERTY_GROUP_META:
+                propList[CONSTANTS.PROPERTY_GROUP_META] = {
+                    name: CONSTANTS.PROPERTY_GROUP_META,
+                    text: CONSTANTS.PROPERTY_GROUP_META,
+                    value: undefined,
+                    isFolder: true
+                };
 
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
-        }
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
+                break;
+            case CONSTANTS.PROPERTY_GROUP_POINTERS:
+                propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
+                    name: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                    text: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                    value: undefined,
+                    isFolder: true
+                };
 
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_META) {
-            propList[CONSTANTS.PROPERTY_GROUP_META] = {
-                name: CONSTANTS.PROPERTY_GROUP_META,
-                text: CONSTANTS.PROPERTY_GROUP_META,
-                value: undefined,
-                isFolder: true
-            };
-
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
-        }
-
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_POINTERS) {
-            propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
-                name: CONSTANTS.PROPERTY_GROUP_POINTERS,
-                text: CONSTANTS.PROPERTY_GROUP_POINTERS,
-                value: undefined,
-                isFolder: true
-            };
-
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
+                break;
+            default:
+                // Should not happen as it is check in constructor.
+                self._logger.error('Unknown type', self._type);
         }
 
         return propList;
@@ -596,8 +619,7 @@ define(['js/logger',
                             dst[cbyKey].options.invalid =
                                 this._isInvalidPointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
 
-                            if (dst[repKey].value === false &&
-                                !dst[cbyKey].options.resetable && !dst[cbyKey].options.invalid) {
+                            if (dst[repKey].value === false && !dst[cbyKey].options.resetable && !dst[cbyKey].options.invalid) {
                                 // In this case it is only clutter to display this pointer widget.
                                 delete dst[cbyKey];
                             }
