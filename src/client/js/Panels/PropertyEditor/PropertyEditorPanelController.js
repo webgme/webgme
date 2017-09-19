@@ -7,6 +7,7 @@
  */
 
 define(['js/logger',
+    'common/util/canon',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Constants',
@@ -17,6 +18,7 @@ define(['js/logger',
     'js/Dialogs/ValidVisualizers/ValidVisualizersDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets'
 ], function (Logger,
+             CANON,
              nodePropertyNames,
              REGISTRY_KEYS,
              CONSTANTS,
@@ -698,82 +700,29 @@ define(['js/logger',
             attrMetaDescriptor,
             attrName,
             attrNames,
-            i,
-            isCommon,
-            commonEnumValues,
-            isEnumCommon,
-            isEnumAttrMeta;
+            i;
 
         attrNames = Object.keys(commonAttrMeta);
-        //first delete the ones from the common that does not exist in this node
+
+        // First delete the ones from the common that do not exist at this node.
         for (i = 0; i < attrNames.length; i += 1) {
             if (nodeAttributeNames.indexOf(attrNames[i]) === -1) {
                 delete commonAttrMeta[attrName];
             }
         }
 
-        //for the remaining list check if still common
-        //common: type is the same
-        //if type is enum, the common types should be the intersection of the individual enum types
+        // For the remaining list check if still common, that is the attribute-meta's are deeply equal.
         while (len--) {
             attrName = nodeAttributeNames[len];
             attrMetaDescriptor = node.getAttributeMeta(attrName) || {type: 'string'};
+
             if (commonAttrMeta.hasOwnProperty(attrName)) {
-                isCommon = true;
-                //this attribute already exist in the attribute meta map
-                //let's see if it is still common
-                if (attrMetaDescriptor) {
-                    if (commonAttrMeta[attrName].type === attrMetaDescriptor.type) {
-                        isEnumCommon = commonAttrMeta[attrName].enum && commonAttrMeta[attrName].enum.length > 0;
-                        isEnumAttrMeta = attrMetaDescriptor.enum && attrMetaDescriptor.enum.length > 0;
-                        if (isEnumCommon && isEnumAttrMeta) {
-                            //same type, both enum
-                            //get the intersection of the enum values
-                            commonEnumValues = _.intersection(commonAttrMeta[attrName].enum,
-                                attrMetaDescriptor.enum);
-
-                            if (commonEnumValues.length !== commonAttrMeta[attrName].enum.length) {
-                                if (commonEnumValues.length === 0) {
-                                    //0 common enum values, can not consider common attribute anymore
-                                    isCommon = false;
-                                } else {
-                                    //has common values but less than before
-                                    //store the new common values
-                                    commonAttrMeta[attrName].enum = commonEnumValues.slice(0);
-                                }
-                            }
-                        } else {
-                            //not both are enum
-                            //if only one is enum --> not common anymore
-                            //if both are not enum --> still common
-                            if (!(!isEnumCommon && !isEnumAttrMeta)) {
-                                isCommon = false;
-                            }
-                        }
-                    } else {
-                        //different types, for sure it's not common anymore
-                        isCommon = false;
-                    }
-                } else {
-                    //node meta descriptor in this node
-                    //it's not common then
-                    //NOTE: it should never happen probably
-                    isCommon = false;
-                }
-
-                //if not common, delete it from attribute map
-                if (!isCommon) {
+                if (CANON.stringify(commonAttrMeta[attrName]) !== CANON.stringify(attrMetaDescriptor)) {
                     delete commonAttrMeta[attrName];
                 }
-            } else {
-                //no entry for this attribute
-                //in init phase, create entry
-                if (initPhase) {
-                    if (attrMetaDescriptor) {
-                        commonAttrMeta[attrName] = {};
-                        _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
-                    }
-                }
+            } else if (initPhase) {
+                commonAttrMeta[attrName] = {};
+                _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
             }
         }
     };
