@@ -75,6 +75,7 @@ define([
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
         GUID_DIGITS = 6,
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
+        AUTO_ROUTER_MARGIN = 15,
         BACKGROUND_TEXT_SIZE = 30,
 
         DEBUG = window.DEBUG,
@@ -885,15 +886,17 @@ define([
     /*************** MODEL CREATE / UPDATE / DELETE ***********************/
 
     DiagramDesignerWidget.prototype._alignPositionToGrid = function (pX, pY) {
-        var posXDelta,
+        var actualMargin = Math.ceil(AUTO_ROUTER_MARGIN / this.gridSize) * this.gridSize,
+            posXDelta,
             posYDelta;
 
-        if (pX < this.gridSize) {
-            pX = 0;
+        // The auto-router crashes for ports if this margin isn't there
+        if (pX < actualMargin) {
+            pX = actualMargin;
         }
 
-        if (pY < this.gridSize) {
-            pY = 0;
+        if (pY < actualMargin) {
+            pY = actualMargin;
         }
 
         if (this.gridSize > 1) {
