@@ -9,10 +9,12 @@
 
 define([
     'codemirror',
-    'text!./templates/CodeEditorDialog.html',
+    'ot',
     './constants',
     'common/Constants',
+    'js/Loader/LoaderCircles',
     'js/Dialogs/Confirm/ConfirmDialog',
+    'text!./templates/CodeEditorDialog.html',
     'css!./styles/CodeEditorDialog.css',
     'codemirror/mode/clike/clike',
     'codemirror/mode/css/css',
@@ -28,7 +30,7 @@ define([
     'codemirror/mode/python/python',
     'codemirror/mode/ttcn/ttcn',
     'codemirror/mode/yaml/yaml'
-], function (CodeMirror, dialogTemplate, CONSTANTS, COMMON, ConfirmDialog) {
+], function (CodeMirror, ot, CONSTANTS, COMMON, LoaderCircles, ConfirmDialog, dialogTemplate) {
     'use strict';
 
     function CodeEditorDialog() {
@@ -53,7 +55,7 @@ define([
             activeObject;
 
         function hasDifferentValue() {
-            var editorValue = self._editor.getValue(),
+            var editorValue = self._cm.getValue(),
                 nodeObj,
                 i;
 
@@ -76,7 +78,7 @@ define([
             client.startTransaction();
 
             self._activeSelection.forEach(function (id) {
-                client.setAttribute(id, params.name, self._editor.getValue());
+                client.setAttribute(id, params.name, self._cm.getValue());
             });
 
             client.completeTransaction();
@@ -107,6 +109,7 @@ define([
         }
 
         client = params.client || WebGMEGlobal.Client;
+
         this._savedValue = params.value;
 
         activeObject = params.activeObject || WebGMEGlobal.State.getActiveObject();
@@ -152,7 +155,8 @@ define([
             $(this._cancelBtn).text(params.cancelLabel);
         }
 
-        this._editor = CodeMirror.fromTextArea(this._dialog.find('#codemirror-area').first().get(0), codemirrorOptions);
+        this._cm = CodeMirror.fromTextArea(this._dialog.find('#codemirror-area').first().get(0), codemirrorOptions);
+        this._editor = new ot.CodeMirrorAdapter(this._cm);
 
         this._saveBtn.on('click', function (event) {
             event.preventDefault();
@@ -202,13 +206,36 @@ define([
         });
 
         this._dialog.on('shown.bs.modal', function () {
-            self._editor.focus();
-            self._editor.refresh();
+            self._cm.focus();
+            self._cm.refresh();
         });
 
         this._dialog.modal('show');
 
-        this._editor.setValue(params.value);
+        this._loader = new LoaderCircles({containerElement: this._dialog});
+        self._loader.start();
+
+        client.watchDocument({
+                projectId: client.getActiveProjectId(),
+                branchName: client.getActiveBranchName(),
+                nodeId: this._activeSelection[0],
+                attrName: params.name,
+                attrValue: params.value,
+            }, function atOperation(operation) {
+                console.log('new operation', operation);
+                self._editor.applyOperation(operation);
+            },
+            function (err, initData) {
+                console.log(initData);
+                self._cm.setValue(initData.str);
+                self._editor.registerCallbacks({
+                    'change': function (operation, inverse) {
+                        console.log(operation, inverse);
+                        client.sendDocumentOperation({operation: operation});
+                    }
+                });
+                self._loader.stop();
+            });
 
         if (params.readOnly) {
             this._okBtn.hide();
@@ -219,7 +246,7 @@ define([
     CodeEditorDialog.prototype.changeMode = function (event) {
         var modeSelect = event.target,
             mode = modeSelect.options[modeSelect.selectedIndex].textContent;
-        this._editor.setOption('mode', CONSTANTS.MODE[mode]);
+        this._cm.setOption('mode', CONSTANTS.MODE[mode]);
     };
 
     return CodeEditorDialog;

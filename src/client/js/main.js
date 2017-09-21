@@ -105,6 +105,7 @@ require.config({
         debug: 'common/lib/debug/debug',
         q: 'common/lib/q/q',
         chance: 'common/chance/chance',
+        ot: 'common/lib/ot/ot',
 
         moment: 'bower_components/moment/moment',
         blockies: 'lib/blockies/blockies',
