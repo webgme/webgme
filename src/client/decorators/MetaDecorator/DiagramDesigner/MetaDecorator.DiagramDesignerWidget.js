@@ -519,7 +519,7 @@ define([
         };
 
         dialog.show(desc, attrNames, function (attrDesc) {
-            self.saveAttributeDescriptor(attrName, attrDesc);
+            self.saveAttributeDescriptor(attrDesc.name, attrDesc);
         });
     };
 

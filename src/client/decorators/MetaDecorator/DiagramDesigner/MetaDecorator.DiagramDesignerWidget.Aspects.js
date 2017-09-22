@@ -184,13 +184,13 @@ define([
         }
 
         desc = {
-            'name': cName,
-            'items': [],
-            'validChildrenTypes': this._getAspectDescriptorValidChildrenTypes()
+            name: cName,
+            items: [],
+            validChildrenTypes: this._getAspectDescriptorValidChildrenTypes()
         };
 
         dialog.show(desc, aspectNames, function (cDesc) {
-            self.saveAspectDescriptor(cName, cDesc);
+            self.saveAspectDescriptor(cDesc.name, cDesc);
         });
     };
 
@@ -207,8 +207,8 @@ define([
         i = validChildrenTypeIDs.length;
         while (i--) {
             typeInfo = {
-                'id': validChildrenTypeIDs[i],
-                'name': validChildrenTypeIDs[i]
+                id: validChildrenTypeIDs[i],
+                name: validChildrenTypeIDs[i]
             };
 
             nodeObj = client.getNode(validChildrenTypeIDs[i]);
