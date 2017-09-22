@@ -7,24 +7,24 @@
  */
 
 define(['js/logger',
-    'js/util',
+    'common/util/canon',
     'js/NodePropertyNames',
     'js/RegistryKeys',
     'js/Constants',
     'assets/line/lineSvgs',
-    'js/Utils/GMEConcepts',
     'js/Utils/DisplayFormat',
+    './PropertyEditorPanelControllerHelpers',
     'js/Dialogs/DecoratorSVGExplorer/DecoratorSVGExplorerDialog',
     'js/Dialogs/ValidVisualizers/ValidVisualizersDialog',
     'js/Controls/PropertyGrid/PropertyGridWidgets'
 ], function (Logger,
-             util,
+             CANON,
              nodePropertyNames,
              REGISTRY_KEYS,
              CONSTANTS,
              LINE_SVG_DIRECTORY,
-             GMEConcepts,
              displayFormat,
+             PropertyEditorPanelControllerHelpers,
              DecoratorSVGExplorerDialog,
              ValidVisualizersDialog,
              PROPERTY_GRID_WIDGETS) {
@@ -80,7 +80,16 @@ define(['js/logger',
     PropertyEditorController = function (client, propertyGrid, type) {
         this._client = client;
         this._propertyGrid = propertyGrid;
-        this._type = type || null; // CONSTANTS.PROPERTY_GROUP_ATTRIBUTES ...
+        this.NON_INVALID_PTRS = NON_INVALID_PTRS;
+        if ([CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                CONSTANTS.PROPERTY_GROUP_POINTERS,
+                CONSTANTS.PROPERTY_GROUP_META,
+                CONSTANTS.PROPERTY_GROUP_PREFERENCES].indexOf(type) === -1) {
+
+            throw new Error('No valid type given for property controller!');
+        }
+
+        this._type = type; // CONSTANTS.PROPERTY_GROUP_ATTRIBUTES ...
         this._logger = Logger.create('gme:Panels:PropertyEditor:PropertyEditorController',
             WebGMEGlobal.gmeConfig.client.log);
         //it should be sorted alphabetically
@@ -94,6 +103,11 @@ define(['js/logger',
         this._logger.debug('Created');
     };
 
+    // Prototypical inheritance from PropertyEditorPanelControllerHelpers.
+    PropertyEditorController.prototype = Object.create(PropertyEditorPanelControllerHelpers.prototype);
+    PropertyEditorController.prototype.constructor = PropertyEditorController;
+
+    // Event handling and update triggering
     PropertyEditorController.prototype._initEventHandlers = function () {
         var self = this;
 
@@ -218,32 +232,46 @@ define(['js/logger',
 
             if (cNode) {
                 selectedNodes.push(cNode);
-                flattenedAttrs = this._getNodeAttributeValues(cNode);
-                this._buildCommonAttrMeta(commonAttrMeta, cNode, isFirstNode);
-                this._filterCommon(commonAttrMeta, commonAttrs, flattenedAttrs, isFirstNode);
 
-                flattenedPreferences = this._getNodeRegistryValues(cNode, PREFERENCES_REGISTRY_KEYS);
-                this._filterCommon(commonAttrMeta, commonPreferences, flattenedPreferences, isFirstNode);
+                switch (self._type) {
+                    case CONSTANTS.PROPERTY_GROUP_ATTRIBUTES:
+                        flattenedAttrs = this._getNodeAttributeValues(cNode);
+                        this._buildCommonAttrMeta(commonAttrMeta, cNode, isFirstNode);
+                        this._filterCommon(commonAttrMeta, commonAttrs, flattenedAttrs, isFirstNode);
+                        break;
+                    case CONSTANTS.PROPERTY_GROUP_PREFERENCES:
+                        //
+                        flattenedPreferences = this._getNodeRegistryValues(cNode, PREFERENCES_REGISTRY_KEYS);
+                        this._filterCommon(commonAttrMeta, commonPreferences, flattenedPreferences, isFirstNode);
+                        break;
+                    case CONSTANTS.PROPERTY_GROUP_META:
+                        flattenedMeta = this._getNodeRegistryValues(cNode, META_REGISTRY_KEYS);
+                        this._filterCommon(commonAttrMeta, commonMeta, flattenedMeta, isFirstNode);
+                        break;
+                    case CONSTANTS.PROPERTY_GROUP_POINTERS:
+                        flattenedPointers = self._getPointerInfo(cNode);
+                        this._filterCommon(commonAttrMeta, commonPointers, flattenedPointers, isFirstNode);
+                        break;
+                    default:
+                        // Should not happen as it is check in constructor.
+                        self._logger.error('Unknown type', self._type);
+                }
 
-                flattenedMeta = this._getNodeRegistryValues(cNode, META_REGISTRY_KEYS);
-                this._filterCommon(commonAttrMeta, commonMeta, flattenedMeta, isFirstNode);
-
-                flattenedPointers = self._getPointerInfo(cNode);
-                this._filterCommon(commonAttrMeta, commonPointers, flattenedPointers, isFirstNode);
+                isFirstNode = false;
             }
         }
 
-        if (selectedObjIDs.length === 1) {
+        if (selectedNodes.length === 1) {
+            cNode = selectedNodes[0];
             propList[' ID/Path'] = {
                 name: 'ID',
-                value: selectedObjIDs[0],
+                value: cNode.getId(),
                 valueType: 'string',
                 isCommon: true,
                 readOnly: true,
                 clipboard: true
             };
 
-            cNode = self._client.getNode(selectedObjIDs[0]);
             if (cNode) {
                 propList[' GUID'] = {
                     name: 'GUID',
@@ -278,57 +306,59 @@ define(['js/logger',
             }
         }
 
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
-            propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
-                name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
-                value: undefined,
-                isFolder: true
-            };
+        switch (self._type) {
+            case CONSTANTS.PROPERTY_GROUP_ATTRIBUTES:
+                propList[CONSTANTS.PROPERTY_GROUP_ATTRIBUTES] = {
+                    name: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                    text: CONSTANTS.PROPERTY_GROUP_ATTRIBUTES,
+                    value: undefined,
+                    isFolder: true
+                };
 
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
-        }
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonAttrs, CONSTANTS.PROPERTY_GROUP_ATTRIBUTES, propList, true, false, false);
+                break;
+            case CONSTANTS.PROPERTY_GROUP_PREFERENCES:
+                propList[PREFERENCES_BASIC_SUB_GROUP] = {
+                    name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
+                    text: PREFERENCES_BASIC_SUB_GROUP,
+                    value: undefined,
+                    isFolder: true
+                };
 
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_PREFERENCES) {
-            propList[PREFERENCES_BASIC_SUB_GROUP] = {
-                name: CONSTANTS.PROPERTY_GROUP_PREFERENCES,
-                text: PREFERENCES_BASIC_SUB_GROUP,
-                value: undefined,
-                isFolder: true
-            };
+                if (commonPointers.hasOwnProperty(CONSTANTS.POINTER_CONSTRAINED_BY)) {
+                    commonPreferences[CONSTANTS.POINTER_CONSTRAINED_BY] = commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
+                    delete commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
+                }
 
-            if (commonPointers.hasOwnProperty(CONSTANTS.POINTER_CONSTRAINED_BY)) {
-                commonPreferences[CONSTANTS.POINTER_CONSTRAINED_BY] = commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
-                delete commonPointers[CONSTANTS.POINTER_CONSTRAINED_BY];
-            }
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
+                break;
+            case CONSTANTS.PROPERTY_GROUP_META:
+                propList[CONSTANTS.PROPERTY_GROUP_META] = {
+                    name: CONSTANTS.PROPERTY_GROUP_META,
+                    text: CONSTANTS.PROPERTY_GROUP_META,
+                    value: undefined,
+                    isFolder: true
+                };
 
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonPreferences, CONSTANTS.PROPERTY_GROUP_PREFERENCES, propList, false, true, false);
-        }
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
+                break;
+            case CONSTANTS.PROPERTY_GROUP_POINTERS:
+                propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
+                    name: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                    text: CONSTANTS.PROPERTY_GROUP_POINTERS,
+                    value: undefined,
+                    isFolder: true
+                };
 
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_META) {
-            propList[CONSTANTS.PROPERTY_GROUP_META] = {
-                name: CONSTANTS.PROPERTY_GROUP_META,
-                text: CONSTANTS.PROPERTY_GROUP_META,
-                value: undefined,
-                isFolder: true
-            };
-
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonMeta, CONSTANTS.PROPERTY_GROUP_META, propList, false, true, false);
-        }
-
-        if (self._type === null || self._type === CONSTANTS.PROPERTY_GROUP_POINTERS) {
-            propList[CONSTANTS.PROPERTY_GROUP_POINTERS] = {
-                name: CONSTANTS.PROPERTY_GROUP_POINTERS,
-                text: CONSTANTS.PROPERTY_GROUP_POINTERS,
-                value: undefined,
-                isFolder: true
-            };
-
-            this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
-                commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
+                this._addItemsToResultList(selectedNodes, commonAttrMeta, decoratorNames,
+                    commonPointers, CONSTANTS.PROPERTY_GROUP_POINTERS, propList, false, false, true);
+                break;
+            default:
+                // Should not happen as it is check in constructor.
+                self._logger.error('Unknown type', self._type);
         }
 
         return propList;
@@ -589,8 +619,7 @@ define(['js/logger',
                             dst[cbyKey].options.invalid =
                                 this._isInvalidPointer(selectedNodes, CONSTANTS.POINTER_CONSTRAINED_BY);
 
-                            if (dst[repKey].value === false &&
-                                !dst[cbyKey].options.resetable && !dst[cbyKey].options.invalid) {
+                            if (dst[repKey].value === false && !dst[cbyKey].options.resetable && !dst[cbyKey].options.invalid) {
                                 // In this case it is only clutter to display this pointer widget.
                                 delete dst[cbyKey];
                             }
@@ -648,253 +677,6 @@ define(['js/logger',
         }
     };
 
-    PropertyEditorController.prototype._getNodeAttributeValues = function (node) {
-        var result = {},
-            attrNames = _.union(node.getAttributeNames() || [], node.getValidAttributeNames() || []),
-            len = attrNames.length;
-
-        while (--len >= 0) {
-            result[attrNames[len]] = node.getAttribute(attrNames[len]);
-        }
-
-        return util.flattenObject(result);
-    };
-
-    PropertyEditorController.prototype._getNodeRegistryValues = function (node, registryNames) {
-        var result = {},
-            len = registryNames.length;
-
-        while (--len >= 0) {
-            result[registryNames[len]] = node.getRegistry(registryNames[len]);
-        }
-
-        return util.flattenObject(result);
-    };
-
-    PropertyEditorController.prototype._getPointerInfo = function (node) {
-        var result = {},
-            availablePointers = _.union(node.getValidPointerNames() || [], node.getPointerNames() || []),
-            len = availablePointers.length,
-            ptrTo;
-
-        while (len--) {
-            if (availablePointers[len] === CONSTANTS.POINTER_BASE) {
-                ptrTo = node.getBaseId();
-            } else {
-                ptrTo = node.getPointerId(availablePointers[len]);
-            }
-
-            ptrTo = ptrTo === null ? CONSTANTS.CORE.NULLPTR_RELID : ptrTo;
-            result[availablePointers[len]] = ptrTo || '';
-        }
-
-        return util.flattenObject(result);
-    };
-
-    PropertyEditorController.prototype._isInvalidAttribute = function (selectedNodes, attrName) {
-        var i = selectedNodes.length,
-            node,
-            validNames;
-
-        while (i--) {
-            node = selectedNodes[i];
-            validNames = selectedNodes[i].getValidAttributeNames();
-            if (validNames.indexOf(attrName) !== -1) {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
-    PropertyEditorController.prototype._isInvalidAttributeValue = function (selectedNodes, attrName) {
-        var result = false,
-            attrValue,
-            node;
-
-        if (selectedNodes.length === 1) {
-            node = selectedNodes[0];
-            if (node) {
-                attrValue = node.getAttribute(attrName);
-
-                // We should not complain when there is no value at all.
-                if (typeof attrValue === 'undefined') {
-                    return false;
-                }
-
-                try {
-                    result = !node.isValidAttributeValueOf(attrName, attrValue);
-                } catch (e) {
-                    if (e.message.indexOf('Invalid regular expression') > -1) {
-                        this._logger.error('Invalid regular expression defined in the meta model for attribute "' +
-                            attrName + '"');
-                        result = true;
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-        }
-
-        return result;
-    };
-
-    PropertyEditorController.prototype._getAttributeRange = function (selectedNodes, attrName) {
-        var i = selectedNodes.length,
-            range = {},
-            nodeObj,
-            schema;
-
-        while (i--) {
-            nodeObj = selectedNodes[i];
-            schema = nodeObj.getAttributeMeta(attrName) || {};
-            if (schema.hasOwnProperty('min')) {
-                if (range.hasOwnProperty('min')) {
-                    range.min = schema.min > range.min ? schema.min : range.min;
-                } else {
-                    range.min = schema.min;
-                }
-            }
-
-            if (schema.hasOwnProperty('max')) {
-                if (range.hasOwnProperty('max')) {
-                    range.max = schema.max < range.max ? schema.max : range.max;
-                } else {
-                    range.max = schema.max;
-                }
-            }
-        }
-
-        return range;
-    };
-
-    PropertyEditorController.prototype._isInvalidPointer = function (selectedNodes, pointerName) {
-        var i = selectedNodes.length,
-            node,
-            validNames;
-
-        while (i--) {
-            node = selectedNodes[i];
-            if (node) {
-                validNames = node.getValidPointerNames();
-
-                if (validNames.indexOf(pointerName) !== -1 || NON_INVALID_PTRS.indexOf(pointerName) !== -1) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    };
-
-    PropertyEditorController.prototype._isResettableRegistry = function (selectedNodes, regName) {
-        var i = selectedNodes.length,
-            ownRegistryNames,
-            node;
-
-        while (i--) {
-            node = selectedNodes[i];
-
-            if (node) {
-                ownRegistryNames = node.getOwnRegistryNames();
-
-                if (node.getOwnRegistryNames().indexOf(regName) === -1) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    };
-
-    PropertyEditorController.prototype._isResettableAttribute = function (selectedNodes, attrName) {
-        var i = selectedNodes.length,
-            ownAttrNames,
-            validNames,
-            baseValidNames,
-            node,
-            baseNode;
-
-        while (i--) {
-            node = selectedNodes[i];
-
-            if (node) {
-                baseNode = this._client.getNode(node.getBaseId());
-                validNames = node.getValidAttributeNames();
-                baseValidNames = baseNode === null ? [] : baseNode.getValidAttributeNames();
-                ownAttrNames = node.getOwnAttributeNames();
-
-                if (ownAttrNames.indexOf(attrName) === -1) {
-                    return false;
-                }
-
-                if (baseValidNames.indexOf(attrName) === -1 && validNames.indexOf(attrName) !== -1) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    };
-
-    PropertyEditorController.prototype._isReadonlyAttribute = function (selectedNodes, attrName) {
-        var i;
-
-        for (i = 0; i < selectedNodes.length; i += 1) {
-            if ((selectedNodes[i].getAttributeMeta(attrName) || {}).readonly &&
-                selectedNodes[i].isMetaNode() !== true) {
-                return true;
-            }
-        }
-
-        return false;
-    };
-
-    PropertyEditorController.prototype._isResettablePointer = function (selectedNodes, pointerName) {
-        var i = selectedNodes.length,
-            ownPointerNames,
-            node,
-            validNames,
-            baseValidNames,
-            baseNode;
-
-        while (i--) {
-            node = selectedNodes[i];
-
-            if (node) {
-                baseNode = this._client.getNode(node.getBaseId());
-                ownPointerNames = node.getOwnPointerNames();
-                validNames = node.getValidPointerNames();
-                baseValidNames = baseNode === null ? [] : baseNode.getValidPointerNames();
-
-                if (ownPointerNames.indexOf(pointerName) === -1) {
-                    return false;
-                }
-
-                if (baseValidNames.indexOf(pointerName) === -1 && validNames.indexOf(pointerName) !== -1) {
-                    return false;
-                }
-
-            }
-        }
-
-        return true;
-    };
-
-    PropertyEditorController.prototype._canBeReplaceable = function (selectedNodes) {
-        var i = selectedNodes.length;
-
-        while (i--) {
-            if (GMEConcepts.canBeReplaceable(selectedNodes[i].getId())) {
-                // continue
-            } else {
-                return false;
-            }
-        }
-
-        return true;
-    };
-
     PropertyEditorController.prototype._filterCommon = function (commonAttrMeta, result, other, initPhase) {
         var it,
             i,
@@ -940,82 +722,29 @@ define(['js/logger',
             attrMetaDescriptor,
             attrName,
             attrNames,
-            i,
-            isCommon,
-            commonEnumValues,
-            isEnumCommon,
-            isEnumAttrMeta;
+            i;
 
         attrNames = Object.keys(commonAttrMeta);
-        //first delete the ones from the common that does not exist in this node
+
+        // First delete the ones from the common that do not exist at this node.
         for (i = 0; i < attrNames.length; i += 1) {
             if (nodeAttributeNames.indexOf(attrNames[i]) === -1) {
                 delete commonAttrMeta[attrName];
             }
         }
 
-        //for the remaining list check if still common
-        //common: type is the same
-        //if type is enum, the common types should be the intersection of the individual enum types
+        // For the remaining list check if still common, that is the attribute-meta's are deeply equal.
         while (len--) {
             attrName = nodeAttributeNames[len];
             attrMetaDescriptor = node.getAttributeMeta(attrName) || {type: 'string'};
+
             if (commonAttrMeta.hasOwnProperty(attrName)) {
-                isCommon = true;
-                //this attribute already exist in the attribute meta map
-                //let's see if it is still common
-                if (attrMetaDescriptor) {
-                    if (commonAttrMeta[attrName].type === attrMetaDescriptor.type) {
-                        isEnumCommon = commonAttrMeta[attrName].enum && commonAttrMeta[attrName].enum.length > 0;
-                        isEnumAttrMeta = attrMetaDescriptor.enum && attrMetaDescriptor.enum.length > 0;
-                        if (isEnumCommon && isEnumAttrMeta) {
-                            //same type, both enum
-                            //get the intersection of the enum values
-                            commonEnumValues = _.intersection(commonAttrMeta[attrName].enum,
-                                attrMetaDescriptor.enum);
-
-                            if (commonEnumValues.length !== commonAttrMeta[attrName].enum.length) {
-                                if (commonEnumValues.length === 0) {
-                                    //0 common enum values, can not consider common attribute anymore
-                                    isCommon = false;
-                                } else {
-                                    //has common values but less than before
-                                    //store the new common values
-                                    commonAttrMeta[attrName].enum = commonEnumValues.slice(0);
-                                }
-                            }
-                        } else {
-                            //not both are enum
-                            //if only one is enum --> not common anymore
-                            //if both are not enum --> still common
-                            if (!(!isEnumCommon && !isEnumAttrMeta)) {
-                                isCommon = false;
-                            }
-                        }
-                    } else {
-                        //different types, for sure it's not common anymore
-                        isCommon = false;
-                    }
-                } else {
-                    //node meta descriptor in this node
-                    //it's not common then
-                    //NOTE: it should never happen probably
-                    isCommon = false;
-                }
-
-                //if not common, delete it from attribute map
-                if (!isCommon) {
+                if (CANON.stringify(commonAttrMeta[attrName]) !== CANON.stringify(attrMetaDescriptor)) {
                     delete commonAttrMeta[attrName];
                 }
-            } else {
-                //no entry for this attribute
-                //in init phase, create entry
-                if (initPhase) {
-                    if (attrMetaDescriptor) {
-                        commonAttrMeta[attrName] = {};
-                        _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
-                    }
-                }
+            } else if (initPhase) {
+                commonAttrMeta[attrName] = {};
+                _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
             }
         }
     };
