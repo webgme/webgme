@@ -1,5 +1,33 @@
 # Change Log
 
+## [Unreleased](https://github.com/webgme/webgme/tree/HEAD)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.17.1...HEAD)
+
+**Implemented enhancements:**
+
+- webgme-engine 2.18.3 and user-management-page 0.3.2 [\#1528](https://github.com/webgme/webgme/pull/1528) ([pmeijer](https://github.com/pmeijer))
+- Pass the commit index to badges in Project Repository [\#1514](https://github.com/webgme/webgme/pull/1514) ([pmeijer](https://github.com/pmeijer))
+- Split up the repository where webgme-engine contains the server and Client API [\#1510](https://github.com/webgme/webgme/pull/1510) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Changing the name when adding new attribute prompts user to propagate change [\#1523](https://github.com/webgme/webgme/issues/1523)
+- Property editor doesn't update properties under all scenarios [\#1518](https://github.com/webgme/webgme/issues/1518)
+- Connection drawer throws errors when trying to draw edges between nodes that have negative position values. [\#1516](https://github.com/webgme/webgme/issues/1516)
+- Show when attributes have mixed values during multiple selection [\#1515](https://github.com/webgme/webgme/issues/1515)
+- Setting the color etc. from the DiagramDesigner also applies the choice on the next selected node. [\#1513](https://github.com/webgme/webgme/issues/1513)
+- Disabled connAreas can not be completely enabled in instances [\#1512](https://github.com/webgme/webgme/issues/1512)
+- Clean up all associated meta-rules when removing node from the meta [\#1511](https://github.com/webgme/webgme/issues/1511)
+- Property Editor does not display mixed in pointer definitions [\#1509](https://github.com/webgme/webgme/issues/1509)
+- Cannot embed in iframe [\#1506](https://github.com/webgme/webgme/issues/1506)
+- Fixes \#1506 fallback to config.authentication.logOutUrl if embedded from x-origin [\#1527](https://github.com/webgme/webgme/pull/1527) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1523 Changing the name when adding new attribute prompts user to propagate change [\#1525](https://github.com/webgme/webgme/pull/1525) ([kecso](https://github.com/kecso))
+- Fixes \#1516 Connection drawing error and exception [\#1524](https://github.com/webgme/webgme/pull/1524) ([pmeijer](https://github.com/pmeijer))
+- Property editor multiselect issues and various improvements fixes to it [\#1521](https://github.com/webgme/webgme/pull/1521) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1511 Clean up references in other meta-nodes when removing node from meta  [\#1520](https://github.com/webgme/webgme/pull/1520) ([pmeijer](https://github.com/pmeijer))
+- Small ui fixes [\#1517](https://github.com/webgme/webgme/pull/1517) ([kecso](https://github.com/kecso))
+
 ## [v2.17.1](https://github.com/webgme/webgme/tree/v2.17.1) (2017-09-08)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.17.0...v2.17.1)
 
