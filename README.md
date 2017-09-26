@@ -6,7 +6,7 @@
 # WebGME - Web-based Generic Modeling Environment
 
 Note that this repository contains the full webgme app including a highly extendable graphical user interface and is the typical dependency a webgme app will depend on.
-To use the webgme framework without any GU - check out [webgme-engine](https://github.com/webgme/webgme-engine).
+To use the webgme framework without a packaged GUI - check out [webgme-engine](https://github.com/webgme/webgme-engine).
 
 Create your own Domain Specific Modeling Languages (DSML) right in the browser. Specify modeling concepts, their relationships, attributes, and aspects by drawing a UML class diagram-based metamodel and WebGME automatically configures itself to support the DSML.
 

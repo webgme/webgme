@@ -1,8 +1,14 @@
 # Change Log
 
-## [Unreleased](https://github.com/webgme/webgme/tree/HEAD)
+## [v2.18.1](https://github.com/webgme/webgme/tree/v2.18.1) (2017-09-26)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.18.0...v2.18.1)
 
-[Full Changelog](https://github.com/webgme/webgme/compare/v2.17.1...HEAD)
+**Fixed bugs:**
+
+- Make sure to minifiy and generate source-maps [\#1529](https://github.com/webgme/webgme/pull/1529) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.18.0](https://github.com/webgme/webgme/tree/v2.18.0) (2017-09-25)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.17.1...v2.18.0)
 
 **Implemented enhancements:**
 
