@@ -52,7 +52,8 @@ define([
             },
             oked,
             client,
-            activeObject;
+            activeObject,
+            docId;
 
         function hasDifferentValue() {
             var editorValue = self._cm.getValue(),
@@ -230,8 +231,11 @@ define([
                 self._cm.setValue(initData.str);
                 self._editor.registerCallbacks({
                     'change': function (operation, inverse) {
-                        console.log(operation, inverse);
-                        client.sendDocumentOperation({operation: operation});
+                        //console.log(operation, inverse);
+                        client.sendDocumentOperation({
+                            operation: operation,
+                            docId: initData.docId
+                        });
                     }
                 });
                 self._loader.stop();
