@@ -189,6 +189,14 @@ define([
                     save();
                 }
 
+                if (docId) {
+                    client.unwatchDocument({docId: docId}, function (err) {
+                        if (err) {
+                            console.error(err);
+                        }
+                    });
+                }
+
                 self._dialog.remove();
                 self._dialog.empty();
                 self._dialog = undefined;
@@ -223,18 +231,21 @@ define([
                 attrName: params.name,
                 attrValue: params.value,
             }, function atOperation(operation) {
-                console.log('new operation', operation);
                 self._editor.applyOperation(operation);
             },
             function (err, initData) {
-                console.log(initData);
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+                docId = initData.docId;
                 self._cm.setValue(initData.str);
                 self._editor.registerCallbacks({
                     'change': function (operation, inverse) {
                         //console.log(operation, inverse);
                         client.sendDocumentOperation({
                             operation: operation,
-                            docId: initData.docId
+                            docId: docId
                         });
                     }
                 });
