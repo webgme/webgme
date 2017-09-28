@@ -50,6 +50,7 @@ define([
                 matchBrackets: true,
                 fullscreen: false,
             },
+            currentSelections = {},
             oked,
             client,
             activeObject,
@@ -230,8 +231,17 @@ define([
                 nodeId: this._activeSelection[0],
                 attrName: params.name,
                 attrValue: params.value,
-            }, function atOperation(operation) {
+            },
+            function atOperation(operation) {
                 self._editor.applyOperation(operation);
+            },
+            function atSelection(eData) {
+                if (currentSelections.hasOwnProperty(eData.clientId)) {
+                    currentSelections[eData.clientId].clear();
+                }
+
+                currentSelections[eData.clientId] = self._editor.setOtherSelection(eData.selection,
+                    '#0000ff', eData.clientId);
             },
             function (err, initData) {
                 if (err) {
@@ -244,8 +254,9 @@ define([
                     'change': function (operation, inverse) {
                         //console.log(operation, inverse);
                         client.sendDocumentOperation({
+                            docId: docId,
                             operation: operation,
-                            docId: docId
+                            selection: self._editor.getSelection()
                         });
                     }
                 });
