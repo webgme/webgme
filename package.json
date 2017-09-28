@@ -51,6 +51,7 @@
   "scripts": {
     "start": "node app.js",
     "prepublish": "node ./utils/prepublish.js",
+    "build": "node ./utils/build/dist/build.js",
     "postinstall": "node ./utils/postinstall.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
     "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",
