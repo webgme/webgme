@@ -258,6 +258,12 @@ define([
                             operation: operation,
                             selection: self._editor.getSelection()
                         });
+                    },
+                    'selectionChange': function () {
+                        client.sendDocumentSelection({
+                            docId: docId,
+                            selection: self._editor.getSelection()
+                        });
                     }
                 });
                 self._loader.stop();
