@@ -33,6 +33,19 @@ define([
 ], function (CodeMirror, ot, CONSTANTS, COMMON, LoaderCircles, ConfirmDialog, dialogTemplate) {
     'use strict';
 
+    var CLIENT_COLORS = [
+        '#ccccff', // PURPLE
+        '#ffcccc', // RED
+        '#ffccff', // PINK
+        '#ccffff', // TURQUISE
+        '#ffffcc', // YELLOW
+        '#ccffcc', // GREEN
+        '#ffe6cc', // ORANGE
+        '#cce5ff', // BLUE
+        '#e6ffcc', // YELLOW-GREEN
+        '#e5ccff'  // PURPUPLE-PINK
+    ];
+
     function CodeEditorDialog() {
         this._dialog = $(dialogTemplate);
         this._icon = this._dialog.find('.header-icon');
@@ -50,7 +63,7 @@ define([
                 matchBrackets: true,
                 fullscreen: false,
             },
-            currentSelections = {},
+            otherClients = {},
             oked,
             client,
             activeObject,
@@ -236,12 +249,22 @@ define([
                 self._editor.applyOperation(operation);
             },
             function atSelection(eData) {
-                if (currentSelections.hasOwnProperty(eData.clientId)) {
-                    currentSelections[eData.clientId].clear();
+                var colorIndex;
+                if (otherClients.hasOwnProperty(eData.clientId) === false) {
+                    colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
+                    otherClients[eData.clientId] = {
+                        userId: eData.userId,
+                        selection: null,
+                        color: CLIENT_COLORS[colorIndex]
+                    };
                 }
 
-                currentSelections[eData.clientId] = self._editor.setOtherSelection(eData.selection,
-                    '#0000ff', eData.clientId);
+                if (otherClients[eData.clientId].selection) {
+                    otherClients[eData.clientId].selection.clear();
+                }
+
+                otherClients[eData.clientId].selection = self._editor.setOtherSelection(eData.selection,
+                    otherClients[eData.clientId].color, otherClients[eData.clientId].userId);
             },
             function (err, initData) {
                 if (err) {
