@@ -20,6 +20,7 @@ Installing Node.js
 When you have followed the instructions below make sure that the command below works and prints v6.11.4 or similar.
 
 .. code-block:: bash
+
     node --version
 
 Windows
@@ -34,21 +35,26 @@ Linux based operating systems (and macOS)
 2. Run `nvm <https://github.com/creationix/nvm>` installer with either curl or wget.
 
 .. code-block:: bash
+
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
 
 or
 
 .. code-block:: bash
+
     wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.5/install.sh | bash
 
 3. If everything went well, open new Terminal window/tab.
 4. List what versions of Node are currently installed (probably none).
 
 .. code-block:: bash
+
     nvm ls
+
 5. Install latest `Node.js <https://nodejs.org/en>`_ LTS release.
 
 .. code-block:: bash
+
   nvm install v6.11.4
 
 
@@ -60,17 +66,20 @@ Webgme stores the models, project metadata and user info inside a mongo database
 After you've followed the instructions and successfully installed mongodb. Either Launch a daemon (mongod) with the default options or pass the dbpath flag to store files at another location.
 
 .. code-block:: bash
+
     mongod --dbpath C:\webgmeData
 
 
 .. code-block:: bash
+
     mongod --dbpath ~/webgmeData
 
 Git
 --------
-For this tutorial you will need to have git installed. On linux this is typically already installed. Check by typing.
+For this tutorial you will need to have git installed. On linux this is typically already installed. Check by typing:
 
 .. code-block:: bash
+
     git --version
 
 If not installed following the instruction at `git's webpage <https://git-scm.com/downloads>`_.
