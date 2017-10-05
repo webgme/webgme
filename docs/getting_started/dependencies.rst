@@ -16,6 +16,9 @@ to install some dependencies in addition to having access to a browser.
 
 Installing Node.js
 ---------------
+When you have followed the instructions below make sure that the command below works and prints v6.11.4 or similar.
+.. code-block:: bash
+    node --version
 
 Windows
   Simply click on the link above and make sure to install the LTS! At the time of writing this that would be version v6.11.4.
@@ -39,7 +42,8 @@ or
 .. code-block:: bash
     nvm ls
 5. Install latest `Node.js <https://nodejs.org/en>` LTS release.
-  - `nvm install v6.11.4`
+.. code-block:: bash
+  nvm install v6.11.4
 
 
 Installing MongoDB
