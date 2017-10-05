@@ -75,7 +75,7 @@ In case you didn't move webgme to dependencies and it's still a peerDependency y
 
     npm install webgme
 
-To check if the installation succeeded do, it should print a tree like structure and include webgme at the root level.
+To check if the installation succeeded the following command should print a tree-like structure and include webgme at the root level.
 
 .. code-block:: bash
 

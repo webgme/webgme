@@ -66,11 +66,13 @@ Webgme stores the models, project metadata and user info inside a mongo database
 After you've followed the instructions and successfully installed mongodb. Either Launch a daemon (mongod) with the default options or pass the dbpath flag to store files at another location.
 
 Windows
+
 .. code-block::
 
     mongod --dbpath C:\webgmeData
 
-Linux based
+Linux based/MacOS
+
 .. code-block:: bash
 
     mongod --dbpath ~/webgmeData
