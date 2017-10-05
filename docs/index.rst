@@ -7,8 +7,11 @@ Welcome to WebGME's documentation!
 ==================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Getting Started
+
+   getting_started/what_is_webgme.rst
+   getting_started/dependencies.rst
 
 
 
