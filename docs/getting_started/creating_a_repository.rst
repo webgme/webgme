@@ -55,4 +55,20 @@ To check if the installation succeeded do, it should print a tree like structure
 gmeConfig
 -------------------
 Before launching the server a word on the configuration for webgme (sometimes referred to as gmeConfig) is in place.
+This section can be skipped for now... (todo fill out)
 
+Starting the server
+-------------------
+Make sure you have mongodb running. Look back at the dependencies section (todo link). As mentioned before the app.js file is
+the starting point for the webgme server. To invoke it with node.js simply do:
+
+.. code-block:: bash
+    node app.js
+
+There is a short cut defined in package.json that lets you start the app by typing:
+
+.. code-block:: bash
+    npm start
+
+You should see some logging listing the port where webgme is available. By default this is 8888, so open up a browser
+and enter localhost:8888 in the address bar. The webgme UI should be loaded!

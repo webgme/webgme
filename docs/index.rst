@@ -11,7 +11,9 @@ Welcome to WebGME's documentation!
    :caption: Getting Started
 
    getting_started/what_is_webgme.rst
+   getting_started/terminology.rst
    getting_started/dependencies.rst
+   getting_started/creating_a_repository.rst
 
 .. toctree::
    :maxdepth: 1
