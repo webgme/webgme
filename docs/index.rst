@@ -33,10 +33,9 @@ Welcome to WebGME's documentation!
    visualization/custom_visualization.rst
 
 .. toctree::
-      :maxdepth: 1
-      :caption: Model Interpreters
+   :maxdepth: 1
+   :caption: Model Interpreters
 
-      interpreters/what_are_model_interpreters.rst
-      interpreters/plugins.rst
-      interpreters/addons.rst
-      interpreters/webhooks.rst
+   interpreters/what_are_model_interpreters.rst
+   interpreters/plugins.rst
+   interpreters/other_forms_of_model_interpreters.rst
