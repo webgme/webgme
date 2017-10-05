@@ -37,7 +37,7 @@ webgme-setup.json
 
 Installing the node_modules
 -------------------
-Before launching the server you need to install all dependencies. From the root of the repository do:
+In order to be able to launch the server you need to install all dependencies. From the root of the repository do:
 
 .. code-block:: bash
     npm install
@@ -47,10 +47,12 @@ In case you didn't move webgme to dependencies and it's still a peerDependency y
 .. code-block:: bash
     npm install webgme
 
-To check if the installation succeeded do, it should print a tree like structure and include webgme at the root scope.
+To check if the installation succeeded do, it should print a tree like structure and include webgme at the root level.
 
 .. code-block:: bash
     npm list
 
-
+gmeConfig
+-------------------
+Before launching the server a word on the configuration for webgme (sometimes referred to as gmeConfig) is in place.
 
