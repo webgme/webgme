@@ -9,7 +9,7 @@ However we recommend using Chrome for a couple of reasons:
 As a developer of a webgme app you will however be required to host your own webgme server and for that you will need
 to install some dependencies in addition to having access to a browser.
 
-* [NodeJS](https://nodejs.org/) (version >= 4, CI tests are performed on versions 4.x, 6.x and LTS is recommended).
-* [MongoDB](https://www.mongodb.com/) (version >= 2.6).
-* [Git](https://git-scm.com) (must be available in PATH).
-* [Redis](https://redis.io/) Note that this is only needed if you intend on running [multiple webgme nodes](https://github.com/webgme/webgme/wiki/Multiple-Nodes) behind a reverse proxy.
+* `NodeJS <https://nodejs.org/>` (version >= 4, CI tests are performed on versions 4.x, 6.x and LTS is recommended).
+* `MongoDB <https://www.mongodb.com/>` (version >= 2.6).
+* `Git <https://git-scm.com>` (must be available in PATH).
+* (Optional) `Redis <https://redis.io/>` Note that this is only needed if you intend on running `multiple webgme nodes <https://github.com/webgme/webgme/wiki/Multiple-Nodes>`.
