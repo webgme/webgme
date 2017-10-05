@@ -61,22 +61,23 @@ or
 Installing MongoDB
 ------------------
 Webgme stores the models, project metadata and user info inside a mongo database. The
-`Community edition https://docs.mongodb.com/manual/administration/install-community/`_ works fine.
+`Community edition <https://docs.mongodb.com/manual/administration/install-community/>`_ works fine.
 
 After you've followed the instructions and successfully installed mongodb. Either Launch a daemon (mongod) with the default options or pass the dbpath flag to store files at another location.
 
-.. code-block:: bash
+Windows
+.. code-block::
 
     mongod --dbpath C:\webgmeData
 
-
+Linux based
 .. code-block:: bash
 
     mongod --dbpath ~/webgmeData
 
 Git
 --------
-For this tutorial you will need to have git installed. On linux this is typically already installed. Check by typing:
+For this tutorial you will need to have git installed. On linux/macOS this is typically already installed. Check by typing:
 
 .. code-block:: bash
 

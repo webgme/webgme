@@ -14,3 +14,28 @@ Welcome to WebGME's documentation!
    getting_started/terminology.rst
    getting_started/dependencies.rst
    getting_started/creating_a_repository.rst
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Meta-modeling
+
+    meta_modeling/what_is_meta_modeling.rst
+    meta_modeling/meta_modeling_in_webgme.rst
+    meta_modeling/meta_editor.rst
+    meta_modeling/saving_meta_model_at_deployment.rst
+    meta_modeling/read_only_meta_model.rst
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Visualization
+
+    visualization/generic_visualization.rst
+    visualization/custom_visualization.rst
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Model Interpreters
+
+    interpreters/what_are_model_interpreters.rst
+    interpreters/plugins.rst
+    interpreters/other_forms_of_model_interpreters.rst
