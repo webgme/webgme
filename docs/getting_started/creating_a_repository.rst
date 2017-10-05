@@ -6,20 +6,26 @@ webgme-cli will automatically set this up for you.
 
 Installing webgme-cli
 ------------------
-`webgme-cli <https://github.com/webgme/webgme-cli>` is a tool for managing webgme apps.
+`webgme-cli <https://github.com/webgme/webgme-cli>`_ is a tool for managing webgme apps.
 It provides a command line interface for creating, removing, installing from other webgme apps,
 (etc) for various webgme components.
 
 Make sure you have node.js and npm (npm comes with node.js) installed.
+
 .. code-block:: bash
+
     npm --version
 
 Now install webgme-cli as a global npm module (the flag -g should passed)
+
 .. code-block:: bash
+
     npm install -g webgme-cli
 
 If the installation was successful the following command should print a version number (the version of webgme-cli).
+
 .. code-block:: bash
+
     webgme --version
 
 
