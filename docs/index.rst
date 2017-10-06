@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to WebGME's documentation!
+How to build a Design Studio with WebGME
 ==================================
 
 .. toctree::
