@@ -7,13 +7,14 @@ Welcome to WebGME's documentation!
 ==================================
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Getting Started
+    :maxdepth: 1
+    :caption: Getting Started
 
-   getting_started/what_is_webgme.rst
-   getting_started/terminology.rst
-   getting_started/dependencies.rst
-   getting_started/creating_a_repository.rst
+    getting_started/scope.rst
+    getting_started/what_is_webgme.rst
+    getting_started/terminology.rst
+    getting_started/dependencies.rst
+    getting_started/creating_a_repository.rst
 
 .. toctree::
     :maxdepth: 1
