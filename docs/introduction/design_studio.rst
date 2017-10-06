@@ -10,6 +10,6 @@ Typical components of a design studio include
 * Visualization for modeling and viewing analysis results
 * Version controlled models and centralized storage
 
-
+Example design studios: give links to webgme-based design studios (BIP, deepforge, rosmod, ..)
 
 
