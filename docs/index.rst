@@ -39,3 +39,12 @@ Welcome to WebGME's documentation!
     interpreters/what_are_model_interpreters.rst
     interpreters/plugins.rst
     interpreters/other_forms_of_model_interpreters.rst
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Integrating Analysis Tools
+
+    analysis_tools/introduction.rst
+    analysis_tools/invoking_from_plugin.rst
+    analysis_tools/executor_server.rst
+    analysis_tools/result_presentation.rst
