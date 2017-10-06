@@ -32,7 +32,7 @@ Linux based operating systems (and macOS)
   The instructions below are borrowed from `d2s' gist <https://gist.github.com/d2s/372b5943bce17b964a79>`_.
 
 1. Open new Terminal window.
-2. Run `nvm <https://github.com/creationix/nvm>` installer with either curl or wget.
+2. Run `nvm <https://github.com/creationix/nvm>`_ installer with either curl or wget.
 
 .. code-block:: bash
 
