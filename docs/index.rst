@@ -48,3 +48,12 @@ Welcome to WebGME's documentation!
     analysis_tools/invoking_from_plugin.rst
     analysis_tools/executor_server.rst
     analysis_tools/result_presentation.rst
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Deployment
+
+    deployment/introduction.rst
+    deployment/authentication.rst
+    deployment/secure_deployment.rst
+    deployment/scaling_up.rst
