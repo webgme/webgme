@@ -1,7 +1,7 @@
 Terminology
 ======================
-This is a list of webgme-terminology that will be used throughout the tutorial. It's recommended to at least skim through this
-list at this stage, but the main purpose is to be able to use it a reference-manual.
+This is a list of webgme-terminology that will be used throughout the tutorial. It's recommended to at least skim through the
+list at this stage, but you can always return to it later.
 
 
 Project

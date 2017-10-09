@@ -10,6 +10,6 @@ Other resources
   more details about a certain area or extension point of webgme. Some of the pages there will be link to from this tutorial.
 
 `Source code documentation <https://editor.webgme.org/docs/source/index.html>`_
-  The API documentation generated from the `jsdoc <http://usejsdoc.org/>`_ inside the webgme source code. This is available
-  from every deployment and once you're at the point of having a webgme-server running you should be able to access the API
-  docs for your currently running version at :code:`<host>/source/index.html`.
+  The API documentation generated from the `jsdoc <http://usejsdoc.org/>`_ inside the webgme source code. This documentation is
+  served from every webgme deployment. Once you're at the point of having your webgme-server running, you should be able to access
+  the API docs for your currently running version at :code:`<host>/docs/source/index.html`.

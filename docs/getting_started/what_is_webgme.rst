@@ -34,8 +34,8 @@ Other points of extensions are sdd-ons, webhooks, REST-routers, etc. TODO: Links
 
 WebGME-cli
 ----------------
-To ease the process of creating new components mentioned above, webgme provides a tool `webgme-cli <https://github.com/webgme/webgme-cli>`_ that
-can generate boilerplate code and automatically tweak the configuration of webgme to find these.
+To ease the process of creating new components webgme provides a tool, `webgme-cli <https://github.com/webgme/webgme-cli>`_, that
+generates boilerplate code and automatically updates the configuration so webgme can find and apply these.
 
 In addition to this it also allows users to easily share and import components between repositories, on `webgme.org a list of published extension components <https://webgme.org/?tab=extensions>`_ is updated every 15 min.
 

@@ -1,6 +1,6 @@
 Dependencies
 ===============
-One of the advantages of being a web-based modeling environment is that end-user do not need be concerned with
+One of the advantages of being a web-based modeling environment is that end-users don't need be concerned with
 installing any dependencies on their machine. All they need is a web browser! We aim to support all the major modern browsers.
 However we recommend using Chrome for a couple of reasons:
 

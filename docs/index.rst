@@ -25,8 +25,9 @@ How to build a Design Studio with WebGME
 
 .. toctree::
     :maxdepth: 1
-    :caption: Meta-modeling
+    :caption: Modeling
 
+    meta_modeling/creating_our_first_project.rst
     meta_modeling/what_is_meta_modeling.rst
     meta_modeling/meta_modeling_in_webgme.rst
     meta_modeling/meta_editor.rst
