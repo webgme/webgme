@@ -5,11 +5,12 @@ that's fine. It will also explain what these are.
 
 The tutorial will go through all steps needed to host your own deployment, create your own meta-model, implement interpreters and
 customize the visualization. In order to give you an idea of how all these things play a roll in a Design Studio, these steps
-will be illustrated by an example of a simple Analog Circuit domain. In short we will
+will be illustrated by an example of a simple Analog Circuit domain. In short we will:
 
-* Create a meta-model suitable for modeling electrical circuits.
-* Write an interpreter that generates `Modelica <https://modelica.org>`_ code.
-* Extend our inte
+* Create a meta-model suitable for modeling electrical circuits
+* Write an interpreter that generates `Modelica <https://modelica.org>`_ code
+* Extend the interpreter to simulate the generated Modelica code using `OpenModelica <https://openmodelica.org>`_
+* Visualize the simulation results
 
 
 Target Audience
@@ -17,7 +18,7 @@ Target Audience
 This is for you, a researcher or an engineer, who might have seen an example of an application build up in webgme and are interested
 in building your application fitting your domain.
 
-
+It also for you who just heard about webgme and are new to meta-modeling and would like to learn more about it.
 
 Prerequisites
 -------------
