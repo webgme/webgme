@@ -31,3 +31,12 @@ the browser or on the server (or both). These scripts (typically invoked by the 
 contexts of the models and can work along side the users without any need for locking etc.
 
 Other points of extensions are sdd-ons, webhooks, REST-routers, etc. TODO: Links
+
+WebGME-cli
+----------------
+To ease the process of creating new components mentioned above, webgme provides a tool `webgme-cli <https://github.com/webgme/webgme-cli>`_ that
+can generate boilerplate code and automatically tweak the configuration of webgme to find these.
+
+In addition to this it also allows users to easily share and import components between repositories, on `webgme.org a list of published extension components <https://webgme.org/?tab=extensions>`_ is updated every 15 min.
+
+WebGME-cli will be used throughout the tutorial, however you don't need to install it right away. As you move forward detailed instructions will be provided.
