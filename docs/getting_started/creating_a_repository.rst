@@ -31,7 +31,7 @@ If the installation was successful the following command should print a version 
 
 Creating a Repository
 -------------------
-Pick location on your file-system where you want your repository to be located (a new folder will be created).
+Pick a location on your file-system where you want your repository to be located (a new folder will be created).
 
 .. code-block:: bash
 

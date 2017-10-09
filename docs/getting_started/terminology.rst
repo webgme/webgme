@@ -1,5 +1,8 @@
 Terminology
 ======================
+This is a list of webgme-terminology that will be used throughout the tutorial. It's recommended to at least skim through this
+list at this stage, but the main purpose is to be able to use it a reference manual.
+
 
 Project
   Version (and access) controlled model repository containing (model)data-blobs, commits, branches and tags.
@@ -12,6 +15,7 @@ Branch
 
 Tag
   Similar to a branch, but it does not change. [It can be deleted and recreated but not updated.]
+
 Node
   Atomic modeling element in the project tree.
 

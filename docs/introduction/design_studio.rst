@@ -15,9 +15,9 @@ Example Design Studios
 
 `DeepForge <http://deepforge.org>`_
   DeepForge is an open-source visual development environment for deep learning providing end-to-end support for creating
-   deep learning models. This is achieved through providing the ability to design architectures, create training pipelines,
-   and then execute these pipelines over a cluster. Using a notebook-esque api, users can get real-time feedback about the
-   status of any of their executions including compare them side-by-side in real-time.
+  deep learning models. This is achieved through providing the ability to design architectures, create training pipelines,
+  and then execute these pipelines over a cluster. Using a notebook-esque api, users can get real-time feedback about the
+  status of any of their executions including compare them side-by-side in real-time.
 
 `ROSMOD <https://github.com/rosmod/webgme-rosmod>`_
   The Robot Operating System Model-driven development tool suite, (ROSMOD) an integrated development environment for rapid prototyping component-based software for the Robot Operating System (ROS) middleware. ROSMOD consists of:

@@ -67,7 +67,7 @@ After you've followed the instructions and successfully installed mongodb. Eithe
 
 Windows
 
-.. code-block::
+.. code-block:: bash
 
     mongod --dbpath C:\webgmeData
 
