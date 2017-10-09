@@ -16,12 +16,24 @@ and clicking :code:`Manage projects ...` (to save a click you can also click :co
 
 .. figure:: new_project_1.png
     :align: center
-    :scale: 65 %
+    :scale: 100 %
 
     Main menu in **Project Navigator**
 
 Select a suiting name for you project, why not :code:`ElectricalCircuits`, and proceed with the instructions. You should create a project from a seed and select
 the :code:`EmptyProject` from one of the Template Files.
 
-This `video <https://youtu.be/xR0rmcVFcgY>`_ explains more detail how you can create and manage projects webgme. Note that authentication is currently not turned on
-your deployment and every user will be identified as the :code:`guest`.
+
+After this step you should have an "empty" project containing only the **FCO** and the **ROOT** node. Every webgme project contain these and they cannot be removed.
+(Looking back at the `terminology <getting_started/terminology.rst>`_ page you'll see that these are the roots of the inheritance and containment trees respectively, and since both
+of these are **strong** relationships, the removal of the roots would removed all other nodes).
+
+.. figure:: new_project_2.png
+    :align: center
+    :scale: 100 %
+
+    The **Composition** tab in the **Object Browser** shows all the nodes in our project-tree.
+
+
+This `video <https://youtu.be/xR0rmcVFcgY>`_ explains more in detail how you can create and manage projects webgme.
+Note that authentication is currently not turned on your deployment and every user will be identified as the :code:`guest`.
