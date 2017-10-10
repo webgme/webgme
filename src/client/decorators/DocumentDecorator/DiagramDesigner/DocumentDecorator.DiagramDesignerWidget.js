@@ -11,6 +11,7 @@ define([
     'js/Constants',
     'js/Utils/ComponentSettings',
     'js/NodePropertyNames',
+    'js/Utils/DisplayFormat',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     '../Core/DocumentDecorator.Core',
     './DocumentEditorDialog',
@@ -20,6 +21,7 @@ define([
              CONSTANTS,
              ComponentSettings,
              nodePropertyNames,
+             displayFormat,
              DiagramDesignerWidgetDecoratorBase,
              DocumentDecoratorCore,
              DocumentEditorDialog,
@@ -136,24 +138,29 @@ define([
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
         //render GME-ID in the DOM, for debugging
+
         this.$el.attr({'data-id': this._metaInfo[CONSTANTS.GME_ID]});
         if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
+            this.name = displayFormat.resolve(nodeObj);
         }
         //find name placeholder
         this.skinParts.$name = this.$el.find('.name');
         this.skinParts.$name.text(this.name);
+
+        if (this.name) {
+            this.skinParts.$name.show();
+        } else {
+            this.skinParts.$name.hide();
+        }
     };
 
     DocumentDecorator.prototype.update = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            newName = '',
             newDoc = '',
             renderedEl;
 
         if (nodeObj) {
-            newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
             newDoc = nodeObj.getAttribute('documentation');
             // Update docs on node when attribute "documentation" changes
             this.$doc.empty();
@@ -179,10 +186,7 @@ define([
                 }
             }
 
-            if (this.name !== newName) {
-                this.name = newName;
-                this.skinParts.$name.text(this.name);
-            }
+            this._renderName();
         }
 
         this._updateColors();
