@@ -41,13 +41,14 @@ div.valid-visualizers-dialog {
       margin-right: 10px;
       ul {
         border: 1px solid #eee;
-        min-height: 30px;
+        min-height: 200px;
         list-style-type: none;
         padding: 5px 0 0 0;
       }
       li {
-        margin: 0 5px 5px 5px;
-        padding: 5px;
+        margin: 0 4px 4px 4px;
+        padding: 4px;
+        font-size: 10px;
         text-overflow: ellipsis;
         overflow: hidden;
         cursor: pointer;
