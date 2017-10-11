@@ -12,13 +12,13 @@ How to build a Design Studio with WebGME
 
     introduction/scope.rst
     introduction/design_studio.rst
+    introduction/what_is_webgme.rst
     introduction/other_resources.rst
 
 .. toctree::
     :maxdepth: 1
     :caption: Getting Started
 
-    getting_started/what_is_webgme.rst
     getting_started/terminology.rst
     getting_started/dependencies.rst
     getting_started/creating_a_repository.rst

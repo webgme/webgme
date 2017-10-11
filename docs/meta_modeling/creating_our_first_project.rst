@@ -34,6 +34,11 @@ of these are **strong** relationships, the removal of the roots would removed al
 
     The **Composition** tab in the **Object Browser** shows all the nodes in our project-tree.
 
+.. raw:: html
 
-This `video <https://youtu.be/xR0rmcVFcgY>`_ explains more in detail how you can create and manage projects webgme.
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="//youtu.be/xR0rmcVFcgY" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+
+
 Note that authentication is currently not turned on your deployment and every user will be identified as the :code:`guest`.
