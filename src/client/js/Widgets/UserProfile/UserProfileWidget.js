@@ -6,7 +6,9 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['js/logger',
+define([
+    'js/logger',
+    'superagent',
     'css!./styles/UserProfileWidget.css'
 ], function (Logger) {
     'use strict';
@@ -30,6 +32,7 @@ define(['js/logger',
     UserProfileWidget.prototype._initializeUI = function (opts) {
         var widget = $(TEMPLATE),
             userName = WebGMEGlobal.userInfo._id,
+            logoutEl,
             referrer,
             logoutUrl;
 
@@ -49,8 +52,31 @@ define(['js/logger',
                 logoutUrl = '/logout';
             }
 
-            widget.append($('<a target="_top" class="navbar-link">' +
-                '<i class="glyphicon glyphicon-eject icon-white" title="Log out"/></a>').attr('href', logoutUrl));
+            logoutEl = $('<a target="_blank" class="navbar-link logout-btn">' +
+                '<i class="glyphicon glyphicon-eject icon-white" title="Log out"/></a>');
+
+            logoutEl.on('click', function () {
+                setTimeout(function () {
+                    var tempAnchor = document.createElement('a');
+
+                    tempAnchor.target = '_self';
+
+                    if (referrer) {
+                        tempAnchor.href = '/logout?redirectUrl=' + referrer;
+                    } else {
+                        tempAnchor.href = '/logout';
+                    }
+
+
+                    document.body.appendChild(tempAnchor);
+
+                    tempAnchor.click();
+                });
+
+                window.parent.postMessage('logout', '*');
+            });
+
+            widget.append(logoutEl);
         }
 
         this._el.append(widget);
