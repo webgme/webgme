@@ -53,10 +53,6 @@ require(
             window.sessionStorage.setItem('originalReferrer', document.referrer);
         }
 
-        window.addEventListener('message', function (event) {
-            alert(event.origin);
-        });
-
         // domDeferred will be resolved (with gmeApp) when the dom is ready (i.e. $ function invoked).
         $(function () {
             var d,

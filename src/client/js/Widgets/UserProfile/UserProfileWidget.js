@@ -56,23 +56,23 @@ define([
                 '<i class="glyphicon glyphicon-eject icon-white" title="Log out"/></a>');
 
             logoutEl.on('click', function () {
-                setTimeout(function () {
-                    var tempAnchor = document.createElement('a');
+                var tempAnchor = document.createElement('a');
 
-                    tempAnchor.target = '_self';
+                tempAnchor.target = '_self';
 
-                    if (referrer) {
-                        tempAnchor.href = '/logout?redirectUrl=' + referrer;
-                    } else {
-                        tempAnchor.href = '/logout';
-                    }
+                if (referrer) {
+                    tempAnchor.href = '/logout?redirectUrl=' + referrer;
+                } else {
+                    tempAnchor.href = '/logout';
+                }
 
 
-                    document.body.appendChild(tempAnchor);
+                document.body.appendChild(tempAnchor);
 
-                    tempAnchor.click();
-                });
+                // Send the logout request.
+                tempAnchor.click();
 
+                //While the server processes the request - post logout message to the parent.
                 window.parent.postMessage('logout', '*');
             });
 
