@@ -10,7 +10,7 @@ in order for that to work in practise some more concepts are needed. Mainly
 Webgme data-model
 ------------------
 Leaving the adaptive UI on the side, it is completely possible to construct models using webgme's APIs that do not adhere
-to any specific meta-model. These are the build in concepts of the webgme data-model:
+to any specific meta-model. These are the built-in concepts of the webgme data-model:
 
 * FCO (“first class object”, “object”, “thing”)
 * Inheritance and Containment

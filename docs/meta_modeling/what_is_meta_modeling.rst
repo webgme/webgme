@@ -4,14 +4,52 @@ Alright, so you have created your first webgme project and probably want to make
 the **FCO** and **ROOT** nodes...
 
 In a typical modeling environment (including the Design Studio you will have built up at the end of this tutorial)
-there will be an syntax or schema for how models are being built up. In many tools this syntax is implied and enforced in the code itself, but
-webgme, and meta-modeling tools in general, work differently. The rules for how models can be composed (structural semantics) is captured in a model itself - the meta-model.
-The following definition of meta-modeling is borrowed from Wikipedia[1]_.
+there will be an syntax or schema for how models are being built up. In many tools this syntax is implied and enforced in the code itself.
+But webgme, and meta-modeling tools in general, work differently. The rules for how models can be composed (structural semantics)
+is captured in a model itself - the meta-model.
 
-.. code-block:: bash
+The following definition of meta-modeling is borrowed from Wikipedia [1]_.
 
-    A metamodel or surrogate model is a model of a model, and metamodeling is the process of generating such metamodels.
+::
 
-So a meta-model is a model that governs how other models can be composed. Without an example, this can sound a bit fuzzy..
+    A metamodel or surrogate model is a model of a model, and metamodeling
+    is the process of generating such metamodels.
+
+So a meta-model is a model that governs how other models can be composed.
+
+Simple Containment Example
+-------------------------
+The domain, or meta-model, we are targeting in this tutorial is a domain for building electrical circuits. Two obvious
+concepts that comes into mind are the notions of :code:`Circuit` and ::code:`Component`.
+
+* :code:`Circuit` - This will be the diagrams where different types of electrical-components will be place and wired together.
+* :code:`Component` - This will be an abstract base type for various electrical-components such as `Resistor`, `Ground`, `Inductor`, etc.
+
+Conceptually the notion of these two meta-types constitutes a meta-model. So far we have defined that our models can
+have instances of `Circuit` and `Component`, however nothing has been said about how these instances can be related to each other...
+
+A natural way of relating electrical-circuits and electrical-components is to say that circuits can contain components. Most meta-modeling
+environments have the notion of **containment** that does exactly this. It is typically visualized as an edge between the two types, where
+the end at the container is a black diamond.
+
+.. figure:: containment_uml.png
+    :align: center
+    :scale: 100 %
+
+    Containment in `UML <https://en.wikipedia.org/wiki/Unified_Modeling_Language>`_
+
+.. figure:: containment_webgme.png
+    :align: center
+    :scale: 100 %
+
+    Containment in WebGME
+
+In the two graphical representations of **containment** cardinality was introduced. For this example it states that there can be
+any number of `Components` inside a `Circuit`.
+
+**Containment** is also a strong relationship. This means that when the parent (the container) is removed so are the children.
+This suites well for electrical-circuits - one we discard a circuit the components are discarded as well.
+
+
 
 .. [1] This tutorial uses the hyphenated version of meta-model and not metamodel.
