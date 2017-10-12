@@ -19,9 +19,9 @@ How to build a Design Studio with WebGME
     :maxdepth: 1
     :caption: Getting Started
 
-    getting_started/terminology.rst
     getting_started/dependencies.rst
     getting_started/creating_a_repository.rst
+    getting_started/terminology.rst
 
 .. toctree::
     :maxdepth: 1

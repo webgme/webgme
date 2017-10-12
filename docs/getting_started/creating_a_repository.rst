@@ -103,3 +103,9 @@ There is a short-cut defined in package.json that lets you start the app by typi
 
 You should see some logging listing the port where webgme is available. By default this is 8888, so open up a browser
 and enter :code:`localhost:8888` in the address bar. The webgme GUI should be loaded!
+
+.. figure:: editor.png
+    :align: center
+    :scale: 100 %
+
+    The WebGME GUI
