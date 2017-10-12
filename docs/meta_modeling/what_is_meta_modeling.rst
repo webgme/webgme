@@ -20,36 +20,34 @@ So a meta-model is a model that governs how other models can be composed.
 Simple Containment Example
 -------------------------
 The domain, or meta-model, we are targeting in this tutorial is a domain for building electrical circuits. Two obvious
-concepts that comes into mind are the notions of :code:`Circuit` and ::code:`Component`.
+concepts that comes into mind are the notions of :code:`Circuit` and :code:`Component`.
 
 * :code:`Circuit` - This will be the diagrams where different types of electrical-components will be place and wired together.
-* :code:`Component` - This will be an abstract base type for various electrical-components such as `Resistor`, `Ground`, `Inductor`, etc.
+* :code:`Component` - This will be an abstract base type for various electrical-components such as :code:`Resistor`, :code:`Ground`, :code:`Inductor`, etc.
 
-Conceptually the notion of these two meta-types constitutes a meta-model. So far we have defined that our models can
-have instances of `Circuit` and `Component`, however nothing has been said about how these instances can be related to each other...
+Conceptually, just the notion of these two meta-types constitutes a meta-model. So far we have defined that our models can
+have instances of :code:`Circuit` and :code:`Component`, however nothing has been said about how these instances can be related to each other...
 
-A natural way of relating electrical-circuits and electrical-components is to say that circuits can contain components. Most meta-modeling
-environments have the notion of **containment** that does exactly this. It is typically visualized as an edge between the two types, where
-the end at the container is a black diamond.
+A natural way of relating electrical-circuits and electrical-components is to say that circuits *can contain* components. Most meta-modeling
+environments have the notion of **containment** defines exactly this. (It is typically visualized as an edge between the two types, where
+the end at the container is a black diamond.)
 
 .. figure:: containment_uml.png
     :align: center
-    :scale: 100 %
+    :scale: 50 %
 
-    Containment in `UML <https://en.wikipedia.org/wiki/Unified_Modeling_Language>`_
+    Containment as depicted in `UML <https://en.wikipedia.org/wiki/Unified_Modeling_Language>`_
 
 .. figure:: containment_webgme.png
     :align: center
     :scale: 100 %
 
-    Containment in WebGME
+    Containment as depicted in WebGME
 
-In the two graphical representations of **containment** cardinality was introduced. For this example it states that there can be
-any number of `Components` inside a `Circuit`.
+In the two graphical representations of **containment** the **cardinality** is also shown. For this example it says that
+there can be any number of :code:`Components` contained inside of a :code:`Circuit`.
 
-**Containment** is also a strong relationship. This means that when the parent (the container) is removed so are the children.
-This suites well for electrical-circuits - one we discard a circuit the components are discarded as well.
-
-
+**Containment** is also a strong relationship. This means that when the parent (the container) is removed from the model
+so are the children. This suites well for electrical-circuits - if we discard a circuit the components are discarded as well.
 
 .. [1] This tutorial uses the hyphenated version of meta-model and not metamodel.
