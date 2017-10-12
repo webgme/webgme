@@ -34,7 +34,7 @@ the end at the container is a black diamond.)
 
 .. figure:: containment_uml.png
     :align: center
-    :scale: 30 %
+    :scale: 40 %
 
     Containment as depicted in `UML <https://en.wikipedia.org/wiki/Unified_Modeling_Language>`_
 
