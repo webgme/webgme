@@ -41,7 +41,8 @@ how prototypal inheritance is implemented in webgme. Consider a meta-type :code:
 
     Nodes of meta-type :code:`A` can contain other nodes of meta-type :code:`A`.
 
-Consider two instances of :code:`A` : :code:`a` and :code:`a'`.
+Consider two instances of :code:`A`, :code:`a` and :code:`a'`. (Yes in webgme creating instances is not restricted to meta-types,
+and it's perfectly fine to create a new instance from any node.)
 
 .. figure:: instance_of_instance.png
     :align: center
