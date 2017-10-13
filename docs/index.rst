@@ -30,6 +30,7 @@ How to build a Design Studio with WebGME
     meta_modeling/creating_our_first_project.rst
     meta_modeling/what_is_meta_modeling.rst
     meta_modeling/meta_modeling_in_webgme.rst
+    meta_modeling/meta_modeling_concepts.rst
     meta_modeling/meta_editor.rst
     meta_modeling/saving_meta_model_at_deployment.rst
     meta_modeling/read_only_meta_model.rst

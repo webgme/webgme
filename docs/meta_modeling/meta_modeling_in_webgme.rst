@@ -6,7 +6,7 @@ in order for that to work in practise some more concepts are needed.
 * How do nodes (model elements) relate to each other in general, what are the restrictions?
 
 
-Webgme Data-model
+Data-model
 ------------------
 Leaving the adaptive UI on the side, it is completely possible to construct models using webgme's APIs that do not adhere
 to any specific meta-model. Below are the built-in concepts of the webgme data-model listed. Note that they are tightly coupled
@@ -28,50 +28,6 @@ Set
 Attribute/Registry
     Textual or numerical information stored at the nodes. Attributes adhere to the meta-model, whereas registries can hold any type
     data without meta-violations.
-
-
-The Meta-meta-model
---------------------
-The meta-meta-model in webgme describes the syntax for the meta-models. Below follows a short description and a video
-elaborating on each concept.
-
-Containment
-    * Defines where in the containment hierarchy a node can be created
-    * One-to-many relationship
-
-        - The cardinality can be restricted (e.g 0..* means any number of children)
-
-    * All nodes have a parent
-
-        - Except the ROOT node which is the root of the Composition Tree
-
-    * Containment is a strong relationship: if a parent node is deleted so are all its children
-
-.. raw:: html
-
-    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/kVLq32SoFM4?rel=0" frameborder="0" allowfullscreen></iframe>
-    </div>
-
-Base relationship/Inheritance
-    * base is a built-in pointer (one-to-one relationship)
-    * All nodes have base pointer defined
-    * All nodes (except the ROOT and FCO) have another node as their base
-
-        - The FCO is the root of the Inheritance Tree (the ROOT lives outside!)
-
-    * We can modify the value of base in the Meta Editor
-    * The base/instance relationship is a strong relationship: if a base node is deleted so are all its instances
-    * A node’s base is its prototype
-
-        - Prototypal/Prototypical inheritance: asking for a property of a node traverses the base-chain till a value is reached
-
-.. raw:: html
-
-    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/vMTveKozhY0?rel=0" frameborder="0" allowfullscreen></iframe>
-    </div>
-
 
 
 Restrictions Beyond the Meta-model
