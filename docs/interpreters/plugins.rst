@@ -1,9 +1,11 @@
-Plugins
-=======
-Plugins are custom extension points to a webgme-deployment that are intended to be used for e.g. querying, interpreting
-and building models. The framework and API are designed to enable both server- and browser-side execution of the same
-code. At the point where a plugin is executed it will have access to the context it was invoked and various webgme APIs,
- e.g. :code:`Core`, :code:`Project`, :code:`BlobClient` etc.
+Creating the Interpreter
+=========================
+So far we have constructed a meta-model for our electrical-circuit domain. It enabled us to create models that resembles
+circuits. Up to this point though there is no actual meaning to the circuits. As humans we can infer certain properties from
+these circuits, but the models themselves don't impose any interpretation. The meta-model infers the structural semantics,
+but no behavioural semantics.
+
+There are many potential interpretations of circuits,
 
 Generating a plugin
 -----------------------
