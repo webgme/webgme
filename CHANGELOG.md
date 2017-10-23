@@ -1,5 +1,20 @@
 # Change Log
 
+## [v2.19.0](https://github.com/webgme/webgme/tree/v2.19.0) (2017-10-23)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.18.2...v2.19.0)
+
+**Implemented enhancements:**
+
+- Better visual indication when user is forked from the current branch [\#1526](https://github.com/webgme/webgme/issues/1526)
+- post message to outer window at the logout [\#1538](https://github.com/webgme/webgme/pull/1538) ([pmeijer](https://github.com/pmeijer))
+- Minor usability improvements of the UI [\#1533](https://github.com/webgme/webgme/pull/1533) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- When changing a string attribute to be multi-line string, the default value for the string is lost. [\#1535](https://github.com/webgme/webgme/issues/1535)
+- Fixes \#1535 multiline value uses default after switch [\#1540](https://github.com/webgme/webgme/pull/1540) ([pmeijer](https://github.com/pmeijer))
+- Make sure to check defined src/dst ptrs at isConnection check [\#1539](https://github.com/webgme/webgme/pull/1539) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.18.2](https://github.com/webgme/webgme/tree/v2.18.2) (2017-10-13)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.18.1...v2.18.2)
 
@@ -1479,7 +1494,6 @@
 
 **Implemented enhancements:**
 
-- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 - Squashing commits [\#466](https://github.com/webgme/webgme/issues/466)
 - Object browser auto scroll, when navigating with the keyboard [\#408](https://github.com/webgme/webgme/issues/408)
 - No Bezier Curves with the AutoRouter [\#314](https://github.com/webgme/webgme/issues/314)
@@ -1619,6 +1633,10 @@
 
 ## [v0.14.1](https://github.com/webgme/webgme/tree/v0.14.1) (2015-09-07)
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.14.0...v0.14.1)
+
+**Implemented enhancements:**
+
+- Better programmatic interface for export.js script [\#534](https://github.com/webgme/webgme/issues/534)
 
 **Fixed bugs:**
 
@@ -2291,6 +2309,7 @@
 
 - webgme uses too much memory and crashes [\#66](https://github.com/webgme/webgme/issues/66)
 - Loading objects within a territory creates multiple events. [\#65](https://github.com/webgme/webgme/issues/65)
+- Failing to load a rextrast module should be a fatal error [\#59](https://github.com/webgme/webgme/pull/59) ([ksmyth](https://github.com/ksmyth))
 
 ## [webgme_0.6.3](https://github.com/webgme/webgme/tree/webgme_0.6.3) (2014-06-26)
 [Full Changelog](https://github.com/webgme/webgme/compare/webgme_0.5.12...webgme_0.6.3)
@@ -2325,6 +2344,7 @@
 - Requesting html template from client while WebGME is initializing crashes server [\#42](https://github.com/webgme/webgme/issues/42)
 - Status code logged is wrong for some requests [\#40](https://github.com/webgme/webgme/issues/40)
 - Tree-browser string handling [\#29](https://github.com/webgme/webgme/issues/29)
+- Fix status code logging of many successful requests, e.g. GET / [\#41](https://github.com/webgme/webgme/pull/41) ([ksmyth](https://github.com/ksmyth))
 
 **Closed issues:**
 
@@ -2332,6 +2352,10 @@
 - Sometimes the mongo object is null and it stops the webserver [\#14](https://github.com/webgme/webgme/issues/14)
 - Self containment issue [\#8](https://github.com/webgme/webgme/issues/8)
 - Create UI wireframes and mockups [\#1](https://github.com/webgme/webgme/issues/1)
+
+**Merged pull requests:**
+
+- Add jszip, filesaver, and PluginFSClient. [\#7](https://github.com/webgme/webgme/pull/7) ([lattmann](https://github.com/lattmann))
 
 ## [webgme_0.4.4](https://github.com/webgme/webgme/tree/webgme_0.4.4) (2014-02-05)
 **Closed issues:**
