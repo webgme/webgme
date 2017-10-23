@@ -35,13 +35,13 @@ Pick a location on your file-system where you want your repository to be located
 
 .. code-block:: bash
 
-    webgme init my-webgme
+    webgme init electrical-circuits
 
 Navigate into the newly created directory and you will see the content...
 
-.. code-block:: my-webgme
+.. code-block:: bash
 
-    cd my-webgme
+    cd electrical-circuits
 
 :code:`.gitignore`
   Contains a list of patterns of files that will not be checked into the repository if using git as version control system.
