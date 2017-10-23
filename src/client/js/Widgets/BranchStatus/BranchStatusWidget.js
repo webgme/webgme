@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $*/
 /*jshint browser: true*/
 
 /**
@@ -240,7 +240,21 @@ define([
         this._ddBranchStatus.setTitle('AHEAD[' + eventData.commitQueue.length + ']');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
 
-        this._popoverBox.show('You are out of sync from the origin.',
+        $.notify({
+            icon: 'fa fa-share-alt fa-rotate-90',
+            message: 'You are not not in sync with the current branch. Your action is required! Pick a solution ' +
+            'from the widget down in the footer.'
+        }, {
+            delay: 10000,
+            hideDuration: 0,
+            type: 'warning',
+            offset: {
+                x: 20,
+                y: 37
+            }
+        });
+
+        this._popoverBox.show('You are out of sync - an action is required!',
             this._popoverBox.alertLevels.WARNING, true);
     };
 

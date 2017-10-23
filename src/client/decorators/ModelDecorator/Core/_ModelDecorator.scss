@@ -8,7 +8,7 @@ $height: 40px;
 $border: 1px solid #000000;
 $padding: 3px;
 $background-color: #ECECEC;
-$box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, .15);
+//$box-shadow: inset 0px 0px 7px 0px rgba(0, 0, 0, .15);
 $selected-background-color: #DBEAFC;
 $selected-border: 1px solid #52A8EC;
 $ports-background-color: #000000;
@@ -32,9 +32,9 @@ $abstract-class-name-color: #AAAAAA;
     padding: $padding;
     text-align: center;
     position: relative;
-    -webkit-box-shadow: $box-shadow;
-    -moz-box-shadow: $box-shadow;
-    box-shadow: $box-shadow;
+    //-webkit-box-shadow: $box-shadow;
+    //-moz-box-shadow: $box-shadow;
+    //box-shadow: $box-shadow;
 
     .name {
       white-space: nowrap;

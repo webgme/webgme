@@ -1,4 +1,4 @@
-/*globals define, WebGMEGlobal*/
+/*globals define, WebGMEGlobal, $*/
 /*jshint browser: true*/
 
 /**
@@ -184,6 +184,8 @@ define([
     };
 
     NetworkStatusWidget.prototype._modeUncaughtException = function () {
+        var message = 'Oops, there was an uncaught exception!';
+
         this._ddNetworkStatus.clear();
         this._ddNetworkStatus.setTitle('UNCAUGHT_EXCEPTION');
         this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.RED);
@@ -194,6 +196,25 @@ define([
         this._ddNetworkStatus.addItem({
             text: 'Download error data',
             value: ITEM_VALUE_DOWNLOAD_ERROR
+        });
+
+        if (WebGMEGlobal.gmeConfig.client.errorReporting.enable === true) {
+            message += ' An error report has been submitted.';
+        }
+
+        message += ' You are strongly advised to refresh the browser and pick up from where you were.';
+
+        $.notify({
+            icon: 'fa fa-exclamation-triangle',
+            message: message
+        }, {
+            delay: 30000,
+            hideDuration: 0,
+            type: 'danger',
+            offset: {
+                x: 20,
+                y: 37
+            }
         });
 
         this._popoverBox.show('Uncaught exception - click here for actions',
