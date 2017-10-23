@@ -113,7 +113,7 @@ define([
             }
         }
 
-        function multiLineSelectionChanged(checked) {
+        function multiLineSelectionChanged(checked, value) {
             var enumChecked = self._cbEnum.is(':checked');
 
             if (checked) {
@@ -121,10 +121,24 @@ define([
                     self._cbEnum.attr('checked', false);
                     enumSelectionChanged(false);
                 }
+
+                if (typeof value === 'string') {
+                    self._inputDefaultValueMultiline.val(value);
+                } else {
+                    self._inputDefaultValueMultiline.val(self._inputDefaultValue.val());
+                }
+
                 self._pMultilineSubTypes.show();
                 self._pDefaultValueMultiline.show();
                 self._pDefaultValue.hide();
             } else {
+
+                if (typeof value === 'string') {
+                    self._inputDefaultValue.val(value);
+                } else {
+                    self._inputDefaultValue.val(self._inputDefaultValueMultiline.val());
+                }
+
                 self._multilineType.val('');
                 self._pMultilineSubTypes.hide();
                 self._pDefaultValueMultiline.hide();
@@ -421,6 +435,7 @@ define([
             this._pRegExp.hide();
         } else {
             this._inputDefaultValue.val(attributeDesc.defaultValue);
+            this._inputDefaultValueMultiline.val(attributeDesc.defaultValue);
             if (attributeDesc.isEnum) {
                 this._cbEnum.attr('checked', true);
                 this._inputEnumValues.val(attributeDesc.enumValues.join('\n'));
@@ -451,7 +466,7 @@ define([
                         this._multilineType.val('');
                     }
 
-                    multiLineSelectionChanged(true);
+                    multiLineSelectionChanged(true, attributeDesc.defaultValue);
                 }
             } else {
                 this._pRange.show();
