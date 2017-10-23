@@ -18,7 +18,7 @@ define([
     var NetworkStatusWidget,
         ITEM_VALUE_CONNECT = 'connect',
         ITEM_VALUE_REFRESH = 'refresh',
-        ITEM_VALUE_LOGOUT = 'logout',
+        //ITEM_VALUE_LOGOUT = 'logout',
         ITEM_VALUE_DOWNLOAD_ERROR = 'downloadError';
 
     NetworkStatusWidget = function (containerEl, client) {
@@ -62,8 +62,8 @@ define([
 
             } else if (value === ITEM_VALUE_REFRESH) {
                 document.location.href = self._urlAtDisconnect;
-            } else if (value === ITEM_VALUE_LOGOUT) {
-                document.location.href = '/logout';
+            // } else if (value === ITEM_VALUE_LOGOUT) {
+            //     document.location.href = '/logout';
             } else if (value === ITEM_VALUE_DOWNLOAD_ERROR) {
                 self._client.downloadError();
             }
@@ -159,10 +159,10 @@ define([
         this._ddNetworkStatus.clear();
         this._ddNetworkStatus.setTitle('AUTH_TOKEN_EXPIRED');
         this._ddNetworkStatus.setColor(DropDownMenu.prototype.COLORS.RED);
-        this._ddNetworkStatus.addItem({
-            text: 'Logout...',
-            value: ITEM_VALUE_LOGOUT
-        });
+        // this._ddNetworkStatus.addItem({
+        //     text: 'Logout...',
+        //     value: ITEM_VALUE_LOGOUT
+        // });
 
         this._disconnected = true;
         this._popoverBox.show('Token has expired - a new login is required.',

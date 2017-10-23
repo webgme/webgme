@@ -28,7 +28,7 @@
     "requirejs": "2.1.20",
     "require-uncached": "1.0.3",
     "webgme-engine": "2.18.4",
-    "webgme-user-management-page": "0.3.2"
+    "webgme-user-management-page": "0.3.3"
   },
   "devDependencies": {
     "chai": "3.5.0",

@@ -48,13 +48,9 @@ require(
             ).install();
         }
 
-        // Set the referrer in the session store (if not already set)
-        if (typeof window.sessionStorage.getItem('originalReferrer') !== 'string') {
-            try {
-                window.sessionStorage.setItem('originalReferrer', window.top.document.referrer);
-            } catch (e) {
-                // Fall back to logOutUrl set in gmeConfig.authentication.logOutUrl
-            }
+        // Set the referrer in the session store (if not already set and we are the top window)
+        if (window.top === window && typeof window.sessionStorage.getItem('originalReferrer') !== 'string') {
+            window.sessionStorage.setItem('originalReferrer', document.referrer);
         }
 
         // domDeferred will be resolved (with gmeApp) when the dom is ready (i.e. $ function invoked).
