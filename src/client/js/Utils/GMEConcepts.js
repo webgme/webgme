@@ -60,15 +60,10 @@ define(['jquery',
      */
     function isConnectionType(objID) {
         var valid = false,
-            obj = client.getNode(objID),
-            ptrNames;
+            obj = client.getNode(objID);
 
         if (obj) {
-            ptrNames = obj.getPointerNames();
-            if (ptrNames.indexOf(CONSTANTS.POINTER_SOURCE) !== -1 &&
-                ptrNames.indexOf(CONSTANTS.POINTER_TARGET) !== -1) {
-                valid = true;
-            }
+            return obj.isConnection();
         }
 
         return valid;
