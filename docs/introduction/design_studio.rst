@@ -6,7 +6,7 @@ Design studio components can be organized in the following three categories: 1) 
 
 The following figure shows the main steps of the design flow. Initially, models are designed using dedicated model editors. Optionally, design patterns stored in model repositories can be used to simplify the modeling process. Next, the checking loop starts (step 1), where the models are checked for conformance, optionally by using dedicated tools. If the required conformance conditions are not satisfied by the model, the checking mechanism must point back to the problematic nodes of the model in the model editor and inform the developer of the inconsistency causes to facilitate model refinement. Finally, when the conformance conditions are satisfied (step 2), the refined models can be analyzed (e.g. for safety properties) and/or executed (step 3) by using integrated, into the design studio, third party tools. The output of the tools is then collected and sent back to the model editors (step 4) for visualization of analysis or execution results.
 
-.. figure:: DesignStudioFlow.pdf
+.. figure:: DesignStudioFlow.png
     :align: center
     :scale: 100 %
 
