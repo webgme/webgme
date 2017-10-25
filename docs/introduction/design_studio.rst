@@ -1,16 +1,12 @@
-Design Studio
+What is a Design Studio?
 ======================
 A framework with a set of tools and services for simplifying one or many (typically engineering) tasks.
 
-Typical components of a design studio include:
+Design studio components can be organized in the following three categories: 1) semantic integration, 2) service integration, and 3) tool integration. Semantic integration components comprise the domain of the modeling language, i.e., its metamodel that explicitly specifies the building blocks of the language and their relations. Service integration components include dedicated model editors, code editors, and GUI/Visualization components for modeling and simulating results. Additionally, service integration components include model transformation and code generation services, consistency and type checking mechanisms, model repositories, dedicated model interpreters, and version control services. Finally, tool integration components consist in interfaces and integration services towards third party tools such as run-times and verification tools.
 
-* A domain (meta-model) for building models
-* Model interpreters typically targeting analysis tools
-* Interfaces/services towards (third party) analysis tools
-* A GUI/Visualization for modeling and viewing analysis results
-* Version controlled models and centralized storage
+The following figure shows the main steps of the design flow. Initially, models are designed using dedicated model editors. Optionally, design patterns stored in model repositories can be used to simplify the modeling process. Next, the checking loop starts (step 1), where the models are checked for conformance, optionally by using dedicated tools. If the required conformance conditions are not satisfied by the model, the checking mechanism must point back to the problematic nodes of the model in the model editor and inform the developer of the inconsistency causes to facilitate model refinement. Finally, when the conformance conditions are satisfied (step 2), the refined models can be analyzed (e.g. for safety properties) and/or executed (step 3) by using integrated, into the design studio, third party tools. The output of the tools is then collected and sent back to the model editors (step 4) for visualization of analysis or execution results.
 
-.. figure:: design_studio.png
+.. figure:: DesignStudioFlow.png
     :align: center
     :scale: 100 %
 
