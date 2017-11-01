@@ -22,7 +22,7 @@ It also for you who just heard about webgme and are new to meta-modeling and wou
 
 Prerequisites
 -------------
-Although we try to explain the `underlying technologies that webgme depend on <dependencies.rst>`_,
+Although we try to explain the `underlying technologies that webgme depend on <../getting_started/dependencies.rst>`_,
 users are assumed to have a basic understanding of these. If not, it's recommended to use the internet and read up on the basics
 behind these technologies. In addition it's required that you have some experience in JavaScript, HTML5 and CSS3. It should be noted that unless
 you really need to customize the visualization, JavaScript will suffice.
