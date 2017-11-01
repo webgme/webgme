@@ -23,7 +23,7 @@ Basic Components in the Analog Electrical library as part of the **Modelica Stan
         Electrical Analog components in Modelica
 
 
-This library contains a range of electrical components with a various number of pin. Looking at one of the examples we
+This library contains a range of electrical components with a various number of pins. Looking at one of the examples we
 see that the pins are connected via electrical connections.
 
 .. figure:: cauer_low_pass_modelica.png
@@ -35,6 +35,7 @@ see that the pins are connected via electrical connections.
 
 With or without Modelica a very natural breakdown of this domain is include the concepts of a :code:`Component`, :code:`Pin`, and :code:`Connection`.
 Additionally, since our goal is to build electrical circuits, we also need the concept of a :code:`Circuit`.
+Later we will add sub-types of components corresponding to components such as `Resistor`, `Ground`, `Capacitor`, `Inductor`, etc.
 
 The video below shows how you can add these initial concepts as meta-nodes starting from your empty project.
 
@@ -47,10 +48,11 @@ The video below shows how you can add these initial concepts as meta-nodes start
 
 Containment
 ----------------
-Now let's model where these concepts can be added in the containment-hierarchy. A :code:`Circuit` should be able to contain
-:code:`Component`s wired together by :code:`Connection`s. The way connections are constructed in webgme requires us to add
-a containment rule for the :code:`Connection` w.r.t. the :code:`Circuit`. (Next section illustrates how we can make the :code:`Connection`
-in to an actual connection (or edge on the drawing canvas).
+Now let's model where these concepts can be added in the containment-hierarchy.
+
+A :code:`Circuit` should be able to contain :code:`Component`s wired together by :code:`Connection`s. The way connections
+are constructed in webgme requires us to add a containment rule for the :code:`Connection` w.r.t. the :code:`Circuit`. Next section illustrates how we can make the :code:`Connection` in to
+an actual connection (an edge on the drawing canvas).
 
 Inside the :code:`Component`s the :code:`Pin`s determine where the :code:`Connection`s connect the :code:`Component`s together.
 
@@ -62,10 +64,14 @@ The video below shows how to add the needed containment rules.
         <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
     </div>
 
-
-Connections and Ports
+Sub-types of Components
 --------------------
-
+TODO:
 
 Attributes
 ----------------
+TODO:
+
+Connections and Ports
+--------------------
+TODO:
