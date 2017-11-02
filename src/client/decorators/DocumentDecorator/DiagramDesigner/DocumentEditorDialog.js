@@ -19,7 +19,7 @@ define(['js/util',
      * Insert dialog modal into body and initialize editor with
      * customized options
      */
-    DocumentEditorDialog = function () {
+    DocumentEditorDialog = function (title) {
         // Get Modal Template node for Editor Dialog and append it to body
         this._dialog = $(DocumentEditorDialogTemplate);
         this._dialog.appendTo($(document.body));
@@ -28,6 +28,9 @@ define(['js/util',
         this._el = this._dialog.find('.modal-body').first();
         this._btnSave = this._dialog.find('.btn-save').first();
         this._pMeta = this._el.find('#pMeta').first();
+        this._title = this._dialog.find('#dialog-title').first();
+        if (title)
+            this._title.html(title);
         this._content = this._pMeta.find('div.controls').first();
 
         /* Create Markdown Editor with options, but load() function should be
