@@ -29,8 +29,9 @@ define(['js/util',
         this._btnSave = this._dialog.find('.btn-save').first();
         this._pMeta = this._el.find('#pMeta').first();
         this._title = this._dialog.find('#dialog-title').first();
-        if (title)
+        if (title) {
             this._title.html(title);
+        }
         this._content = this._pMeta.find('div.controls').first();
 
         /* Create Markdown Editor with options, but load() function should be
