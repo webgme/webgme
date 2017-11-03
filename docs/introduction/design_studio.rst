@@ -39,7 +39,7 @@ Example Design Studios
   status of any of their executions including compare them side-by-side in real-time.
 
 `DesignBIP <https://github.com/anmavrid/webgme-bip>`_
-    DesignBIP is a web-based, collaborative, modeling and execution environment for building concurrent systems using the BIP (Behavior-Interaction-Priority) component framework. BIP has been successfully used for modeling and analysis of a variety of applications such as modeling of correct-by-construction satellite software, and construction and verification of a robotic system. DesignBIP allows specifying BIP interaction and behavior models in a graphical way and generating the equivalent code. DesignBIP provides model repositories, design guidance services, code generators and integration with the BIP tool-set.
+    DesignBIP is an all-in-one, web-based, collaborative, modeling and execution environment for building concurrent systems using the BIP (Behavior-Interaction-Priority) component framework. DesignBIP allows specifying BIP interaction and behavior models in a graphical way and generating the equivalent code. DesignBIP provides model repositories, design guidance services, code generators and integration with the BIP tool-set.
 
 `ROSMOD <https://github.com/rosmod/webgme-rosmod>`_
   The Robot Operating System Model-driven development tool suite, (ROSMOD) an integrated development environment for rapid prototyping component-based software for the Robot Operating System (ROS) middleware. ROSMOD consists of:
