@@ -84,35 +84,35 @@ the heat portion of the components). Note that the associated Modelica parameter
 Library** using a Modelica tool, such as `OpenModelica <https://openmodelica.org/>`_. For each component we need to indicate
 its unique path or identifier within the **MSL**, this will be captured by the read-only attribute ModelicaURI.
 
-``Resistor``
+Resistor
     Attributes
         * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Resistor``
         * ``R`` - The resistance of the resistor in Ohm. A float greater or equal to ``0`` with a default value of ``1``.
     Ports
         Two ``Pins`` ``p`` and ``n``.
 
-``Ground``
+Ground
     Modelica requires each electrical system (``Circuit`` in our case) to contain a ground component in order to make the system solvable.
     Attributes
         * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Ground``
     Ports
         One ``Pin`` named `p`.
 
-``Inductor``
+Inductor
     Attributes
         * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Inductor``
         * ``L`` - The inductance of the inductor in Henry. A float greater or equal to ``0`` with a default value of ``1``.
     Ports
         Two ``Pins`` ``p`` and ``n``.
 
-``Capacitor``
+Capacitor
     Attributes
         * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Capacitor``
         * ``C`` - The capacitance of the capacitor in Farad. A float greater or equal to ``0`` with a default value of ``1``.
     Ports
         Two ``Pins`` ``p`` and ``n``.
 
-``StepVoltage``
+StepVoltage
     Attributes
         * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Sources.StepVoltage``
         * ``V`` - The voltage of the source in Volt. A float with a default value of ``1``.
@@ -121,9 +121,17 @@ its unique path or identifier within the **MSL**, this will be captured by the r
         Two ``Pins`` ``p`` and ``n``.
 
 With the approach taken the ``Component`` meta-type itself does not have any interpretation w.r.t. our domain and will only
-act as an ``abstract`` type. The video below shows how to create the new types with attributes and pins as defined above.
+act as an ``abstract`` type that cannot be instantiated. In addition to the ``Component`` it's also convenient to introduce
+an additional ``abstract`` base type that defines two ``Pins``, ``p`` and ``n``, and let all ``Components`` but the ``Ground``
+be derived from it. In general this approach is not only more elegant and convenient, but also more efficient since the raw data
+for the two pins can be shared and requires less data to be loaded from the server. Therefor we will introduce the ``TwoPinComponent``
+meta-type as well.
+
+The video below shows how to create the new types with attributes and pins as defined above.
 
 TODO: Video
+
+
 
 Connections and Ports
 --------------------
