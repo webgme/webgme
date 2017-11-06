@@ -35,7 +35,7 @@ see that the pins are connected via electrical connections.
 
 With or without Modelica a very natural breakdown of this domain is include the concepts of a :code:`Component`, :code:`Pin`, and :code:`Connection`.
 Additionally, since our goal is to build electrical circuits, we also need the concept of a :code:`Circuit`.
-Later we will add sub-types of components corresponding to components such as `Resistor`, `Ground`, `Capacitor`, `Inductor`, etc.
+Later we will add sub-types of components corresponding to components such as ``Resistor``, ``Ground``, ``Capacitor``, ``Inductor``, etc.
 
 The video below shows how you can add these initial concepts as meta-nodes starting from your empty project.
 
@@ -50,13 +50,13 @@ Containment
 ----------------
 Now let's model where these concepts can be added in the containment-hierarchy.
 
-A :code:`Circuit` should be able to contain :code:`Component`s wired together by :code:`Connection`s. The way connections
-are constructed in webgme requires us to add a containment rule for the :code:`Connection` w.r.t. the :code:`Circuit`. Next section illustrates how we can make the :code:`Connection` in to
-an actual connection (an edge on the drawing canvas).
+A ``Circuit`` should be able to contain ``Component``s wired together by ``Connection``s. The way connections
+are constructed in webgme requires us to add a containment rule for the ``Connection`` w.r.t. the ``Circuit``.
+Next section illustrates how we can make the ``Connection`` in to an actual connection (an edge on the drawing canvas).
 
-Inside the :code:`Component`s the :code:`Pin`s determine where the :code:`Connection`s connect the :code:`Component`s together.
+Inside the ``Component`` the ``Pin``s determine where the ``Connection``s connect the ``Component``s together.
 
-The video below shows how to add the needed containment rules.
+The video below shows how to add these containment rules to our meta-model using the Meta Editor.
 
 .. raw:: html
 

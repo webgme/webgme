@@ -4,13 +4,14 @@ WebGME is a web-based, collaborative meta-modeling environment. WebGME is a clie
 and server-side (`NodeJS <https://nodejs.org>`_) use JavaScript. The clients carry quite a lot of the work-load and the role of the server
 is mainly to store and retrieve the raw model-data and propagate events between collaborating clients.
 
-Clients do not load the entire model, instead they register and listens to events from territories within the model hierarchy.
+Clients do not load the entire model, instead they register and listens to events at territories (subtrees) within the model hierarchy.
 The major portion of the communication with the server is retrieving raw model-data. Therefore the storage model has been optimized to
 reuse as much of that data as possible; both over revisions (structural sharing of immutable data) and within the models (prototypal inheritance).
-In addition, when two versions of the data exist, the communication is done via small patches (diffs).
+In addition, when two versions of the data exist, the communication of changes is done using small patch objects (diffs).
 
 This model allows for immediate small commits, which in turn minimizes the risk for accidental branching. Every change made using the GUI will
-create a new commit in the GIT-like storage.
+create a new commit in the GIT-like storage. In the event of concurrent changes it's guaranteed that only one client will update
+the model state (branch hash). In such cases the other client has the option to attempt to merge in its changes.
 
 The Storage Model
 ------------------

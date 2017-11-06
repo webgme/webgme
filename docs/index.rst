@@ -37,13 +37,6 @@ How to build a Design Studio with WebGME
 
 .. toctree::
     :maxdepth: 1
-    :caption: Visualization
-
-    visualization/generic_visualization.rst
-    visualization/custom_visualization.rst
-
-.. toctree::
-    :maxdepth: 1
     :caption: Model Interpreters
 
     interpreters/what_are_model_interpreters.rst
@@ -58,6 +51,13 @@ How to build a Design Studio with WebGME
     analysis_tools/invoking_from_plugin.rst
     analysis_tools/executor_server.rst
     analysis_tools/result_presentation.rst
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Visualization
+
+    visualization/generic_visualization.rst
+    visualization/custom_visualization.rst
 
 .. toctree::
     :maxdepth: 1
