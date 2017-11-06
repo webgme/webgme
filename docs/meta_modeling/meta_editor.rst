@@ -51,11 +51,11 @@ Containment
 ----------------
 Now let's model where these concepts can be added in the containment-hierarchy.
 
-A ``Circuit`` should be able to contain ``Component``s wired together by ``Connection``s. The way connections
+A ``Circuit`` should be able to contain ``Components`` wired together by ``Connections``. The way connections
 are constructed in webgme requires us to add a containment rule for the ``Connection`` w.r.t. the ``Circuit``.
 Next section illustrates how we can make the ``Connection`` in to an actual connection (an edge on the drawing canvas).
 
-Inside the ``Component`` the ``Pin``s determine where the ``Connection``s connect the ``Component``s together.
+Inside the ``Component`` the ``Pins`` determine where the ``Connections`` connect the ``Components`` together.
 
 The video below shows how to add these containment rules to our meta-model using the Meta Editor.
 
@@ -84,20 +84,54 @@ the heat portion of the components). Note that the associated Modelica parameter
 Library** using a Modelica tool, such as `OpenModelica <https://openmodelica.org/>`_. For each component we need to indicate
 its unique path or identifier within the **MSL**, this will be captured by the read-only attribute ModelicaURI.
 
-`Resistor`
+``Resistor``
     Attributes
-        * `ModelicaURI` - `Modelica.Electrical.Analog.Basic.Resistor`
-        * `R` - The resistance of the connector in Ohm. A float greater or equal to `0` with a default value of `1`.
+        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Resistor``
+        * ``R`` - The resistance of the resistor in Ohm. A float greater or equal to ``0`` with a default value of ``1``.
     Ports
-        Two ``Pin``s `p` and `n`.
+        Two ``Pins`` ``p`` and ``n``.
 
-`Ground`
-    Modelica requires each electrical system (`Circuit` in our case) to contain a ground component in order to make the system solvable.
+``Ground``
+    Modelica requires each electrical system (``Circuit`` in our case) to contain a ground component in order to make the system solvable.
     Attributes
-        * `ModelicaURI` - `Modelica.Electrical.Analog.Basic.Resistor`
+        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Ground``
     Ports
         One ``Pin`` named `p`.
 
+``Inductor``
+    Attributes
+        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Inductor``
+        * ``L`` - The inductance of the inductor in Henry. A float greater or equal to ``0`` with a default value of ``1``.
+    Ports
+        Two ``Pins`` ``p`` and ``n``.
+
+``Capacitor``
+    Attributes
+        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Capacitor``
+        * ``C`` - The capacitance of the capacitor in Farad. A float greater or equal to ``0`` with a default value of ``1``.
+    Ports
+        Two ``Pins`` ``p`` and ``n``.
+
+``StepVoltage``
+    Attributes
+        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Sources.StepVoltage``
+        * ``V`` - The voltage of the source in Volt. A float with a default value of ``1``.
+        * ``startTime`` - Time offset (when the voltage goes from 0 to ``V``) in seconds. A float with a default value of ``1``.
+    Ports
+        Two ``Pins`` ``p`` and ``n``.
+
+With the approach taken the ``Component`` meta-type itself does not have any interpretation w.r.t. our domain and will only
+act as an ``abstract`` type. The video below shows how to create the new types with attributes and pins as defined above.
+
+TODO: Video
+
 Connections and Ports
 --------------------
-TODO:
+In order to create connections between ``Components`` or rather between the ``Pins`` of the ``Components`` we need to
+make the ``Connection`` into a connection like object. In webgme's meta-model there is no first order concept of a connection,
+instead such can be constructed by using reserved named pointers; ``src`` and ``dst``. The target of each will be the source and
+destination of the ``Connection`` respectively.
+
+TODO: Ports
+
+TODO: Video
