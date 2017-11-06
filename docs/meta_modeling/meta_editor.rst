@@ -45,6 +45,7 @@ The video below shows how you can add these initial concepts as meta-nodes start
         <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
 
 Containment
 ----------------
@@ -64,13 +65,38 @@ The video below shows how to add these containment rules to our meta-model using
         <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+
 Sub-types of Components
 --------------------
-TODO:
+So far our meta-model only contains a generic ``Component`` for representing electrical components, but we need a way to represent
+specific electrical components such as ``Resistor``, ``Ground``, etc. There are multiple ways we can achieve this by extending the
+meta-model. Since our domain is relatively small we will take the approach of adding a meta-type for each type of electrical component
+and add the related Modelica parameters as attributes.
 
-Attributes
-----------------
-TODO:
+An alternatively approach would be to create the different types of electrical components outside of the meta and treat
+the Modelica parameters as separate child nodes of the components. This approach allows for creation of new types
+without modifying the meta-model itself, but also makes the modeling a bit more cumbersome using the default visualization.
+(Visualizing and modifying the parameters of a component could no longer be done from a single node.)
+
+For the sake of simplicity we will take the first approach and limit out domain to the five components (we will also leave out
+the heat portion of the components). Note that the associated Modelica parameters can be extracted from the **Modelica Standard
+Library** using a Modelica tool, such as `OpenModelica <https://openmodelica.org/>`_. For each component we need to indicate
+its unique path or identifier within the **MSL**, this will be captured by the read-only attribute ModelicaURI.
+
+`Resistor`
+    Attributes
+        * `ModelicaURI` - `Modelica.Electrical.Analog.Basic.Resistor`
+        * `R` - The resistance of the connector in Ohm. A float greater or equal to `0` with a default value of `1`.
+    Ports
+        Two ``Pin``s `p` and `n`.
+
+`Ground`
+    Modelica requires each electrical system (`Circuit` in our case) to contain a ground component in order to make the system solvable.
+    Attributes
+        * `ModelicaURI` - `Modelica.Electrical.Analog.Basic.Resistor`
+    Ports
+        One ``Pin`` named `p`.
 
 Connections and Ports
 --------------------
