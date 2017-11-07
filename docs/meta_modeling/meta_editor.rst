@@ -1,4 +1,5 @@
-Creating a Meta-model
+.. _creating-the-meta-model:
+Creating the Meta-model
 ======================
 At this point you should have a basic understanding of the concepts of meta-modeling in webgme. Before starting to build
 a meta-model for our electrical circuit domain, you need to know the basics behind the webgme GUI...
