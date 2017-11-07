@@ -82,35 +82,37 @@ without modifying the meta-model itself, but also makes the modeling a bit more 
 For the sake of simplicity we will take the first approach and limit out domain to the five components (we will also leave out
 the heat portion of the components). Note that the associated Modelica parameters can be extracted from the **Modelica Standard
 Library** using a Modelica tool, such as `OpenModelica <https://openmodelica.org/>`_. For each component we need to indicate
-its unique path or identifier within the **MSL**, this will be captured by the read-only attribute ModelicaURI.
+its unique path or identifier within the **MSL**, this will be captured by the read-only attribute ModelicaURI. In order to
+map directly to Modelica we name the ports the same way they're named in **MSL**.
 
 Resistor
     Attributes
-        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Resistor``
-        * ``R`` - The resistance of the resistor in Ohm. A float greater or equal to ``0`` with a default value of ``1``.
+        - ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Resistor``
+        - ``R`` - The resistance of the resistor in Ohm. A float greater or equal to ``0`` with a default value of ``1``.
     Ports
-        Two ``Pins`` ``p`` and ``n``.
+        Two ``Pins``, ``p`` and ``n``.
 
 Ground
     Modelica requires each electrical system (``Circuit`` in our case) to contain a ground component in order to make the system solvable.
+
     Attributes
-        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Ground``
+        - ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Ground``
     Ports
-        One ``Pin`` named `p`.
+        One ``Pin``, named `p`.
 
 Inductor
     Attributes
-        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Inductor``
-        * ``L`` - The inductance of the inductor in Henry. A float greater or equal to ``0`` with a default value of ``1``.
+        - ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Inductor``
+        - ``L`` - The inductance of the inductor in Henry. A float greater or equal to ``0`` with a default value of ``1``.
     Ports
-        Two ``Pins`` ``p`` and ``n``.
+        Two ``Pins``, ``p`` and ``n``.
 
 Capacitor
     Attributes
-        * ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Capacitor``
-        * ``C`` - The capacitance of the capacitor in Farad. A float greater or equal to ``0`` with a default value of ``1``.
+        - ``ModelicaURI`` - ``Modelica.Electrical.Analog.Basic.Capacitor``
+        - ``C`` - The capacitance of the capacitor in Farad. A float greater or equal to ``0`` with a default value of ``1``.
     Ports
-        Two ``Pins`` ``p`` and ``n``.
+        Two ``Pins``, ``p`` and ``n``.
 
 StepVoltage
     Attributes
@@ -136,10 +138,16 @@ TODO: Video
 Connections and Ports
 --------------------
 In order to create connections between ``Components`` or rather between the ``Pins`` of the ``Components`` we need to
-make the ``Connection`` into a connection like object. In webgme's meta-model there is no first order concept of a connection,
-instead such can be constructed by using reserved named pointers; ``src`` and ``dst``. The target of each will be the source and
-destination of the ``Connection`` respectively.
+make our ``Connection`` into a connection like object. In webgme's meta-model there is no first order concept of a connection,
+instead such can be constructed using reserved named pointers; ``src`` and ``dst``. The target of each will be the source and
+destination of the ``Connection`` respectively. For more details on connections revisit the `"Connections" meta_modeling_concepts.html#connections>`_
+under `"Meta-modeling Concepts" meta_modeling_concepts.html`_.
 
-TODO: Ports
+Just like with connections, there is no first order concept of a port in webgme. Connection sources and destinations are
+only constrained by the valid pointer ends defined in meta-model and can crosscut over the containment hierarchy. To make
+modeling more comprehensible, it is often useful to be able to visually propagate port like children up to boundary of
+the parent node. The way this is solved in webgme is through the `meta-property meta_modeling_concepts.html#meta-property>`_ (implemented as registry) `isPort`.
+Note that the usage of this property only takes effect if the decorator (the UI component responsible for drawing the box
+on the canvas) implements logic using this property - this is the case for both the default Model- and SVG-Decorators.
 
 TODO: Video

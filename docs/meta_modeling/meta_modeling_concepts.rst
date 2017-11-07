@@ -3,7 +3,7 @@ Meta-modeling Concepts
 The meta-meta-model in webgme describes the syntax for the meta-models. Below follows a short description and a video
 elaborating on each concept defined in the meta-meta-model. To follow this tutorial it is perfectly fine to skip
 **Sets**, **Mixins**, **Aspects** and **Constraints**. This whole section can also be seen as a reference manual and it's
-recommended to return to these during `the section "Creating a Meta-model" <meta_editor.rst>`_.
+recommended to return to these during the section `"Creating a Meta-model" <meta_editor.html>`_.
 
 Containment
 -------------
