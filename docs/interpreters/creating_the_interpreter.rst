@@ -59,8 +59,8 @@ You might also have noted that the :code:`config/config.webgme.js` was modified.
 to find our plugin the path to it is added to the configuration file. Note that both :code:`config.default.js` and
 :code:`config.test.js` load and reuse the added configuration parameters from this file.
 
-The video below shows how to generate the new plugin and modify it so we have a map of all the nodes from the `activeNode`.
-The `activeNode` is the invocation point of a plugin and in the next sub-section we will register our plugin at `Circuits`.
+The video below shows how to generate the new plugin and modify it so we have a map of all the nodes from the ``activeNode``.
+The ``activeNode`` is the invocation point of a plugin and in the next sub-section we will register our plugin at ``Circuits``.
 
 
 .. raw:: html
@@ -75,7 +75,7 @@ Registering the Plugin at Circuits
 ----------------------
 The generated plugin is available from the browser and the server, however in order to present it to the user on the GUI,
 we must register it at the appropriate nodes. In our case we want the code-generator to be invoked on node of meta-type
-`Circuit` so we edit the value at the meta-node and the registered value will propagate down the inheritance chain.
+``Circuit`` so we edit the value at the meta-node and the registered value will propagate down the inheritance chain.
 
 This video shows how we register the plugin and how we can enable the gme-logger for the *ModelicaCodeGenerator* in the browser.
 (Note that after updating the localStorage the page must be refreshed. The page must also be refreshed each time we update
@@ -106,7 +106,7 @@ the related Core-API calls. (For simplicity we will leave out the Modelica param
     :align: center
     :scale: 100 %
 
-    Mapping from a ``Circuit`` in our webgme model to Modelica code
+    Mapping from a Circuit in our webgme model to Modelica code
 
 We will break up the task into two parts; 1) Extracting the data and 2) Generating the modelica code. The high-level
 outline of the first part is shown below in the code block where all the extracted data will be stored in serializable
@@ -134,6 +134,7 @@ TODO: Video
 Implementing the Code Generation
 --------------------------
 At this point we have the context setup up for our plugin.
+TODO: Elaborate on options and
 
 Storing the generated file
 -----------------------------
