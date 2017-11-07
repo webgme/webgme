@@ -11,11 +11,11 @@ a meta-model for our electrical circuit domain, you need to know the basics behi
     </div>
 
 
-Which concepts do we need?
+Which types do we need?
 --------------------------
-The first thing to layout when constructing a meta-model is what type of concepts do we need? Which these are does not only
+The first thing to layout when constructing a meta-model is what types our domain should include. Which these are does not only
 depend on the domain, but also the analysis tools being targeted. Since our target is **Modelica** and more specifically the
-Basic Components in the Analog Electrical library as part of the **Modelica Standard Library**, we should take that into consideration.
+Analog Electrical library as part of the **Modelica Standard Library**, we should take that into consideration.
 
 .. figure:: electrical_analog_modelica.png
     :align: center
@@ -34,8 +34,8 @@ see that the pins are connected via electrical connections.
     A Cauer Low Pass Analog Circuit in Modelica
 
 
-With or without Modelica a very natural breakdown of this domain is include the concepts of a :code:`Component`, :code:`Pin`, and :code:`Connection`.
-Additionally, since our goal is to build electrical circuits, we also need the concept of a :code:`Circuit`.
+With or without Modelica a very natural breakdown of this domain is include the types: :code:`Component`, :code:`Pin`, and :code:`Connection`.
+Additionally, since our goal is to build electrical circuits, we also need a :code:`Circuit` type.
 Later we will add sub-types of components corresponding to components such as ``Resistor``, ``Ground``, ``Capacitor``, ``Inductor``, etc.
 
 The video below shows how you can add these initial concepts as meta-nodes starting from your empty project.
@@ -132,9 +132,13 @@ meta-type as well.
 
 The video below shows how to create the new types with attributes and pins as defined above.
 
-TODO: Video
+.. raw:: html
 
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
+    </div>
 
+|
 
 Connections and Ports
 --------------------
@@ -151,4 +155,8 @@ the parent node. The way this is solved in webgme is through the `meta-property 
 Note that the usage of this property only takes effect if the decorator (the UI component responsible for drawing the box
 on the canvas) implements logic using this property - this is the case for both the default Model- and SVG-Decorators.
 
-TODO: Video
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
+    </div>
