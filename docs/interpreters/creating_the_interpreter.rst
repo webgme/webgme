@@ -1,4 +1,4 @@
-Creating the Interpreter
+Creating the Code Generator
 =========================
 So far we have constructed a meta-model for our electrical-circuit domain. It enabled us to create models that resembles
 circuits. Up to this point though there is no actual meaning to the circuits. As humans we can infer certain properties from
@@ -16,9 +16,9 @@ access to the context it was invoked and through various webgme APIs; :code:`Cor
 
 In this tutorial we will create two plugins;
 
-* *ModelicaModelGenerator* - traverse model and extract the data needed to generate a Modelica model corresponding to the
+* *ModelicaCodeGenerator* - traverse model and extract the data needed to generate a Modelica model corresponding to the
  circuit being interpreted. This plugin will also generate the Modelica code.
-* *SimulateModelica* - this plugin will invoke the *ModelicaModelGenerator* to retrieve the Modelica code and implement
+* *SimulateModelica* - this plugin will invoke the *ModelicaCodeGenerator* to retrieve the Modelica code and implement
 the logic needed to invoke a Modelica tool (OpenModelica in this case) at the generated output. This plugin will also be
 responsible for communicating back the simulation result to the end-user.
 
@@ -28,7 +28,7 @@ workers with these installed) and the plugin can even run in the browser. For so
 to only generate the Modelica code might be favorable. When it comes to writing tests it is typically easier to divide
 functionality into separate implementations.
 
-We will start with the *ModelicaModelGenerator* here and continue with the *SimulateModelica* in the analysis tool section...
+We will start with the *ModelicaCodeGenerator* here and continue with the *SimulateModelica* in the analysis tool section...
 
 Generating a Plugin Template
 -----------------------
@@ -37,21 +37,21 @@ created in earlier sections and invoke the command below.
 
 .. code-block:: bash
 
-    webgme new plugin ModelicaModelGenerator
+    webgme new plugin ModelicaCodeGenerator
 
 This should generate a range of new files..
 
-:code:`src/plugins/ModelicaModelGenerator/metadata.json`
+:code:`src/plugins/ModelicaCodeGenerator/metadata.json`
     This json-structure contains information about the plugin and is used by the GUI and plugin-framework. Details
     about what goes in here is explained in the `wikipages <https://github.com/webgme/webgme/wiki/GME-Plugins#metadatajson>`_.
 
-:code:`src/plugins/ModelicaModelGenerator/ModelicaModelGenerator.js`
+:code:`src/plugins/ModelicaCodeGenerator/ModelicaCodeGenerator.js`
     This is the code of the plugin itself. The very first lines shows the dependencies needed for this code
     to run and is using `requirejs <http://requirejs.org/>`_ hence the syntax
-    :code:`define(['path'], function (Module){ ... return ModelicaModelGenerator;});`. The last return statement is the
+    :code:`define(['path'], function (Module){ ... return ModelicaCodeGenerator;});`. The last return statement is the
     module that this file defines when required by another module (the plugin framework must be able to load our plugin).
 
-:code:`test/plugins/ModelicaModelGenerator/ModelicaModelGenerator.spec.js`
+:code:`test/plugins/ModelicaCodeGenerator/ModelicaCodeGenerator.spec.js`
     This is the outline of a `mocha <https://mochajs.org/>`_ test suite for the plugin and shows how to build up a test
     context and invoke a plugin from a unit-test.
 
