@@ -127,12 +127,23 @@ JavaScript object.
     end for
 
 
-Now let's see what the actual code could look like...
+The first video shows how we can iterate over the children of the ``Circuit`` and check the meta-type. The important new
+concepts here are the ``self.META`` of the plugin which is a mapping from the name of a meta-node to the actual core-node,
+and the helper-method ``isMetaTypeOf`` which checks if the first node is a type of the second node.
 
-TODO: Video
+.. raw:: html
 
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+    </div>
 
-Implementing the Code Generation
+Next we need to implement the extraction of the data we need in order to generate the Modelica code. For this we will
+implement two helper functions that populates the ``modelJson.components`` and ``modelJson.connections`` array respectively.
+At the end we will serialize the data using the standard built-in ``JSON.stringify`` function.
+
+// TODO: Video
+
+Generating the Code
 --------------------------
 At this point we have the context setup up for our plugin.
 TODO: Elaborate on options and
