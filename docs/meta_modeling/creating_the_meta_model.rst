@@ -10,6 +10,7 @@ a meta-model for our electrical circuit domain, you need to know the basics behi
         <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
 
 Which types do we need?
 --------------------------
@@ -160,3 +161,5 @@ on the canvas) implements logic using this property - this is the case for both 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
         <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
     </div>
+
+|

@@ -2,7 +2,7 @@ Creating the Interpreter
 =========================
 So far we have constructed a meta-model for our electrical-circuit domain. It enabled us to create models that resembles
 circuits. Up to this point though there is no actual meaning to the circuits. As humans we can infer certain properties from
-these circuits, but the models themselves don't impose any interpretation. The meta-model infers the structural semantics,
+these circuits, but the models themselves don't impose any particular interpretation. The meta-model infers the structural semantics,
 but no behavioural semantics.
 
 There are many potential interpretations and interpreters of our circuit models. In this tutorial we will focus on generating
@@ -19,8 +19,8 @@ In this tutorial we will create two plugins;
 * *ModelicaModelGenerator* - traverse model and extract the data needed to generate a Modelica model corresponding to the
  circuit being interpreted. This plugin will also generate the Modelica code.
 * *SimulateModelica* - this plugin will invoke the *ModelicaModelGenerator* to retrieve the Modelica code and implement
- the logic needed to invoke a Modelica tool (OpenModelica in this case) at the generated output. This plugin will also be
- responsible for communicating back the simulation result to the end-user.
+the logic needed to invoke a Modelica tool (OpenModelica in this case) at the generated output. This plugin will also be
+responsible for communicating back the simulation result to the end-user.
 
 There a couple of reasons why this is a favourable division. To generate the Modelica code there is no restrictions on
 where the plugin is executed. The server does not have to have any 3rd party dependencies installed (alternatively connected

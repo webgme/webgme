@@ -40,7 +40,7 @@ How to build a Design Studio with WebGME
     :caption: Model Interpreters
 
     interpreters/what_are_model_interpreters.rst
-    interpreters/plugins.rst
+    interpreters/creating_the_interpreter.rst
     interpreters/other_forms_of_model_interpreters.rst
 
 .. toctree::
