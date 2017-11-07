@@ -112,7 +112,7 @@ We will break up the task into two parts; 1) Extracting the data and 2) Generati
 outline of the first part is shown below in the code block where all the extracted data will be stored in serializable
 JavaScript object.
 
-.. code-block::
+.. code-block:: javascript
     ExtractName(activeNode)
     for all (Node child in activeNode) do
         if (child.metaType is Component) then
