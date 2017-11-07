@@ -23,7 +23,7 @@ Webhooks
 ---------------------
 Webhooks are similar to add-ons but more loosely coupled. They can be triggered by different events on the webgme storage
 and the implementation requires a server accepting the post-requests sent out at the events. For more detailed
-documentation see the `webgme-wiki pages <https://github.com/webgme/webgme/wiki/GME-WebHooks>`.
+documentation see the `webgme-wiki pages <https://github.com/webgme/webgme/wiki/GME-WebHooks>`_.
 
 
 iCore
