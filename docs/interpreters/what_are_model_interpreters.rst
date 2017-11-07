@@ -19,6 +19,12 @@ Add-ons are extensions that run on the server and are triggered by changes made 
 when there is user-activity in a certain branch of a project and are kept running as long as (configurable) changes are being made.
 Add-ons have access to the same APIs as plugins (except the project API).
 
+Webhooks
+---------------------
+Webhooks are similar to add-ons but more loosely coupled. They can be triggered by different events on the webgme storage
+and the implementation requires a server accepting the post-requests sent out at the events. For more detailed
+documentation see the `webgme-wiki pages <https://github.com/webgme/webgme/wiki/GME-WebHooks>`.
+
 
 iCore
 ----------------------
