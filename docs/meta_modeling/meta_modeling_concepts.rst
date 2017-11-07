@@ -25,6 +25,8 @@ Containment
         <iframe width="560" height="315" src="https://www.youtube.com/embed/kVLq32SoFM4?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Base Relationship/Inheritance
 --------------------
@@ -47,6 +49,8 @@ Base Relationship/Inheritance
         <iframe width="560" height="315" src="https://www.youtube.com/embed/vMTveKozhY0?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Attributes
 ----------------------
@@ -72,6 +76,8 @@ Attributes
         <iframe width="560" height="315" src="https://www.youtube.com/embed/8098zuY2Snk?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Pointers
 -------------
@@ -86,6 +92,8 @@ Pointers
         <iframe width="560" height="315" src="https://www.youtube.com/embed/EvpSbCxcYSs?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Connections
 ---------------
@@ -103,6 +111,8 @@ Connections
         <iframe width="560" height="315" src="https://www.youtube.com/embed/0xYusMMBt1I?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Sets
 --------------
@@ -121,6 +131,8 @@ Sets
         <iframe width="560" height="315" src="https://www.youtube.com/embed/w5XwVu3ZQ0E?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Mixins
 ------------
@@ -141,6 +153,8 @@ Mixins
         <iframe width="560" height="315" src="https://www.youtube.com/embed/Fd6lbKdfYXY?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Aspects
 ------------
@@ -154,6 +168,8 @@ Aspects
         <iframe width="560" height="315" src="https://www.youtube.com/embed/JQXFCUnlwyI?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Constraints
 ------------
@@ -171,6 +187,8 @@ Constraints
         <iframe width="560" height="315" src="https://www.youtube.com/embed/KZZ2LGp2WLY?rel=0" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+|
 
 Meta Properties
 ------------------

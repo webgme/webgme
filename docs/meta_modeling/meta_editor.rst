@@ -121,8 +121,8 @@ StepVoltage
         Two ``Pins`` ``p`` and ``n``.
 
 With the approach taken the ``Component`` meta-type itself does not have any interpretation w.r.t. our domain and will only
-act as an ``abstract`` type that cannot be instantiated. In addition to the ``Component`` it's also convenient to introduce
-an additional ``abstract`` base type that defines two ``Pins``, ``p`` and ``n``, and let all ``Components`` but the ``Ground``
+act as an `abstract` type that cannot be instantiated. In addition to the ``Component`` it's also convenient to introduce
+an additional `abstract` base type that defines two ``Pins``, ``p`` and ``n``, and let all ``Components`` but the ``Ground``
 be derived from it. In general this approach is not only more elegant and convenient, but also more efficient since the raw data
 for the two pins can be shared and requires less data to be loaded from the server. Therefor we will introduce the ``TwoPinComponent``
 meta-type as well.
