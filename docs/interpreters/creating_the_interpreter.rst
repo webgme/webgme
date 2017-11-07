@@ -113,6 +113,7 @@ outline of the first part is shown below in the code block where all the extract
 JavaScript object.
 
 .. code-block:: javascript
+
     ExtractName(activeNode)
     for all (Node child in activeNode) do
         if (child.metaType is Component) then
