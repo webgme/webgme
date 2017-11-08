@@ -153,8 +153,42 @@ At the end we will serialize the data using the standard built-in ``JSON.stringi
 
 Generating the Code
 --------------------------
-kf
+In the previous section we extracted the data needed to generate the Modelica code in an easily accessible format.
+
+.. code-block:: javascript
+
+    {
+      "name": "aCircuit",
+      "components": [
+        {
+          "URI": "Modelica.Electrical.Analog.Basic.Resistor",
+          "name": "Resistor2",
+          "parameters": {}
+        },
+        ...
+      ],
+      "connections": [
+        {
+          "src": "Resistor2.n",
+          "dst": "Capacitor.n"
+        },
+        ...
+      ]
+    }
+
+To generate the actual code we can use a templating engine such as `ejs <http://www.embeddedjs.com/>`_
+(an example of how to use this in webgme can be found `here <https://github.com/webgme/tutorials/tree/master/_session2_plugin/FSM/src/plugins/FSMCodeGenerator>`_).
+There are also other more fitting `templating engines available in JavaScript <https://colorlib.com/wp/top-templating-engines-for-javascript/>`_.
+For simplicity here, we will make a simple string concatenation to generate the Modelica code.
+
+TODO: Video
 
 Storing the generated file
 -----------------------------
-TODO
+After generating the modelica file we would like to make it available for the user to download. Webgme provides a
+storage for files through the `blob-storage <https://github.com/webgme/webgme/wiki/GME-Blob-Storage-API>`_.
+
+In the video below we will show how to upload the generated file onto the storage and how to provide a download link to
+the invoker of the plugin.
+
+TODO: Video
