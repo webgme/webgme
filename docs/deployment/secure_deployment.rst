@@ -1,5 +1,9 @@
 SSL/TLS
 ================
 The webgme server itself does not provide a secure connection. Instead we recommend using a reverse-proxy
-in front of the webgme server that encrypts the data. Examples: nginx, haproxy
-This is needed. Certificates can be found using free tools like letsencrypt.
+in front of the webgme server that encrypts the data. `Nginx <https://www.nginx.com/>`_ is a commonly used one and an
+example configuration for a webgme-app can be viewed here
+`here <https://github.com/webgme/webgme.org/blob/master/aws/nginx.conf>`_.
+
+To obtain a certificate you can either create a self signed one using `OpenSSL <https://www.ibm.com/support/knowledgecenter/en/SSWHYP_4.0.0/com.ibm.apimgmt.cmc.doc/task_apionprem_gernerate_self_signed_openSSL.html>`_.
+If you have domain name `Let's Encrypt <https://letsencrypt.org/>`_ offers free certificates.

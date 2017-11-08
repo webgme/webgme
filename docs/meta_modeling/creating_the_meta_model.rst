@@ -1,16 +1,7 @@
-.. _creating-the-meta-model:
 Creating the Meta-model
 ======================
-At this point you should have a basic understanding of the concepts of meta-modeling in webgme. Before starting to build
-a meta-model for our electrical circuit domain, you need to know the basics behind the webgme GUI...
-
-.. raw:: html
-
-    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
-    </div>
-
-|
+At this point you should have a basic understanding of the concepts of meta-modeling in webgme and be somewhat familiar
+with the GUI of webgme. In this section we will build up a meta-model for the electrical circuits domain.
 
 Which types do we need?
 --------------------------

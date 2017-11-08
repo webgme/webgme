@@ -1,10 +1,19 @@
-Meta-modeling in Webgme
+Modeling in Webgme
 ======================
 OK, so in webgme you can make a (meta-)model that describes how models can be composed. That's all sounds pretty neat, but
 in order for that to work in practise some more concepts are needed.
 
 * How do nodes (model elements) relate to each other in general, what are the restrictions?
 
+Before going into the details of the data-model let's first have a look at the default GUI of webgme...
+
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+|
 
 Data-model
 ------------------

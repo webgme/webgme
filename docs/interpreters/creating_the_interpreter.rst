@@ -137,16 +137,23 @@ and the helper-method ``isMetaTypeOf`` which checks if the first node is a type 
         <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
     </div>
 
+|
+
 Next we need to implement the extraction of the data we need in order to generate the Modelica code. For this we will
 implement two helper functions that populates the ``modelJson.components`` and ``modelJson.connections`` array respectively.
 At the end we will serialize the data using the standard built-in ``JSON.stringify`` function.
 
-// TODO: Video
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+|
 
 Generating the Code
 --------------------------
-At this point we have the context setup up for our plugin.
-TODO: Elaborate on options and
+kf
 
 Storing the generated file
 -----------------------------

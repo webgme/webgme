@@ -1,5 +1,4 @@
 Scaling Up Deployment
 =====================
-Horizontal scaling is possible. Things to keep in mind, addons! Sticky sessions. Haproxy is an example.
-
-Mongodb sharding.
+Horizontal scaling of webgme servers is possible, but requires a some
+`additional dependencies and specific configurations <https://github.com/webgme/webgme/wiki/Multiple-Nodes>`_.
