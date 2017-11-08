@@ -181,7 +181,13 @@ To generate the actual code we can use a templating engine such as `ejs <http://
 There are also other more fitting `templating engines available in JavaScript <https://colorlib.com/wp/top-templating-engines-for-javascript/>`_.
 For simplicity here, we will make a simple string concatenation to generate the Modelica code.
 
-TODO: Video
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+|
 
 Storing the generated file
 -----------------------------
@@ -191,4 +197,8 @@ storage for files through the `blob-storage <https://github.com/webgme/webgme/wi
 In the video below we will show how to upload the generated file onto the storage and how to provide a download link to
 the invoker of the plugin.
 
-TODO: Video
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+    </div>

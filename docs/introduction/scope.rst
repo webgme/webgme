@@ -5,7 +5,7 @@ that's fine. It will also explain what these are.
 
 The tutorial will go through all steps needed to host your own deployment, create your own meta-model, implement interpreters and
 customize the visualization. In order to give you an idea of how all these things play a roll in a Design Studio, these steps
-will be illustrated by an example of a simple Analog Circuit domain. In short we will:
+will be illustrated through an example of a simple electrical circuit domain. In short we will:
 
 * Create a meta-model suitable for modeling electrical circuits
 * Write an interpreter that generates `Modelica <https://modelica.org>`_ code

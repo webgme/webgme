@@ -6,6 +6,13 @@ to do within the meta-model. For instance the property-editor does not the user 
 have a definition in the meta-model. Another example is the part-browser, it only display the valid children of the active
 node.
 
+Visualizers
+---------------
+
+Decorators
+---------------
+
+
 Customizing SVGs
 --------------
 Without creating a decorator the webgme gui provides support for dynamic SVGs where data from the models can be accessed

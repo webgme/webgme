@@ -1,20 +1,27 @@
 Result Presentation
 ======================
-There are multiple ways results from an analysis can be presented to the user. Initially it depends on the type of analysis
-that is performed. For simplicity here, we will assume that the analysis result can be presented in a graph or table.
+There are multiple ways results from an analysis can be presented to the user. Here we list some approaches that can
+be used when running the analysis from a plugin.
 
-Generate a graphical representation from the plugin
+Generate an Artifact from the Plugin
 ------------------------------------
-The most straight-forward way to present to present the results is to generate a graphical representation from the plugin
-or analysis tool and return a link to this artifact at the end of the execution.
+The most straight-forward way to present to present the results is to return a link to an artifact at the end of the execution.
+For the Modelica simulation we will attach the raw .csv file to the plugin result - which later can be downloaded by the
+invoker and analysed.
 
-TODO: Code block of how to use the blob-client
-
-
-Store the final result in the model
+Store the Result in the Model
 ------------------------------------
-TODO: Code block of how to use assets in a model
+The end result can also be stored back in the model and viewed at any time. In the case of long running analyses the
+invoker might no longer have their browser open to retrieve the results. A benefit of storing the result in the model is
+that the results will be version controlled and since they can be attached to the correct context - the evolution of the model
+and results can be traced.
 
-Update the model as the results are generated
+Additionally a visualizer for presenting the results can be implemented, which would enable users to view the results
+embedded in the webgme GUI.
+
+Notifications while Analysis is Running
 ------------------------------------
-TODO: What is a good approach here even?
+The plugin frame work in webgme supports sending notifications back to the invoker. These could be simple progress statuses,
+but could also contain partial results. The GUI displays messages like these in a console like notification widget, but
+the `Client API <https://github.com/webgme/webgme/wiki/GME-Client-API>`_ allows any UI widget to listen to these and
+present the results in any manner.
