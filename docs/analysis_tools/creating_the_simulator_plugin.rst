@@ -72,15 +72,32 @@ be able to execute the plugin. For detailed info about the ``metadata.json`` the
 
 //TODO: video
 
-
 Invoking the ModelicaCodeGenerator
 ----------------------------
+Plugin can be invoked from other plugins and the invoker will receive the results generated from the invoked plugin.
+The video below shows how to do this.
 
-
+//TODO: video
 
 Simulating the Model
 -------------------------
+At this point we have access to the model-content and a way to invoke OpenModelica from command line. We will create a
+unique directory on the server where the ``.mo`` and ``.mos`` files will be written out. After that we will execute the
+command using `nodejs's child_process module <https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html>`_. (From
+the same link documentation about the other built-in module of node can be found.)
+
+The first video shows how to generate the files and the second one shows how to simulate and store the result in the model.
+
+//TODO: video
+
+//TODO: video
 
 
-Storing the Results
------------------------
+Notes for Developers
+-------------------
+When developing plugins it is typically faster to execute the plugin directly from command line and much easier to debug
+server side code than running and restarting the server. The webgme bin script for running plugins is available
+and documented at ``npm run plugin`` (the script itself is located at ``./node_modules/webgme-engine/src/bin/run_plugin.js``.
+
+This tutorial has not touched on how to write tests for the plugins. Webgme provides a range of helper methods to build
+up the model context for a plugin, see the generated test files for some examples.
