@@ -83,8 +83,10 @@ To check if the installation succeeded the following command should print a tree
 
 gmeConfig
 -------------------
-Before launching the server a word on the configuration for webgme (sometimes referred to as gmeConfig) is in place.
-This section can be skipped for now... (todo fill out)
+The configuration files in the ``config`` directory is where you set the configuration for your webgme app. By default
+the ``config/config.default.js`` and is the entry point of where you manually can overwrite the parameters. It loads
+``config/config.webgme.js`` where webgme-cli adds parameters for the generated components (e.g. plugin). A full list of
+all possible parameters and how to switch between configuration files is documented `here https://github.com/webgme/webgme/blob/master/config/README.md`_.
 
 Starting the server
 -------------------
