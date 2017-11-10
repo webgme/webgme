@@ -1,8 +1,13 @@
 What is WebGME?
 ===============
-WebGME is a web-based, collaborative meta-modeling environment. WebGME is a client-server based application, where both the client (browser)
-and server-side (`NodeJS <https://nodejs.org>`_) use JavaScript. The clients carry quite a lot of the work-load and the role of the server
+WebGME is a web-based, collaborative meta-modeling environment with a centralized version controlled model storage.
+WebGME is a client-server based application, where both the client (browser) and server-side (`NodeJS <https://nodejs.org>`_)
+use JavaScript. The clients carry quite a lot of the work-load and the role of the server
 is mainly to store and retrieve the raw model-data and propagate events between collaborating clients.
+
+The model storage of webgme is influenced by git. All model objects and commits are immutable and all states in the
+evolution of a project are identified (and retrievable) via unique commit-hashes. Branches are light-weight mutable
+labels referencing one of these commits.
 
 Clients do not load the entire model, instead they register and listens to events at territories (subtrees) within the model hierarchy.
 The major portion of the communication with the server is retrieving raw model-data. Therefore the storage model has been optimized to
