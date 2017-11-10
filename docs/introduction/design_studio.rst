@@ -1,5 +1,5 @@
 What is a Design Studio?
-======================
+========================
 A framework with a set of tools and services for simplifying one or many (typically engineering) tasks.
 Design studio components can be organized in the following three categories: 1) semantic integration, 2) service integration, and 3) tool integration.
 
@@ -33,7 +33,8 @@ The output of the tools is then collected and sent back to the model editors (st
 
 
 Example Design Studios
---------------------
+----------------------
+
 
 `DeepForge <http://deepforge.org>`_
   DeepForge is an open-source visual development environment for deep learning providing end-to-end support for creating
