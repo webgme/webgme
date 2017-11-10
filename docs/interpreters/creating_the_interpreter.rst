@@ -16,24 +16,22 @@ access to the context it was invoked and through various webgme APIs; :code:`Cor
 
 In this tutorial we will create two plugins;
 
-* *ModelicaCodeGenerator* - traverse model and extract the data needed to generate a Modelica model corresponding to the
- circuit being interpreted. This plugin will also generate the Modelica code.
-* *SimulateModelica* - this plugin will invoke the *ModelicaCodeGenerator* to retrieve the Modelica code and implement
-the logic needed to invoke a Modelica tool (OpenModelica in this case) at the generated output. This plugin will also be
-responsible for communicating back the simulation result to the end-user.
+* *ModelicaCodeGenerator* - Responsible for traversing model hierarchy and extract the data needed for generating Modelica code corresponding to the circuit being interpreted.
+
+* *SimulateModelica* - Responsible for invoking a Modelica tool that can simulate the dynamical behavior of the circuits. This plugin will also be responsible for communicating back the results to the users.
 
 There a couple of reasons why this is a favourable division. To generate the Modelica code there is no restrictions on
-where the plugin is executed. The server does not have to have any 3rd party dependencies installed (alternatively connected
-workers with these installed) and the plugin can even run in the browser. For some deployments restricting the set of features
-to only generate the Modelica code might be favorable. When it comes to writing tests it is typically easier to divide
+where the plugin is executed. The server does not have to have any 3rd party dependencies installed (or have any connected
+workers with available) and the plugin can even run in the browser. For some deployments restricting the set of features
+to only generate the Modelica code might be favorable. When it comes to writing tests it is typically also easier to divide
 functionality into separate implementations.
 
-We will start with the *ModelicaCodeGenerator* here and continue with the *SimulateModelica* in the analysis tool section...
+We will start with the *ModelicaCodeGenerator* here and continue with the *SimulateModelica* in the ** Integrating Analysis ToolS** section.
 
 Generating a Plugin Template
 -----------------------
 To get a quick start we use the webgme-cli tool in order to create a new plugin. Navigate to the root of the repository
-created in earlier sections and invoke the command below.
+created at the beginning of this tutorial and invoke the command below.
 
 .. code-block:: bash
 
@@ -55,18 +53,20 @@ This should generate a range of new files..
     This is the outline of a `mocha <https://mochajs.org/>`_ test suite for the plugin and shows how to build up a test
     context and invoke a plugin from a unit-test.
 
-You might also have noted that the :code:`config/config.webgme.js` was modified. In order for the webgme plugin framework
+You might also have noticed that the :code:`config/config.webgme.js` was modified... In order for the webgme plugin framework
 to find our plugin the path to it is added to the configuration file. Note that both :code:`config.default.js` and
 :code:`config.test.js` load and reuse the added configuration parameters from this file.
 
-The video below shows how to generate the new plugin and modify it so we have a map of all the nodes from the ``activeNode``.
-The ``activeNode`` is the invocation point of a plugin and in the next sub-section we will register our plugin at ``Circuits``.
+The video below shows how to generate the new plugin and modify it so we have a map of all the nodes in the subtree of the ``activeNode``.
+The ``activeNode`` is the invocation point of a plugin and in the next sub-section we will register our plugin so it's invokable at ``Circuits``.
+(With the node map it is possible to retrieve nodes without any asynchronous function call - this makes the writing, and
+especially demonstration of the code easier. The asynchronous API functions in webgme do use promises which makes this a bit easier to deal with.)
 
 
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/agHG2DkM35k" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
@@ -74,8 +74,8 @@ The ``activeNode`` is the invocation point of a plugin and in the next sub-secti
 Registering the Plugin at Circuits
 ----------------------
 The generated plugin is available from the browser and the server, however in order to present it to the user on the GUI,
-we must register it at the appropriate nodes. In our case we want the code-generator to be invoked on node of meta-type
-``Circuit`` so we edit the value at the meta-node and the registered value will propagate down the inheritance chain.
+we must register it at the appropriate nodes. In our case we want the `ModelicaCodeGenerator` to be invoked from nodes of meta-type
+``Circuit`` so we edit the value at the meta-node and the registered value will propagate down the inheritance chain to all ``Circuits``.
 
 This video shows how we register the plugin and how we can enable the gme-logger for the *ModelicaCodeGenerator* in the browser.
 (Note that after updating the localStorage the page must be refreshed. The page must also be refreshed each time we update
@@ -84,7 +84,7 @@ the plugin code on the server.)
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/4r8McbtV4m8" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
@@ -92,15 +92,15 @@ the plugin code on the server.)
 Querying the Model
 --------------------------
 At this point we have the context setup up for our plugin. The activeNode for the plugin will be a ``Circuit`` and all
-nodes in the sub-tree are pre-loaded in a map, where keys are the path (a unique id) to the nodes and values are the
+nodes in the sub-tree are pre-loaded in a map where keys are the path (a unique id) to the nodes and values are the
 node objects.
 
 To extract data from the model we will be using the `Core-API <https://github.com/webgme/webgme/wiki/GME-Core-API#using-the-api>`_,
-and it's highly recommended to read the section on how to use the API.
+and it's highly recommended to read the section on how to use the API at the link.
 
 Before we start extracting the necessary data from the model we need to pin down what we need from our models in order
 to, in this case, generate Modelica code. The figure below shows the mapping from the ``Circuit`` to Modelica code and
-the related Core-API calls. (For simplicity we will leave out the Modelica parameters and use the default value from **MSL**.)
+the related Core-API calls. (For simplicity we will leave out the Modelica parameters and use the default values from **MSL**.)
 
 .. figure:: map_to_modelica.png
     :align: center
@@ -127,14 +127,14 @@ JavaScript object.
     end for
 
 
-The first video shows how we can iterate over the children of the ``Circuit`` and check the meta-type. The important new
-concepts here are the ``self.META`` of the plugin which is a mapping from the name of a meta-node to the actual core-node,
-and the helper-method ``isMetaTypeOf`` which checks if the first node is a type of the second node.
+The first video shows how to iterate over the children of the ``Circuit`` and check their meta-type. Important concepts
+here are; ``self.META`` property of the plugin which is a mapping from the name of a meta-node to the actual core-node,
+and the helper-method ``isMetaTypeOf`` which checks if the first node is of type of the second node.
 
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/7k6NS9v4ybI" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
@@ -146,14 +146,14 @@ At the end we will serialize the data using the standard built-in ``JSON.stringi
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/kF_p1Y2Bttw" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
 
 Generating the Code
 --------------------------
-In the previous section we extracted the data needed to generate the Modelica code in an easily accessible format.
+In the previous section we extracted the data needed to generate the Modelica code in an easily accessible format...
 
 .. code-block:: javascript
 

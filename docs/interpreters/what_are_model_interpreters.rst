@@ -1,6 +1,5 @@
-Model Interpreters
+Model Interpreters/Transformations
 ============================
-TODO: Some short introduction
 
 
 Plugins
