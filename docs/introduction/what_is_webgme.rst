@@ -13,13 +13,6 @@ This model allows for immediate small commits, which in turn minimizes the risk 
 create a new commit in the GIT-like storage. In the event of concurrent changes it's guaranteed that only one client will update
 the model state (branch hash). In such cases the other client has the option to attempt to merge in its changes.
 
-The Storage Model
-------------------
-TODO: Projects, Raw model-data, commits, branches, tags.
-
-TODO: Forking, merge.
-
-
 Extensible
 --------------
 WebGME is made to be customized. Even though the generic GUI adapts itself based on the meta-model (the model describing the models),

@@ -4,15 +4,18 @@ A framework with a set of tools and services for simplifying one or many (typica
 Design studio components can be organized in the following three categories: 1) semantic integration, 2) service integration, and 3) tool integration.
 
 Semantic integration
-    Semantic integration components comprise the domain of the modeling language, i.e., its metamodel that explicitly specifies the building blocks of the language and their relations.
+    Semantic integration components comprise the domain of the modeling language, i.e., its metamodel that explicitly specifies
+    the building blocks of the language and their relations. This portion is covered in the **Modeling** section.
 
 Service integration
     Service integration components include dedicated model editors, code editors, and GUI/Visualization components for modeling and simulating results.
     Additionally, service integration components include model transformation and code generation services, consistency
-    and type checking mechanisms, model repositories, dedicated model interpreters, and version control services.
+    and type checking mechanisms, model repositories, dedicated model interpreters, and version control services. Part of
+    these are covered in the **Model Interpreters** section.
 
 Tool integration
     Tool integration components consist in interfaces and integration services towards third party tools such as run-times and verification tools.
+    This is covered in the **Integrating Analysis Tools** section.
 
 The following figure shows the main steps of the design flow. Initially, models are designed using dedicated model editors.
 Optionally, design patterns stored in model repositories can be used to simplify the modeling process. Next, the checking loop starts (step 1),

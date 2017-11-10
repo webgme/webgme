@@ -13,3 +13,5 @@ Other resources
   The API documentation generated from the `jsdoc <http://usejsdoc.org/>`_ inside the webgme source code. This documentation is
   served from every webgme deployment. Once you're at the point of having your webgme-server running, you should be able to access
   the API docs for your currently running version at :code:`<host>/docs/source/index.html`.
+
+Sections of these will be referenced throughout the tutorial.
