@@ -76,4 +76,4 @@ Nodes cannot contain any of its bases
     have to be loaded first and to load :code:`a'`, its base :code:`a` would have to be loaded..
 
 In general the graph formed by the intersection of the nodes and union of the edges from the containment- and intersection-tree
-must form a tree (a graph with no loops). Luckily the webgme UI and the API ensures that this will never happen.
+must form a tree (a graph with no loops). Luckily the webgme UI and the API ensures that this won't happen.

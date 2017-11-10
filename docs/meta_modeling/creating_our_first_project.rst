@@ -26,7 +26,7 @@ the :code:`EmptyProject` from one of the Template Files.
 
 After this step you should have an "empty" project containing only the **FCO** and the **ROOT** node. Every webgme project contain these and they cannot be removed.
 (Looking back at the `terminology <getting_started/terminology.rst>`_ page you'll see that these are the roots of the inheritance and containment trees respectively, and since both
-of these are **strong** relationships, the removal of the roots would removed all other nodes).
+of these are **strong** relationships, the removal of any of these would remove all other nodes).
 
 .. figure:: new_project_2.png
     :align: center

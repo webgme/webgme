@@ -30,12 +30,12 @@ With or without Modelica a very natural breakdown of this domain is include the 
 Additionally, since our goal is to build electrical circuits, we also need a :code:`Circuit` type.
 Later we will add sub-types of components corresponding to components such as ``Resistor``, ``Ground``, ``Capacitor``, ``Inductor``, etc.
 
-The video below shows how you can add these initial concepts as meta-nodes starting from your empty project.
+The video below shows how you can add these types as meta-nodes starting from your empty project.
 
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/raf1gkglZTw" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
