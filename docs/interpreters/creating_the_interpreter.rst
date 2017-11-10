@@ -184,12 +184,12 @@ For simplicity here, we will make a simple string concatenation to generate the 
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/6Ug0DIFcuEs" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
 
-Storing the generated file
+Uploading the Generated File
 -----------------------------
 After generating the modelica file we would like to make it available for the user to download. Webgme provides a
 storage for files through the `blob-storage <https://github.com/webgme/webgme/wiki/GME-Blob-Storage-API>`_.
@@ -200,5 +200,7 @@ the invoker of the plugin.
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/SddGyiYtJ34" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/CmDqSHGn91I" frameborder="0" allowfullscreen></iframe>
     </div>
+
+|
