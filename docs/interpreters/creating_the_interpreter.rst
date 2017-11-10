@@ -22,7 +22,7 @@ In this tutorial we will create two plugins;
 
 There a couple of reasons why this is a favourable division. To generate the Modelica code there is no restrictions on
 where the plugin is executed. The server does not have to have any 3rd party dependencies installed (or have any connected
-workers with available) and the plugin can even run in the browser. For some deployments restricting the set of features
+workers with available resources) and the plugin can even run in the browser. For some deployments restricting the set of features
 to only generate the Modelica code might be favorable. When it comes to writing tests it is typically also easier to divide
 functionality into separate implementations.
 
