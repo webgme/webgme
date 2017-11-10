@@ -55,7 +55,7 @@ The video below shows how to add these containment rules to our meta-model using
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/EPUbPbRhHsA" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
@@ -63,20 +63,23 @@ The video below shows how to add these containment rules to our meta-model using
 Sub-types of Components
 --------------------
 So far our meta-model only contains a generic ``Component`` for representing electrical components, but we need a way to represent
-specific electrical components such as ``Resistor``, ``Ground``, etc. There are multiple ways we can achieve this by extending the
-meta-model. Since our domain is relatively small we will take the approach of adding a meta-type for each type of electrical component
-and add the related Modelica parameters as attributes.
+specific electrical components such as ``Resistor``, ``Ground``, etc.
 
-An alternatively approach would be to create the different types of electrical components outside of the meta and treat
-the Modelica parameters as separate child nodes of the components. This approach allows for creation of new types
+There are multiple ways we can achieve this by extending the meta-model. One apporach is to add a meta-type for each type of electrical component
+and add the related Modelica parameters as attributes to these respectively.
+
+Another approach is to create the different types of electrical components outside of the meta-model and treat
+the Modelica parameters as separate child nodes of the ``Components``. This approach allows for creation of new types
 without modifying the meta-model itself, but also makes the modeling a bit more cumbersome using the default visualization.
 (Visualizing and modifying the parameters of a component could no longer be done from a single node.)
 
-For the sake of simplicity we will take the first approach and limit out domain to the five components (we will also leave out
-the heat portion of the components). Note that the associated Modelica parameters can be extracted from the **Modelica Standard
-Library** using a Modelica tool, such as `OpenModelica <https://openmodelica.org/>`_. For each component we need to indicate
-its unique path or identifier within the **MSL**, this will be captured by the read-only attribute ModelicaURI. In order to
-map directly to Modelica we name the ports the same way they're named in **MSL**.
+For the sake of simplicity we will take the first approach and limit our domain to the five ``Components`` below (we will also leave out
+the heat transfer portion in the domain).
+
+The associated Modelica parameters can be extracted from the **Modelica Standard Library** using a Modelica tool, such
+as `OpenModelica <https://openmodelica.org/>`_. For each component we need to indicate its unique path or identifier
+within the **MSL**, this will be captured by the read-only attribute ``ModelicaURI``. In order to map directly to Modelica
+we name the ports and the other parameters the same way they're named in **MSL**.
 
 Resistor
     Attributes
@@ -115,19 +118,17 @@ StepVoltage
     Ports
         Two ``Pins`` ``p`` and ``n``.
 
-With the approach taken the ``Component`` meta-type itself does not have any interpretation w.r.t. our domain and will only
-act as an `abstract` type that cannot be instantiated. In addition to the ``Component`` it's also convenient to introduce
-an additional `abstract` base type that defines two ``Pins``, ``p`` and ``n``, and let all ``Components`` but the ``Ground``
-be derived from it. In general this approach is not only more elegant and convenient, but also more efficient since the raw data
-for the two pins can be shared and requires less data to be loaded from the server. Therefor we will introduce the ``TwoPinComponent``
-meta-type as well.
+With the approach taken the ``Component`` meta-type itself will not have any interpretation w.r.t. our domain and will only
+act as an `abstract` type that cannot be instantiated.
 
-The video below shows how to create the new types with attributes and pins as defined above.
+In the video an additional `abstract` base type, ``TwoPinComponent``, that defines two ``Pins``, ``p`` and ``n`` is also added. In general this
+approach is not only more elegant and convenient, but also more efficient since the raw data for the two pins can be shared
+and requires less data to be loaded from the server.
 
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/ZNNLJ-fb85g" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
@@ -137,20 +138,21 @@ Connections and Ports
 In order to create connections between ``Components`` or rather between the ``Pins`` of the ``Components`` we need to
 make our ``Connection`` into a connection like object. In webgme's meta-model there is no first order concept of a connection,
 instead such can be constructed using reserved named pointers; ``src`` and ``dst``. The target of each will be the source and
-destination of the ``Connection`` respectively. For more details on connections revisit the `"Connections" meta_modeling_concepts.html#connections>`_
-under `"Meta-modeling Concepts" meta_modeling_concepts.html`_.
+destination of the ``Connection`` respectively. For more details on connections revisit the videos in the **Meta-modeling Concepts** section.
 
-Just like with connections, there is no first order concept of a port in webgme. Connection sources and destinations are
+Just like with connections, there is no first order concept of a port in webgme either. Connection sources and destinations are
 only constrained by the valid pointer ends defined in meta-model and can crosscut over the containment hierarchy. To make
 modeling more comprehensible, it is often useful to be able to visually propagate port like children up to boundary of
-the parent node. The way this is solved in webgme is through the `meta-property meta_modeling_concepts.html#meta-property>`_ (implemented as registry) `isPort`.
+the parent node. The way this is solved in webgme is through the meta-property (implemented as a registry) ``isPort``.
 Note that the usage of this property only takes effect if the decorator (the UI component responsible for drawing the box
 on the canvas) implements logic using this property - this is the case for both the default Model- and SVG-Decorators.
 
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/LbwlUVcgvBk" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/QSthYt-j6oI" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |
+
+At this point we have a complete meta-model and a small example ``Circuit``.
