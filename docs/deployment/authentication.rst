@@ -9,7 +9,7 @@ The video below shows how to enable authentication and how the user schema works
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/xS6_FK8kZh" frameborder="0" allowfullscreen></iframe>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/xS6_FK8kZhE" frameborder="0" allowfullscreen></iframe>
     </div>
 
 |

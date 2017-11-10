@@ -26,7 +26,7 @@ workers with available) and the plugin can even run in the browser. For some dep
 to only generate the Modelica code might be favorable. When it comes to writing tests it is typically also easier to divide
 functionality into separate implementations.
 
-We will start with the *ModelicaCodeGenerator* here and continue with the *SimulateModelica* in the ** Integrating Analysis ToolS** section.
+We will start with the *ModelicaCodeGenerator* here and continue with the *SimulateModelica* in the **Integrating Analysis Tools** section.
 
 Generating a Plugin Template
 -----------------------
