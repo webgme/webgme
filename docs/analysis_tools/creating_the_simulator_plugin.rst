@@ -1,10 +1,10 @@
 Creating the Simulator Plugin
 ===========================
 This section will show how we can integrate the OpenModelica compiler (OMC) with the webgme. The example shown here is
-of course quite specific to OpenModelica, still the main takeaway is the pattern which typically can be reused for
+of course quite specific to Modelica, still the main takeaway is the pattern which can be reused for many
 analysis tools in general.
 
-Calling OMC from Command line
+Calling OMC from cmd/shell
 ---------------------------
 Download and install the open-source Modelica modeling and simulation environment
 `OpenModelica <https://openmodelica.org/>`_. After the installation make sure the following command is working from an
@@ -47,7 +47,7 @@ Linux/Mac
 
 Alright so we have a programmatic way of simulating our circuits. Now let's implement this code in a plugin!
 
-Generating the SimulateModelica plugin
+Generating the SimulateModelica Plugin
 --------------------------------------
 Just like when we generated the `ModelicaCodeGenerator` plugin we again use the webgme-cli tool.
 
@@ -59,39 +59,62 @@ This plugin will be responsible for the following tasks:
 
 1. Invoking the ModelicaCodeGenerator to retrieve the modelica code
 2. Generating a mos script that simulates the circuit from the modelica code
-3. Calling OMC to initiate the simulation
+3. Calling OMC to execute the simulation
 4. Reading in the results and storing them in the model
-5. Notifying the invoker about the progress
 
 Since this plugin will execute commands on the server we need to enable execution of server side plugins in the
-`gmeConfig <https://github.com/webgme/webgme/tree/master/config#plugin>`_. In the plugin's ``metadata.json`` we will
-disable browser execution of the specific plugin, add a configuration parameter and register that `ModelicaCodeGenerator` is a dependency of the plugin.
+`gmeConfig <https://github.com/webgme/webgme/tree/master/config#plugin>`_.
+
+In the plugin's ``metadata.json`` we will disable browser execution of the specific plugin, add a configuration parameter and register that `ModelicaCodeGenerator` is a dependency of the plugin.
 Additionally we register that the plugin requires write access to the project, that way users without write access won't
-be able to execute the plugin. For detailed info about the ``metadata.json`` the documentation is
+be able to execute the plugin. For detailed info about the ``metadata.json`` documentation is
 `available here <https://github.com/webgme/webgme/wiki/GME-Plugins#metadatajson>`_.
 
-//TODO: video
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/ZEbxRAKi5Z0?rel=0" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+|
 
 Invoking the ModelicaCodeGenerator
 ----------------------------
 Plugin can be invoked from other plugins and the invoker will receive the results generated from the invoked plugin.
 The video below shows how to do this.
 
-//TODO: video
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/TnP5oxjgyUU?rel=0" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+|
 
 Simulating the Model
 -------------------------
 At this point we have access to the model-content and a way to invoke OpenModelica from command line. We will create a
 unique directory on the server where the ``.mo`` and ``.mos`` files will be written out. After that we will execute the
 command using `nodejs's child_process module <https://nodejs.org/dist/latest-v8.x/docs/api/child_process.html>`_. (From
-the same link documentation about the other built-in module of node can be found.)
+the same link documentation about the other built-in modules of nodejs can be found.)
 
 The first video shows how to generate the files and the second one shows how to simulate and store the result in the model.
 
-//TODO: video
+.. raw:: html
 
-//TODO: video
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/q9AS35VhAYg?rel=0" frameborder="0" allowfullscreen></iframe>
+    </div>
 
+|
+
+.. raw:: html
+
+    <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/Ol8YqcNnSNs?rel=0" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+|
 
 Notes for Developers
 -------------------

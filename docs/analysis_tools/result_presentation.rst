@@ -6,8 +6,6 @@ be used when running the analysis from a plugin.
 Generate an Artifact from the Plugin
 ------------------------------------
 The most straight-forward way to present to present the results is to return a link to an artifact at the end of the execution.
-For the Modelica simulation we will attach the raw .csv file to the plugin result - which later can be downloaded by the
-invoker and analysed.
 
 Store the Result in the Model
 ------------------------------------
@@ -16,12 +14,14 @@ invoker might no longer have their browser open to retrieve the results. A benef
 that the results will be version controlled and since they can be attached to the correct context - the evolution of the model
 and results can be traced.
 
-Additionally a visualizer for presenting the results can be implemented, which would enable users to view the results
+For the Modelica simulation we will save the time traces from the dynamic simulation at the circuit and provide a download
+link to the results.
+With this approach a visualizer for presenting the results can be implemented, which would enable users to view the results
 embedded in the webgme GUI.
 
 Notifications while Analysis is Running
 ------------------------------------
-The plugin frame work in webgme supports sending notifications back to the invoker. These could be simple progress statuses,
+The plugin framework in webgme supports sending notifications back to the invoker. These could be simple progress statuses,
 but could also contain partial results. The GUI displays messages like these in a console like notification widget, but
 the `Client API <https://github.com/webgme/webgme/wiki/GME-Client-API>`_ allows any UI widget to listen to these and
 present the results in any manner.
