@@ -44,7 +44,7 @@ This should generate a range of new files..
     about what goes in here is explained in the `wikipages <https://github.com/webgme/webgme/wiki/GME-Plugins#metadatajson>`_.
 
 :code:`src/plugins/ModelicaCodeGenerator/ModelicaCodeGenerator.js`
-    This is the code of the plugin itself. The very first lines shows the dependencies needed for this code
+    This is the code of the plugin itself. The very first lines show the dependencies needed for this code
     to run and is using `requirejs <http://requirejs.org/>`_ hence the syntax
     :code:`define(['path'], function (Module){ ... return ModelicaCodeGenerator;});`. The last return statement is the
     module that this file defines when required by another module (the plugin framework must be able to load our plugin).
