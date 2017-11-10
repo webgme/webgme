@@ -7,7 +7,7 @@ How to build a Design Studio with WebGME
 ==================================
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Introduction
 
     introduction/scope.rst
@@ -16,7 +16,7 @@ How to build a Design Studio with WebGME
     introduction/other_resources.rst
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Getting Started
 
     getting_started/dependencies.rst
@@ -24,7 +24,7 @@ How to build a Design Studio with WebGME
     getting_started/terminology.rst
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Modeling
 
     meta_modeling/creating_our_first_project.rst
@@ -36,7 +36,7 @@ How to build a Design Studio with WebGME
     meta_modeling/read_only_meta_model.rst
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Model Interpreters/Transformations
 
     interpreters/what_are_model_interpreters.rst
@@ -44,7 +44,7 @@ How to build a Design Studio with WebGME
     interpreters/other_forms_of_model_interpreters.rst
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Integrating Analysis Tools
 
     analysis_tools/introduction.rst
@@ -52,7 +52,7 @@ How to build a Design Studio with WebGME
     analysis_tools/creating_the_simulator_plugin.rst
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Deployment
 
     deployment/introduction.rst
