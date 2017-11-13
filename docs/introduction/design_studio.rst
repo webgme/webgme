@@ -25,7 +25,7 @@ causes to facilitate model refinement. Finally, when the conformance conditions 
 the refined models can be analyzed (e.g. for safety properties) and/or executed (step 3) by using integrated, into the design studio, third party tools.
 The output of the tools is then collected and sent back to the model editors (step 4) for visualization of analysis or execution results.
 
-.. figure:: DesignStudioFlow.png
+.. figure:: DesignWorkFlow.png
     :align: center
     :scale: 80 %
 
