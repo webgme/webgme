@@ -5,7 +5,7 @@ be used when running the analysis from a plugin.
 
 Generate an Artifact from the Plugin
 ------------------------------------
-The most straight-forward way to present to present the results is to return a link to an artifact at the end of the execution.
+The most straight-forward way to present the results is to return a link to an artifact at the end of the execution.
 
 Store the Result in the Model
 ------------------------------------
