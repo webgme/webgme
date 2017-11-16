@@ -158,6 +158,7 @@ var requirejs = require('requirejs'),
             'isis-ui-components': 'client/bower_components/isis-ui-components/dist/isis-ui-components',
             'isis-ui-components-templates': 'client/bower_components/isis-ui-components/dist/isis-ui-components-templates',
         },
+        generateSourceMaps: true,
         include: [
             '../utils/build/dist/libIncludes',
         ],
