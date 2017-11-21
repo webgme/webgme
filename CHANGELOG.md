@@ -1,5 +1,19 @@
 # Change Log
 
+## [v2.20.0](https://github.com/webgme/webgme/tree/v2.20.0) (2017-11-21)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.19.0...v2.20.0)
+
+**Implemented enhancements:**
+
+- Bad error message when plugin has invalid config [\#1544](https://github.com/webgme/webgme/issues/1544)
+- Allow DocumentEditorDialog title to be changed through its initialize function [\#1542](https://github.com/webgme/webgme/issues/1542)
+- Get rid of usage of deprecated client "getEditable"-methods [\#1551](https://github.com/webgme/webgme/pull/1551) ([pmeijer](https://github.com/pmeijer))
+- Create source map for client/dist/webgme....lib.build.js [\#1550](https://github.com/webgme/webgme/pull/1550) ([ksmyth](https://github.com/ksmyth))
+- webgme-engine v2.18.5 [\#1549](https://github.com/webgme/webgme/pull/1549) ([pmeijer](https://github.com/pmeijer))
+- Tutorial docs updates and fixes [\#1548](https://github.com/webgme/webgme/pull/1548) ([pmeijer](https://github.com/pmeijer))
+- Tutorial on how to build a webgme application [\#1547](https://github.com/webgme/webgme/pull/1547) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1542 Document Editor Dialog Title can be changed with optional constructor argument [\#1543](https://github.com/webgme/webgme/pull/1543) ([finger563](https://github.com/finger563))
+
 ## [v2.19.0](https://github.com/webgme/webgme/tree/v2.19.0) (2017-10-23)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.18.2...v2.19.0)
 
@@ -822,7 +836,7 @@
 
 **Implemented enhancements:**
 
-- Add missing rest api call for transfer projects [\#1062](https://github.com/webgme/webgme/pull/1062) ([patrickkerrypei](https://github.com/patrickkerrypei))
+- Add missing rest api call for transfer projects [\#1062](https://github.com/webgme/webgme/pull/1062) ([patrickpei](https://github.com/patrickpei))
 - Use core.traverse in bin storage\_stats.js [\#1055](https://github.com/webgme/webgme/pull/1055) ([pmeijer](https://github.com/pmeijer))
 
 **Fixed bugs:**
