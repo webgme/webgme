@@ -1006,7 +1006,7 @@ define(['js/logger',
             gmeID = this._ComponentID2GMEID[selectedIds[i]];
             node = this._client.getNode(gmeID);
             if (node) {
-                regDegree = node.getEditableRegistry(REGISTRY_KEYS.ROTATION) || 0;
+                regDegree = node.getRegistry(REGISTRY_KEYS.ROTATION) || 0;
                 ownDegree = node.getOwnEditableRegistry(REGISTRY_KEYS.ROTATION);
 
                 if (degree === DiagramDesignerWidgetConstants.ROTATION_RESET) {

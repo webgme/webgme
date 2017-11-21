@@ -1973,7 +1973,7 @@ define(['js/logger',
 
     MetaEditorControl.prototype._processMetaAspectSheetsRegistry = function () {
         var aspectNode = this._client.getNode(this.metaAspectContainerNodeID),
-            metaAspectSheetsRegistry = aspectNode.getEditableRegistry(REGISTRY_KEYS.META_SHEETS) || [],
+            metaAspectSheetsRegistry = aspectNode.getRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             docItem,
             prevDocItemsPerSheet,
             docItemsIds,

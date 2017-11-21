@@ -193,10 +193,10 @@ define(['js/NodePropertyNames',
             getterFn = undefined;
             if (keyArr[0] === KEY_ATTRIBUTES) {
                 setterFn = 'setAttributes';
-                getterFn = 'getEditableAttribute';
+                getterFn = 'getAttribute';
             } else if (keyArr[0] === KEY_REGISTRY) {
                 setterFn = 'setRegistry';
-                getterFn = 'getEditableRegistry';
+                getterFn = 'getRegistry';
             }
 
             if (idList && idList.length === 1 && setterFn) {

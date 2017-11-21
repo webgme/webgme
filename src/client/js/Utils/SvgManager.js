@@ -81,7 +81,7 @@ define([
      * @return {string} The generated string should be used as the src attribute of an img tag without any modification
      */
     function getSvgUri(clientNodeObj, registryId) {
-        var data = clientNodeObj.getEditableRegistry(registryId);
+        var data = clientNodeObj.getRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
 
@@ -114,7 +114,7 @@ define([
      * @return {string|null} The rendered or downloaded svg string which can be used to create elements
      */
     function getSvgContent(clientNodeObj, registryId) {
-        var data = clientNodeObj.getEditableRegistry(registryId);
+        var data = clientNodeObj.getRegistry(registryId);
 
         if (typeof data === 'string' && data.length > 0) {
             if (isSvg(data)) {

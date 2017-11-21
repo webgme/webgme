@@ -775,21 +775,21 @@ define(['js/logger',
             getterFn = undefined;
             if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_ATTRIBUTES) {
                 setterFn = 'setAttribute';
-                getterFn = 'getEditableAttribute';
+                getterFn = 'getAttribute';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_PREFERENCES ||
                 keyArr[0] === CONSTANTS.PROPERTY_GROUP_META) {
                 setterFn = 'setRegistry';
-                getterFn = 'getEditableRegistry';
+                getterFn = 'getRegistry';
             } else if (keyArr[0] === CONSTANTS.PROPERTY_GROUP_POINTERS) {
                 this._client.setPointer(gmeID, keyArr[1], args.newValue);
             } else if (keyArr[0] === LINE_SUB_GROUP || keyArr[0] === ICON_SUB_GROUP ||
                 keyArr[0] === COLOR_SUB_GROUP) {
                 setterFn = 'setRegistry';
-                getterFn = 'getEditableRegistry';
+                getterFn = 'getRegistry';
             } else if (keyArr[0] === TEMPLATING_SUB_GROUP) {
                 if (keyArr[1] === REGISTRY_KEYS.REPLACEABLE) {
                     setterFn = 'setRegistry';
-                    getterFn = 'getEditableRegistry';
+                    getterFn = 'getRegistry';
                 } else if (keyArr[1] === CONSTANTS.POINTER_CONSTRAINED_BY) {
                     this._client.setPointer(gmeID, keyArr[1], args.newValue);
                 }
