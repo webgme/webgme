@@ -681,7 +681,7 @@ define(['jquery',
 
         if (node) {
             baseObjectifiedSetsRegistry = _getObjectifiedCrosscutRegistry(node.getBaseId());
-            registry = node.getOwnEditableRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
+            registry = node.getOwnRegistry(REGISTRY_KEYS.CROSSCUTS) || [];
             setNames = node.getSetNames();
             for (i = 0; i < registry.length; i += 1) {
                 if (setNames.indexOf(registry[i].SetID) !== -1) {

@@ -1627,7 +1627,7 @@ define(['js/logger',
                 memberListSetsRegistryKey &&
                 memberListSetsRegistryKey !== '') {
                 memberListContainer = this._client.getNode(memberListContainerID);
-                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
+                memberListSetsRegistry = memberListContainer.getOwnRegistry(memberListSetsRegistryKey);
             }
 
             if (this._tabIDMemberListID[tabID] && memberListSetsRegistry) {
@@ -1667,7 +1667,7 @@ define(['js/logger',
                 memberListSetsRegistryKey &&
                 memberListSetsRegistryKey !== '') {
                 memberListContainer = this._client.getNode(memberListContainerID);
-                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey);
+                memberListSetsRegistry = memberListContainer.getOwnRegistry(memberListSetsRegistryKey);
             }
 
         }
@@ -1719,7 +1719,7 @@ define(['js/logger',
 
             if (memberListSetsRegistry === undefined && typeof memberListSetsRegistryKey === 'string') {
                 memberListContainer = this._client.getNode(memberListContainerID);
-                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey) || [];
+                memberListSetsRegistry = memberListContainer.getOwnRegistry(memberListSetsRegistryKey) || [];
             }
 
             if(memberListSetsRegistry !== undefined && memberListSetsRegistryKey !== undefined){
@@ -1771,7 +1771,7 @@ define(['js/logger',
                 memberListSetsRegistryKey &&
                 memberListSetsRegistryKey !== '') {
                 memberListContainer = this._client.getNode(memberListContainerID);
-                memberListSetsRegistry = memberListContainer.getOwnEditableRegistry(memberListSetsRegistryKey) || [];
+                memberListSetsRegistry = memberListContainer.getOwnRegistry(memberListSetsRegistryKey) || [];
             }
 
             memberListSetsRegistry.sort(function (a, b) {
