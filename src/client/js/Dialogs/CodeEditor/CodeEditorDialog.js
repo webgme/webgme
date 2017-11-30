@@ -12,6 +12,7 @@ define([
     'ot',
     './constants',
     'common/Constants',
+    'client/logger',
     'js/Loader/LoaderCircles',
     'js/Dialogs/Confirm/ConfirmDialog',
     'text!./templates/CodeEditorDialog.html',
@@ -30,7 +31,7 @@ define([
     'codemirror/mode/python/python',
     'codemirror/mode/ttcn/ttcn',
     'codemirror/mode/yaml/yaml'
-], function (CodeMirror, ot, CONSTANTS, COMMON, LoaderCircles, ConfirmDialog, dialogTemplate) {
+], function (CodeMirror, ot, CONSTANTS, COMMON, Logger, LoaderCircles, ConfirmDialog, dialogTemplate) {
     'use strict';
 
     var CLIENT_COLORS = [
@@ -64,6 +65,7 @@ define([
                 fullscreen: false,
             },
             otherClients = {},
+            logger,
             oked,
             client,
             activeObject,
@@ -124,6 +126,7 @@ define([
         }
 
         client = params.client || WebGMEGlobal.Client;
+        logger = Logger.createWithGmeConfig('gme:Dialogs:CodeEditorDialog', client.gmeConfig);
 
         this._savedValue = params.value;
 
@@ -206,7 +209,7 @@ define([
                 if (docId) {
                     client.unwatchDocument({docId: docId}, function (err) {
                         if (err) {
-                            console.error(err);
+                            logger.error(err);
                         }
                     });
                 }
@@ -236,65 +239,65 @@ define([
         this._dialog.modal('show');
 
         this._loader = new LoaderCircles({containerElement: this._dialog});
-        self._loader.start();
-
-        client.watchDocument({
-                projectId: client.getActiveProjectId(),
-                branchName: client.getActiveBranchName(),
-                nodeId: this._activeSelection[0],
-                attrName: params.name,
-                attrValue: params.value,
-            },
-            function atOperation(operation) {
-                self._editor.applyOperation(operation);
-            },
-            function atSelection(eData) {
-                var colorIndex;
-                if (otherClients.hasOwnProperty(eData.clientId) === false) {
-                    colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
-                    otherClients[eData.clientId] = {
-                        userId: eData.userId,
-                        selection: null,
-                        color: CLIENT_COLORS[colorIndex]
-                    };
-                }
-
-                if (otherClients[eData.clientId].selection) {
-                    otherClients[eData.clientId].selection.clear();
-                }
-
-                otherClients[eData.clientId].selection = self._editor.setOtherSelection(eData.selection,
-                    otherClients[eData.clientId].color, otherClients[eData.clientId].userId);
-            },
-            function (err, initData) {
-                if (err) {
-                    console.error(err);
-                    return;
-                }
-                docId = initData.docId;
-                self._cm.setValue(initData.str);
-                self._editor.registerCallbacks({
-                    'change': function (operation, inverse) {
-                        //console.log(operation, inverse);
-                        client.sendDocumentOperation({
-                            docId: docId,
-                            operation: operation,
-                            selection: self._editor.getSelection()
-                        });
-                    },
-                    'selectionChange': function () {
-                        client.sendDocumentSelection({
-                            docId: docId,
-                            selection: self._editor.getSelection()
-                        });
-                    }
-                });
-                self._loader.stop();
-            });
 
         if (params.readOnly) {
             this._okBtn.hide();
             this._cancelBtn.hide();
+        } else {
+            self._loader.start();
+
+            client.watchDocument({
+                    projectId: client.getActiveProjectId(),
+                    branchName: client.getActiveBranchName(),
+                    nodeId: this._activeSelection[0],
+                    attrName: params.name,
+                    attrValue: params.value,
+                },
+                function atOperation(operation) {
+                    self._editor.applyOperation(operation);
+                },
+                function atSelection(eData) {
+                    var colorIndex;
+                    if (otherClients.hasOwnProperty(eData.socketId) === false) {
+                        colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
+                        otherClients[eData.socketId] = {
+                            userId: eData.userId,
+                            selection: null,
+                            color: CLIENT_COLORS[colorIndex]
+                        };
+                    }
+
+                    if (otherClients[eData.socketId].selection) {
+                        otherClients[eData.socketId].selection.clear();
+                    }
+
+                    otherClients[eData.socketId].selection = self._editor.setOtherSelection(eData.selection,
+                        otherClients[eData.socketId].color, otherClients[eData.socketId].userId);
+                },
+                function (err, initData) {
+                    if (err) {
+                        logger.error(err);
+                        return;
+                    }
+                    docId = initData.docId;
+                    self._cm.setValue(initData.document);
+                    self._editor.registerCallbacks({
+                        'change': function (operation) {
+                            client.sendDocumentOperation({
+                                docId: docId,
+                                operation: operation,
+                                selection: self._editor.getSelection()
+                            });
+                        },
+                        'selectionChange': function () {
+                            client.sendDocumentSelection({
+                                docId: docId,
+                                selection: self._editor.getSelection()
+                            });
+                        }
+                    });
+                    self._loader.stop();
+                });
         }
     };
 
