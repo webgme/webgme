@@ -15,6 +15,7 @@ define([
     'client/logger',
     'js/Loader/LoaderCircles',
     'js/Dialogs/Confirm/ConfirmDialog',
+    './CLIENT_COLORS',
     'text!./templates/CodeEditorDialog.html',
     'css!./styles/CodeEditorDialog.css',
     'codemirror/mode/clike/clike',
@@ -31,21 +32,8 @@ define([
     'codemirror/mode/python/python',
     'codemirror/mode/ttcn/ttcn',
     'codemirror/mode/yaml/yaml'
-], function (CodeMirror, ot, CONSTANTS, COMMON, Logger, LoaderCircles, ConfirmDialog, dialogTemplate) {
+], function (CodeMirror, ot, CONSTANTS, COMMON, Logger, LoaderCircles, ConfirmDialog, CLIENT_COLORS, dialogTemplate) {
     'use strict';
-
-    var CLIENT_COLORS = [
-        '#ccccff', // PURPLE
-        '#ffcccc', // RED
-        '#ffccff', // PINK
-        '#ccffff', // TURQUISE
-        '#ffffcc', // YELLOW
-        '#ccffcc', // GREEN
-        '#ffe6cc', // ORANGE
-        '#cce5ff', // BLUE
-        '#e6ffcc', // YELLOW-GREEN
-        '#e5ccff'  // PURPUPLE-PINK
-    ];
 
     function CodeEditorDialog() {
         this._dialog = $(dialogTemplate);
@@ -113,7 +101,7 @@ define([
                     iconClass: 'fa fa-floppy-o',
                     title: 'Save',
                     question: 'The saved value(s) at the current node(s) differ from the one in the editor. ' +
-                        'Would you like to save the changes?',
+                    'Would you like to save the changes?',
                     okLabel: 'Yes',
                     cancelLabel: 'No',
                     onHideFn: function (yes) {
@@ -242,7 +230,7 @@ define([
 
         if (params.readOnly) {
             this._okBtn.hide();
-            this._cancelBtn.hide();
+            this._saveBtn.hide();
         } else {
             self._loader.start();
 
@@ -258,6 +246,7 @@ define([
                 },
                 function atSelection(eData) {
                     var colorIndex;
+
                     if (otherClients.hasOwnProperty(eData.socketId) === false) {
                         colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
                         otherClients[eData.socketId] = {
