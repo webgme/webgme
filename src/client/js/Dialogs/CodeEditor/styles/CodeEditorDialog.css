@@ -3,7 +3,8 @@
 */
 div.code-editor-dialog .modal-dialog {
   width: 90%;
-  height: 90%; }
+  height: 90%;
+  min-height: 800px; }
   div.code-editor-dialog .modal-dialog .modal-content {
     height: 100%;
     width: 100%; }

@@ -256,12 +256,16 @@ define([
                         };
                     }
 
+                    // Clear the current selection for that user...
                     if (otherClients[eData.socketId].selection) {
                         otherClients[eData.socketId].selection.clear();
                     }
 
-                    otherClients[eData.socketId].selection = self._editor.setOtherSelection(eData.selection,
-                        otherClients[eData.socketId].color, otherClients[eData.socketId].userId);
+                    // .. and if there is a new selection, set it in the editor.
+                    if (eData.selection) {
+                        otherClients[eData.socketId].selection = self._editor.setOtherSelection(eData.selection,
+                            otherClients[eData.socketId].color, otherClients[eData.socketId].userId);
+                    }
                 },
                 function (err, initData) {
                     if (err) {
