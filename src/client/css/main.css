@@ -193,3 +193,8 @@ div.spacer {
     width: 100%;
     height: 7px;
 }
+
+/* Make sure the notifications are shown within modal windows*/
+[data-notify="container"] {
+    z-index: 1051 !important;
+}

@@ -58,6 +58,7 @@ require.config({
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
         ravenjs: 'bower_components/raven-js/dist/raven',
         clipboard: 'bower_components/clipboard/dist/clipboard.min',
+        diff_match_patch: 'bower_components/google-diff-match-patch/diff_match_patch_uncompressed',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'

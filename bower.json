@@ -34,6 +34,7 @@
     "underscore": "jashkenas/underscore#1.8.3",
     "bootstrap": "twbs/bootstrap#3.3.7",
     "d3": "mbostock-bower/d3-bower#3.5.16",
+    "google-diff-match-patch": "GerHobbelt/google-diff-match-patch#1.1.0",
     "moment": "moment/moment#2.18.1",
     "jszip": "Stuk/jszip#2.5.0",
     "angular-bootstrap": "angular-ui/bootstrap-bower#0.11.0",

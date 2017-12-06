@@ -5,6 +5,7 @@
  * used for any codemirror based (and pop-up dialog styled) jobs
  *
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define([
@@ -18,6 +19,8 @@ define([
     './CLIENT_COLORS',
     'text!./templates/CodeEditorDialog.html',
     'css!./styles/CodeEditorDialog.css',
+    'codemirror/addon/merge/merge',
+    'css!codemirror/addon/merge/merge.css',
     'codemirror/mode/clike/clike',
     'codemirror/mode/css/css',
     'codemirror/mode/erlang/erlang',
@@ -42,6 +45,8 @@ define([
         this._saveBtn = this._dialog.find('.btn-save');
         this._okBtn = this._dialog.find('.btn-ok');
         this._cancelBtn = this._dialog.find('.btn-cancel');
+        this._compareBtn = this._dialog.find('.btn-compare');
+        this._compareEl = this._dialog.find('.codemirror-compare');
     }
 
     CodeEditorDialog.prototype.show = function (params) {
@@ -52,7 +57,9 @@ define([
                 matchBrackets: true,
                 fullscreen: false,
             },
+            cmCompare,
             otherClients = {},
+            intervalId,
             logger,
             oked,
             client,
@@ -60,33 +67,24 @@ define([
             docId;
 
         function hasDifferentValue() {
-            var editorValue = self._cm.getValue(),
-                nodeObj,
-                i;
-
-            for (i = 0; i < self._activeSelection.length; i += 1) {
-                nodeObj = client.getNode(self._activeSelection[i]);
-                if (nodeObj && nodeObj.getOwnAttribute(params.name) !== editorValue) {
-                    return true;
-                }
-            }
-
-            return false;
+            return self._savedValue !== self._cm.getValue();
         }
 
         function save() {
-
+            var newValue;
             if (params.readOnly || hasDifferentValue() === false) {
                 return;
             }
 
             client.startTransaction();
-
+            newValue = self._cm.getValue();
             self._activeSelection.forEach(function (id) {
-                client.setAttribute(id, params.name, self._cm.getValue());
+                client.setAttribute(id, params.name, newValue);
             });
 
             client.completeTransaction();
+
+            self._savedValue = newValue;
         }
 
         function promptIfToSave(cb) {
@@ -100,8 +98,8 @@ define([
                     severity: 'info',
                     iconClass: 'fa fa-floppy-o',
                     title: 'Save',
-                    question: 'The saved value(s) at the current node(s) differ from the one in the editor. ' +
-                    'Would you like to save the changes?',
+                    question: 'You made changes without saving. ' +
+                    'Would you like to save those changes?',
                     okLabel: 'Yes',
                     cancelLabel: 'No',
                     onHideFn: function (yes) {
@@ -109,6 +107,70 @@ define([
                     }
                 }, function () {
 
+                });
+            }
+        }
+
+        function isConnected(status) {
+            return status === COMMON.STORAGE.CONNECTED || status === COMMON.STORAGE.RECONNECTED;
+        }
+
+        function newNetworkStatus(c, status) {
+            var disconnectedAt,
+                disconnectTimeout;
+
+            if (status === COMMON.STORAGE.DISCONNECTED) {
+                disconnectedAt = Date.now();
+                disconnectTimeout = client.gmeConfig.documentEditing.disconnectTimeout;
+
+                Object.keys(otherClients).forEach(function (id) {
+                    if (otherClients[id].selection) {
+                        otherClients[id].selection.clear();
+                    }
+                });
+
+                intervalId = setInterval(function () {
+                    $.notify({
+                        icon: 'fa fa-exclamation-triangle',
+                        message: 'Connection was lost. If not reconnected within ' +
+                        Math.ceil((disconnectTimeout - (Date.now() - disconnectedAt)) / 1000) +
+                        ' seconds, your changes could get lost.'
+                    }, {
+                        delay: 3000,
+                        hideDuration: 0,
+                        type: 'danger',
+                        offset: {
+                            x: 20,
+                            y: 37
+                        }
+                    });
+                }, disconnectTimeout / 10);
+            } else if (isConnected(status)) {
+                clearInterval(intervalId);
+                $.notify({
+                    message: 'Reconnected - all is fine.'
+                }, {
+                    delay: 3000,
+                    hideDuration: 0,
+                    type: 'success',
+                    offset: {
+                        x: 20,
+                        y: 37
+                    }
+                });
+            } else {
+                clearInterval(intervalId);
+                $.notify({
+                    message: 'There were connection issues - the page needs to be refreshed. ' +
+                    'Make sure to copy any entered text.'
+                }, {
+                    delay: 30000,
+                    hideDuration: 0,
+                    type: 'danger',
+                    offset: {
+                        x: 20,
+                        y: 37
+                    }
                 });
             }
         }
@@ -161,7 +223,7 @@ define([
             $(this._cancelBtn).text(params.cancelLabel);
         }
 
-        this._cm = CodeMirror.fromTextArea(this._dialog.find('#codemirror-area').first().get(0), codemirrorOptions);
+        this._cm = CodeMirror.fromTextArea(this._dialog.find('.codemirror-editor').first().get(0), codemirrorOptions);
         this._editor = new ot.CodeMirrorAdapter(this._cm);
 
         this._saveBtn.on('click', function (event) {
@@ -186,6 +248,33 @@ define([
             self._dialog.modal('hide');
         });
 
+        self._compareEl.hide();
+        this._compareBtn.on('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (cmCompare) {
+                cmCompare = null;
+                self._compareEl.empty();
+                self._compareEl.hide();
+                $(self._cm.getWrapperElement()).show();
+                self._cm.refresh();
+            } else {
+                $(self._cm.getWrapperElement()).hide();
+                self._compareEl.show();
+                cmCompare = CodeMirror.MergeView(self._compareEl.get(0), {
+                    value: self._cm.getValue(),
+                    readOnly: true,
+                    origRight: self._savedValue || '',
+                    lineNumbers: true,
+                    mode: codemirrorOptions.mode,
+                    showDifferences: true,
+                    fullscreen: false,
+                    revertButtons: false
+                });
+            }
+        });
+
         this._dialog.on('hide.bs.modal', function () {
             var doSave = false;
 
@@ -200,6 +289,8 @@ define([
                             logger.error(err);
                         }
                     });
+
+                    client.removeEventListener(client.CONSTANTS.NETWORK_STATUS_CHANGED, newNetworkStatus);
                 }
 
                 self._dialog.remove();
@@ -231,66 +322,88 @@ define([
         if (params.readOnly) {
             this._okBtn.hide();
             this._saveBtn.hide();
+            this._compareBtn.hide();
+            this._cm.setValue(params.value || '');
         } else {
-            self._loader.start();
+            if (client.gmeConfig.documentEditing.enable === true &&
+                isConnected(client.getNetworkStatus()) && this._activeSelection.length === 1) {
 
-            client.watchDocument({
-                    projectId: client.getActiveProjectId(),
-                    branchName: client.getActiveBranchName(),
-                    nodeId: this._activeSelection[0],
-                    attrName: params.name,
-                    attrValue: params.value,
-                },
-                function atOperation(operation) {
-                    self._editor.applyOperation(operation);
-                },
-                function atSelection(eData) {
-                    var colorIndex;
+                self._loader.start();
+                client.watchDocument({
+                        projectId: client.getActiveProjectId(),
+                        branchName: client.getActiveBranchName(),
+                        nodeId: this._activeSelection[0],
+                        attrName: params.name,
+                        attrValue: params.value,
+                    },
+                    function atOperation(operation) {
+                        self._editor.applyOperation(operation);
+                    },
+                    function atSelection(eData) {
+                        var colorIndex;
 
-                    if (otherClients.hasOwnProperty(eData.socketId) === false) {
-                        colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
-                        otherClients[eData.socketId] = {
-                            userId: eData.userId,
-                            selection: null,
-                            color: CLIENT_COLORS[colorIndex]
-                        };
-                    }
-
-                    // Clear the current selection for that user...
-                    if (otherClients[eData.socketId].selection) {
-                        otherClients[eData.socketId].selection.clear();
-                    }
-
-                    // .. and if there is a new selection, set it in the editor.
-                    if (eData.selection) {
-                        otherClients[eData.socketId].selection = self._editor.setOtherSelection(eData.selection,
-                            otherClients[eData.socketId].color, otherClients[eData.socketId].userId);
-                    }
-                },
-                function (err, initData) {
-                    if (err) {
-                        logger.error(err);
-                        return;
-                    }
-                    docId = initData.docId;
-                    self._cm.setValue(initData.document);
-                    self._editor.registerCallbacks({
-                        'change': function (operation) {
-                            client.sendDocumentOperation({
-                                docId: docId,
-                                operation: operation,
-                                selection: self._editor.getSelection()
-                            });
-                        },
-                        'selectionChange': function () {
-                            client.sendDocumentSelection({
-                                docId: docId,
-                                selection: self._editor.getSelection()
-                            });
+                        if (otherClients.hasOwnProperty(eData.socketId) === false) {
+                            colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
+                            otherClients[eData.socketId] = {
+                                userId: eData.userId,
+                                selection: null,
+                                color: CLIENT_COLORS[colorIndex]
+                            };
                         }
+
+                        // Clear the current selection for that user...
+                        if (otherClients[eData.socketId].selection) {
+                            otherClients[eData.socketId].selection.clear();
+                        }
+
+                        // .. and if there is a new selection, set it in the editor.
+                        if (eData.selection) {
+                            otherClients[eData.socketId].selection = self._editor.setOtherSelection(eData.selection,
+                                otherClients[eData.socketId].color, otherClients[eData.socketId].userId);
+                        }
+                    },
+                    function (err, initData) {
+                        if (err) {
+                            logger.error(err);
+                            return;
+                        }
+
+                        docId = initData.docId;
+                        self._cm.setValue(initData.document);
+                        self._editor.registerCallbacks({
+                            'change': function (operation) {
+                                client.sendDocumentOperation({
+                                    docId: docId,
+                                    operation: operation,
+                                    selection: self._editor.getSelection()
+                                });
+                            },
+                            'selectionChange': function () {
+                                client.sendDocumentSelection({
+                                    docId: docId,
+                                    selection: self._editor.getSelection()
+                                });
+                            }
+                        });
+                        self._loader.stop();
+                        $.notify({
+                            message: 'A channel for close collaboration is open. Changes still have to be persisted' +
+                            ' by saving.'
+                        }, {
+                            delay: 5000,
+                            hideDuration: 0,
+                            type: 'success',
+                            offset: {
+                                x: 20,
+                                y: 37
+                            }
+                        });
+
+                        client.addEventListener(client.CONSTANTS.NETWORK_STATUS_CHANGED, newNetworkStatus);
                     });
-                    self._loader.stop();
-                });
+            } else {
+                this._cm.setValue(params.value || '');
+            }
         }
     };
 

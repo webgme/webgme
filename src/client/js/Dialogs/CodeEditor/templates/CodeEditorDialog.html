@@ -6,16 +6,17 @@
                     mode: <select id="mode_select">
                 </select>
                 </div>
-                <button type="button" class="close" data-dismiss="modal">×</button>
                 <i class="header-icon"></i><span class="title-text">Edit</span>
             </div>
             <div class="modal-body">
-                <textarea id="codemirror-area" autofocus></textarea>
+                <textarea class="codemirror-editor" autofocus></textarea>
+                <div class="codemirror-compare"></div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-default btn-compare" title="Compare with stored value">Compare</button>
                 <button class="btn btn-primary btn-save">Save</button>
                 <button class="btn btn-primary btn-ok">Save and close</button>
-                <button class="btn btn-default btn-cancel">Close</button>
+                <button class="btn btn-warning btn-cancel">Close Without Saving</button>
             </div>
         </div>
     </div>
