@@ -59,12 +59,52 @@ define([
             },
             cmCompare,
             otherClients = {},
+            territory = {},
+            uiId,
             intervalId,
             logger,
             oked,
             client,
             activeObject,
             docId;
+
+        function growl(msg, level, delay) {
+            $.notify({
+                icon: level === 'danger' ? 'fa fa-exclamation-triangle' : '',
+                message: msg
+            }, {
+                delay: delay,
+                hideDuration: 0,
+                type: level,
+                offset: {
+                    x: 20,
+                    y: 37
+                }
+            });
+        }
+
+        function nodeEventHandler(events) {
+            var newAttr,
+                i,
+                nodeObj;
+
+            for (i = 0; i < events.length; i += 1) {
+                if (events[i].etype === 'load') {
+                    //nodeObj = client.getNode(events[i].eid);
+                } else if (events[i].etype === 'update') {
+                    nodeObj = client.getNode(events[i].eid);
+                    newAttr = nodeObj.getAttribute(params.name);
+                    if (self._storedValue !== newAttr) {
+                        growl('Stored value was updated', 'info', 1000);
+                        self._storedValue = newAttr;
+                    }
+                } else if (events[i].etype === 'unload') {
+                    growl('Node was deleted! Make sure to copy your text to preserve changes.', 'danger', 10000);
+                } else {
+                    // "Technical events" not used.
+                }
+            }
+        }
 
         function hasDifferentValue() {
             return self._savedValue !== self._cm.getValue();
@@ -87,30 +127,6 @@ define([
             self._savedValue = newValue;
         }
 
-        function promptIfToSave(cb) {
-            var dialog;
-
-            if (params.readOnly || hasDifferentValue() === false) {
-                cb(false);
-            } else {
-                dialog = new ConfirmDialog();
-                dialog.show({
-                    severity: 'info',
-                    iconClass: 'fa fa-floppy-o',
-                    title: 'Save',
-                    question: 'You made changes without saving. ' +
-                    'Would you like to save those changes?',
-                    okLabel: 'Yes',
-                    cancelLabel: 'No',
-                    onHideFn: function (yes) {
-                        cb(yes);
-                    }
-                }, function () {
-
-                });
-            }
-        }
-
         function isConnected(status) {
             return status === COMMON.STORAGE.CONNECTED || status === COMMON.STORAGE.RECONNECTED;
         }
@@ -130,48 +146,19 @@ define([
                 });
 
                 intervalId = setInterval(function () {
-                    $.notify({
-                        icon: 'fa fa-exclamation-triangle',
-                        message: 'Connection was lost. If not reconnected within ' +
+                    var msg = 'Connection was lost. If not reconnected within ' +
                         Math.ceil((disconnectTimeout - (Date.now() - disconnectedAt)) / 1000) +
-                        ' seconds, your changes could get lost.'
-                    }, {
-                        delay: 3000,
-                        hideDuration: 0,
-                        type: 'danger',
-                        offset: {
-                            x: 20,
-                            y: 37
-                        }
-                    });
+                        ' seconds, your changes could get lost.';
+
+                    growl(msg, 'danger', 3000);
                 }, disconnectTimeout / 10);
             } else if (isConnected(status)) {
                 clearInterval(intervalId);
-                $.notify({
-                    message: 'Reconnected - all is fine.'
-                }, {
-                    delay: 3000,
-                    hideDuration: 0,
-                    type: 'success',
-                    offset: {
-                        x: 20,
-                        y: 37
-                    }
-                });
+                growl('Reconnected - all is fine.', 'success', 3000);
             } else {
                 clearInterval(intervalId);
-                $.notify({
-                    message: 'There were connection issues - the page needs to be refreshed. ' +
-                    'Make sure to copy any entered text.'
-                }, {
-                    delay: 30000,
-                    hideDuration: 0,
-                    type: 'danger',
-                    offset: {
-                        x: 20,
-                        y: 37
-                    }
-                });
+                growl('There were connection issues - the page needs to be refreshed. ' +
+                    'Make sure to copy any text you would like to preserve.', 'danger', 30000);
             }
         }
 
@@ -179,6 +166,7 @@ define([
         logger = Logger.createWithGmeConfig('gme:Dialogs:CodeEditorDialog', client.gmeConfig);
 
         this._savedValue = params.value;
+        this._storedValue = params.value;
 
         activeObject = params.activeObject || WebGMEGlobal.State.getActiveObject();
         this._activeSelection = params.activeSelection || WebGMEGlobal.State.getActiveSelection();
@@ -203,7 +191,17 @@ define([
             this._modeSelect.val(COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
         }
 
-        this._modeSelect.on('change', this.changeMode.bind(this));
+        this._modeSelect.on('change', function (event) {
+            var modeSelect = event.target,
+                mode = modeSelect.options[modeSelect.selectedIndex].textContent;
+
+            self._cm.setOption('mode', CONSTANTS.MODE[mode]);
+
+            // TODO: How to update options for cm-merge?
+            // if (cmCompare) {
+            //     cmCompare.setOption('mode', CONSTANTS.MODE[mode]);
+            // }
+        });
 
         if (params.iconClass) {
             this._icon.addClass(params.iconClass);
@@ -255,6 +253,7 @@ define([
 
             if (cmCompare) {
                 cmCompare = null;
+                self._compareBtn.text('Compare');
                 self._compareEl.empty();
                 self._compareEl.hide();
                 $(self._cm.getWrapperElement()).show();
@@ -272,15 +271,20 @@ define([
                     fullscreen: false,
                     revertButtons: false
                 });
+                self._compareBtn.text('Edit');
             }
         });
 
-        this._dialog.on('hide.bs.modal', function () {
+        this._dialog.on('hide.bs.modal', function (e) {
             var doSave = false;
 
             function close() {
                 if (doSave) {
                     save();
+                }
+
+                if (uiId) {
+                    client.removeUI(uiId);
                 }
 
                 if (docId) {
@@ -298,15 +302,15 @@ define([
                 self._dialog = undefined;
             }
 
-            if (typeof oked === 'boolean') {
+            if (typeof oked === 'boolean' || params.readOnly || hasDifferentValue() === false) {
                 doSave = oked;
                 close();
             } else {
-                // If accidentally closed prompt to save if saved values are different.
-                promptIfToSave(function (save) {
-                    doSave = save;
-                    close();
-                });
+                growl('You made changes without saving - you cannot exit without deciding whether to save or not',
+                    'warning', 4000);
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
             }
         });
 
@@ -315,7 +319,7 @@ define([
             self._cm.refresh();
         });
 
-        this._dialog.modal('show');
+        this._dialog.modal({show: true});
 
         this._loader = new LoaderCircles({containerElement: this._dialog});
 
@@ -365,6 +369,7 @@ define([
                     function (err, initData) {
                         if (err) {
                             logger.error(err);
+                            growl(err.message, 'danger', 5000);
                             return;
                         }
 
@@ -386,31 +391,18 @@ define([
                             }
                         });
                         self._loader.stop();
-                        $.notify({
-                            message: 'A channel for close collaboration is open. Changes still have to be persisted' +
-                            ' by saving.'
-                        }, {
-                            delay: 5000,
-                            hideDuration: 0,
-                            type: 'success',
-                            offset: {
-                                x: 20,
-                                y: 37
-                            }
-                        });
-
+                        growl('A channel for close collaboration is open. Changes still have to be ' +
+                            'persisted by saving.', 'success', 5000);
                         client.addEventListener(client.CONSTANTS.NETWORK_STATUS_CHANGED, newNetworkStatus);
                     });
             } else {
                 this._cm.setValue(params.value || '');
             }
-        }
-    };
 
-    CodeEditorDialog.prototype.changeMode = function (event) {
-        var modeSelect = event.target,
-            mode = modeSelect.options[modeSelect.selectedIndex].textContent;
-        this._cm.setOption('mode', CONSTANTS.MODE[mode]);
+            territory[this._activeSelection[0]] = {children: 0};
+            uiId = client.addUI(null, nodeEventHandler);
+            client.updateTerritory(uiId, territory);
+        }
     };
 
     return CodeEditorDialog;
