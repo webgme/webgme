@@ -9,11 +9,18 @@
                 <i class="header-icon"></i><span class="title-text">Edit</span>
             </div>
             <div class="modal-body">
-                <textarea class="codemirror-editor" autofocus></textarea>
-                <div class="codemirror-compare"></div>
+                <div class="compare-container">
+                    <div class="title-container">
+                        <div class="diff-title current-title">Current value in editor</div>
+                        <div class="diff-title title-divider"></div>
+                        <div class="diff-title saved-title">Value stored at attribute</div>
+                    </div>
+                    <div class="codemirror-compare not-comparing"></div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-default btn-compare" title="Compare with stored value">Compare with stored value</button>
+                <button class="btn btn-default btn-compare" title="Compare with stored value">Compare with saved value
+                </button>
                 <button class="btn btn-primary btn-save">Save</button>
                 <button class="btn btn-primary btn-ok">Save and close</button>
                 <button class="btn btn-warning btn-cancel">Close Without Saving</button>

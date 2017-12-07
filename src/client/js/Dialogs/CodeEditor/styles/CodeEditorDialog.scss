@@ -36,22 +36,47 @@ div.code-editor-dialog {
         height: 85%;
         width: 100%;
         display: flex;
-        > .CodeMirror {
-          height: 100%;
-          width: 100%;
-        }
-
-        .codemirror-compare {
+        .compare-container {
           width: 100%;
           height: 100%;
-          .CodeMirror-merge {
+          .title-container {
+            position: relative;
             width: 100%;
-            height: 100%;
-            .CodeMirror-merge-pane {
+            .diff-title {
+              display: inline-block;
+              width: 47%;
+              &.title-divider {
+                width: 6%;
+              }
+              &.saved-title {
+                position: absolute;
+              }
+            }
+          }
+          .codemirror-compare {
+            width: 100%;
+            height: 97%;
+            .CodeMirror-merge {
+              width: 100%;
               height: 100%;
-              .CodeMirror {
-                width: 100%;
+              .CodeMirror-merge-pane {
                 height: 100%;
+                .CodeMirror {
+                  width: 100%;
+                  height: 100%;
+                }
+              }
+            }
+            &.not-comparing {
+              height: 100%;
+              .CodeMirror-merge-pane {
+                width: 100%;
+                &.CodeMirror-merge-pane-rightmost {
+                  display: none;
+                }
+              }
+              .CodeMirror-merge-gap {
+                display: none;
               }
             }
           }

@@ -46,20 +46,30 @@ define([
         this._okBtn = this._dialog.find('.btn-ok');
         this._cancelBtn = this._dialog.find('.btn-cancel');
         this._compareBtn = this._dialog.find('.btn-compare');
+        this._compareContainer = this._dialog.find('.compare-container');
         this._compareEl = this._dialog.find('.codemirror-compare');
+        this._compareTitles = this._dialog.find('.title-container');
     }
 
     CodeEditorDialog.prototype.show = function (params) {
         var self = this,
-            codemirrorOptions = {
-                readOnly: params.readOnly,
-                lineNumbers: true,
-                matchBrackets: true,
-                fullscreen: false,
-            },
-            cmCompare,
             otherClients = {},
             territory = {},
+            codemirrorOptions = {
+                value: params.value || '',
+                readOnly: params.readOnly,
+                origRight: params.value || '',
+                lineNumbers: true,
+                showDifferences: false,
+                fullscreen: false,
+                revertButtons: true
+            },
+            comparing = false,
+            cmCompare,
+            cmEditor,
+            cmSaved,
+            diffView,
+            otWrapper,
             uiId,
             intervalId,
             logger,
@@ -67,6 +77,9 @@ define([
             client,
             activeObject,
             docId;
+
+        this._savedValue = params.value;
+        this._storedValue = params.value;
 
         function growl(msg, level, delay) {
             $.notify({
@@ -97,6 +110,10 @@ define([
                     if (self._storedValue !== newAttr) {
                         growl('Stored value was updated', 'info', 1000);
                         self._storedValue = newAttr;
+                        cmSaved.setValue(newAttr);
+                        if (comparing) {
+                            diffView.forceUpdate();
+                        }
                     }
                 } else if (events[i].etype === 'unload') {
                     growl('Node was deleted! Make sure to copy your text to preserve changes.', 'danger', 10000);
@@ -107,7 +124,7 @@ define([
         }
 
         function hasDifferentValue() {
-            return self._savedValue !== self._cm.getValue();
+            return self._savedValue !== cmEditor.getValue();
         }
 
         function save() {
@@ -117,7 +134,7 @@ define([
             }
 
             client.startTransaction();
-            newValue = self._cm.getValue();
+            newValue = cmEditor.getValue();
             self._activeSelection.forEach(function (id) {
                 client.setAttribute(id, params.name, newValue);
             });
@@ -165,9 +182,6 @@ define([
         client = params.client || WebGMEGlobal.Client;
         logger = Logger.createWithGmeConfig('gme:Dialogs:CodeEditorDialog', client.gmeConfig);
 
-        this._savedValue = params.value;
-        this._storedValue = params.value;
-
         activeObject = params.activeObject || WebGMEGlobal.State.getActiveObject();
         this._activeSelection = params.activeSelection || WebGMEGlobal.State.getActiveSelection();
 
@@ -195,12 +209,8 @@ define([
             var modeSelect = event.target,
                 mode = modeSelect.options[modeSelect.selectedIndex].textContent;
 
-            self._cm.setOption('mode', CONSTANTS.MODE[mode]);
-
-            // TODO: How to update options for cm-merge?
-            // if (cmCompare) {
-            //     cmCompare.setOption('mode', CONSTANTS.MODE[mode]);
-            // }
+            cmEditor.setOption('mode', CONSTANTS.MODE[mode]);
+            cmSaved.setOption('mode', CONSTANTS.MODE[mode]);
         });
 
         if (params.iconClass) {
@@ -221,8 +231,11 @@ define([
             $(this._cancelBtn).text(params.cancelLabel);
         }
 
-        this._cm = CodeMirror.fromTextArea(this._dialog.find('.codemirror-editor').first().get(0), codemirrorOptions);
-        this._editor = new ot.CodeMirrorAdapter(this._cm);
+        cmCompare = CodeMirror.MergeView(self._compareEl.get(0), codemirrorOptions);
+        cmEditor = cmCompare.edit; // The cm instance for editing.
+        cmSaved = cmCompare.right.orig; // The cm instance displaying original value.
+        diffView = cmCompare.right; // Diff view controller (used to update diff).
+        otWrapper = new ot.CodeMirrorAdapter(cmEditor); // Ot wrapper for obtaining/applying operations.
 
         this._saveBtn.on('click', function (event) {
             event.preventDefault();
@@ -246,33 +259,30 @@ define([
             self._dialog.modal('hide');
         });
 
-        self._compareEl.hide();
+        self._compareTitles.hide();
         this._compareBtn.on('click', function (event) {
             event.preventDefault();
             event.stopPropagation();
 
-            if (cmCompare) {
-                cmCompare = null;
+            if (comparing) {
                 self._compareBtn.text('Compare');
-                self._compareEl.empty();
-                self._compareEl.hide();
-                $(self._cm.getWrapperElement()).show();
-                self._cm.refresh();
+                self._compareEl.addClass('not-comparing');
+                self._compareTitles.hide();
+                diffView.setShowDifferences(false);
             } else {
-                $(self._cm.getWrapperElement()).hide();
-                self._compareEl.show();
-                cmCompare = CodeMirror.MergeView(self._compareEl.get(0), {
-                    value: self._cm.getValue(),
-                    readOnly: true,
-                    origRight: self._savedValue || '',
-                    lineNumbers: true,
-                    mode: codemirrorOptions.mode,
-                    showDifferences: true,
-                    fullscreen: false,
-                    revertButtons: false
-                });
-                self._compareBtn.text('Edit');
+                self._compareBtn.text('Hide Compare');
+                self._compareEl.removeClass('not-comparing');
+                self._compareTitles.show();
+                cmSaved.refresh();
+                diffView.setShowDifferences(true);
+                if (self._storedValue === cmEditor.getValue()) {
+                    growl('There are no differences...', 'info', 1000);
+                }
             }
+
+            cmEditor.focus();
+
+            comparing = !comparing;
         });
 
         this._dialog.on('hide.bs.modal', function (e) {
@@ -315,8 +325,8 @@ define([
         });
 
         this._dialog.on('shown.bs.modal', function () {
-            self._cm.focus();
-            self._cm.refresh();
+            cmEditor.focus();
+            cmEditor.refresh();
         });
 
         this._dialog.modal({show: true});
@@ -327,7 +337,7 @@ define([
             this._okBtn.hide();
             this._saveBtn.hide();
             this._compareBtn.hide();
-            this._cm.setValue(params.value || '');
+            cmEditor.setValue(params.value || '');
         } else {
             if (client.gmeConfig.documentEditing.enable === true &&
                 isConnected(client.getNetworkStatus()) && this._activeSelection.length === 1) {
@@ -341,7 +351,10 @@ define([
                         attrValue: params.value,
                     },
                     function atOperation(operation) {
-                        self._editor.applyOperation(operation);
+                        otWrapper.applyOperation(operation);
+                        if (comparing) {
+                            //diffView.forceUpdate();
+                        }
                     },
                     function atSelection(eData) {
                         var colorIndex;
@@ -362,7 +375,7 @@ define([
 
                         // .. and if there is a new selection, set it in the editor.
                         if (eData.selection) {
-                            otherClients[eData.socketId].selection = self._editor.setOtherSelection(eData.selection,
+                            otherClients[eData.socketId].selection = otWrapper.setOtherSelection(eData.selection,
                                 otherClients[eData.socketId].color, otherClients[eData.socketId].userId);
                         }
                     },
@@ -374,19 +387,27 @@ define([
                         }
 
                         docId = initData.docId;
-                        self._cm.setValue(initData.document);
-                        self._editor.registerCallbacks({
+                        cmEditor.setValue(initData.document);
+                        if (comparing) {
+                            diffView.forceUpdate();
+                        }
+
+                        otWrapper.registerCallbacks({
                             'change': function (operation) {
                                 client.sendDocumentOperation({
                                     docId: docId,
                                     operation: operation,
-                                    selection: self._editor.getSelection()
+                                    selection: otWrapper.getSelection()
                                 });
+
+                                if (comparing) {
+                                    //diffView.forceUpdate();
+                                }
                             },
                             'selectionChange': function () {
                                 client.sendDocumentSelection({
                                     docId: docId,
-                                    selection: self._editor.getSelection()
+                                    selection: otWrapper.getSelection()
                                 });
                             }
                         });
@@ -396,7 +417,7 @@ define([
                         client.addEventListener(client.CONSTANTS.NETWORK_STATUS_CHANGED, newNetworkStatus);
                     });
             } else {
-                this._cm.setValue(params.value || '');
+                cmEditor.setValue(params.value || '');
             }
 
             territory[this._activeSelection[0]] = {children: 0};
