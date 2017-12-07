@@ -28,6 +28,7 @@ define([
     'blockies',
     'd3',
     'codemirror',
+    'diff_match_patch',
     'epiceditor',
     'clipboard',
 

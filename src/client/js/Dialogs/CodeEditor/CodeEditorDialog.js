@@ -20,7 +20,6 @@ define([
     'text!./templates/CodeEditorDialog.html',
     'css!./styles/CodeEditorDialog.css',
     'codemirror/addon/merge/merge',
-    'css!codemirror/addon/merge/merge.css',
     'codemirror/mode/clike/clike',
     'codemirror/mode/css/css',
     'codemirror/mode/erlang/erlang',

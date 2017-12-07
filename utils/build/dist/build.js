@@ -60,6 +60,7 @@ var requirejs = require('requirejs'),
             blockies: 'empty:',
             d3: 'empty:',
             clipboard: 'empty:',
+            diff_match_patch: 'empty:',
 
             AutoRouterActionApplier: 'client/lib/autorouter/action-applier',
 
@@ -137,6 +138,7 @@ var requirejs = require('requirejs'),
             d3: 'client/bower_components/d3/d3',
             epiceditor: 'client/bower_components/EpicEditor/epiceditor/js/epiceditor',
             clipboard: 'client/bower_components/clipboard/dist/clipboard',
+            diff_match_patch: 'client/bower_components/google-diff-match-patch/diff_match_patch_uncompressed',
 
             AutoRouterActionApplier: 'empty:',
 
