@@ -64,6 +64,8 @@ define([
                 revertButtons: true
             },
             comparing = false,
+            compareShown = false,
+            nodeName,
             cmCompare,
             cmEditor,
             cmSaved,
@@ -74,11 +76,11 @@ define([
             logger,
             oked,
             client,
-            activeObject,
+            activeObjectId,
             docId;
 
-        this._savedValue = params.value;
-        this._storedValue = params.value;
+        this._savedValue = params.value || '';
+        this._storedValue = params.value || '';
 
         function growl(msg, level, delay) {
             $.notify({
@@ -102,7 +104,8 @@ define([
 
             for (i = 0; i < events.length; i += 1) {
                 if (events[i].etype === 'load') {
-                    //nodeObj = client.getNode(events[i].eid);
+                    nodeObj = client.getNode(events[i].eid);
+                    nodeName = nodeObj.getAttribute('name');
                 } else if (events[i].etype === 'update') {
                     nodeObj = client.getNode(events[i].eid);
                     newAttr = nodeObj.getAttribute(params.name);
@@ -162,11 +165,15 @@ define([
                 });
 
                 intervalId = setInterval(function () {
-                    var msg = 'Connection was lost. If not reconnected within ' +
-                        Math.ceil((disconnectTimeout - (Date.now() - disconnectedAt)) / 1000) +
-                        ' seconds, your changes could get lost.';
+                    var timeLeft = Math.ceil((disconnectTimeout - (Date.now() - disconnectedAt)) / 1000),
+                        msg = 'Connection was lost. If not reconnected within ' + timeLeft +
+                        ' seconds, the channel could be closed. You can save your changes and wait for reconnection.';
 
-                    growl(msg, 'danger', 3000);
+                    if (timeLeft >= 0) {
+                        growl(msg, 'danger', 3000);
+                    } else {
+                        clearInterval(intervalId);
+                    }
                 }, disconnectTimeout / 10);
             } else if (isConnected(status)) {
                 clearInterval(intervalId);
@@ -181,36 +188,12 @@ define([
         client = params.client || WebGMEGlobal.Client;
         logger = Logger.createWithGmeConfig('gme:Dialogs:CodeEditorDialog', client.gmeConfig);
 
-        activeObject = params.activeObject || WebGMEGlobal.State.getActiveObject();
+        activeObjectId = params.activeObject || WebGMEGlobal.State.getActiveObject();
         this._activeSelection = params.activeSelection || WebGMEGlobal.State.getActiveSelection();
 
         if (!this._activeSelection || this._activeSelection.length === 0) {
-            this._activeSelection = [activeObject];
+            this._activeSelection = [activeObjectId];
         }
-
-        // mode selector
-        this._modeSelect = this._dialog.find('#mode_select').first();
-
-        Object.keys(COMMON.ATTRIBUTE_MULTILINE_TYPES).forEach(function (type) {
-            self._modeSelect.append($('<option/>').text(type));
-        });
-
-        if (COMMON.ATTRIBUTE_MULTILINE_TYPES.hasOwnProperty(params.multilineType)) {
-            this._modeSelect.val(params.multilineType);
-            if (params.multilineType !== COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext) {
-                codemirrorOptions.mode = CONSTANTS.MODE[params.multilineType];
-            }
-        } else {
-            this._modeSelect.val(COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
-        }
-
-        this._modeSelect.on('change', function (event) {
-            var modeSelect = event.target,
-                mode = modeSelect.options[modeSelect.selectedIndex].textContent;
-
-            cmEditor.setOption('mode', CONSTANTS.MODE[mode]);
-            cmSaved.setOption('mode', CONSTANTS.MODE[mode]);
-        });
 
         if (params.iconClass) {
             this._icon.addClass(params.iconClass);
@@ -235,6 +218,34 @@ define([
         cmSaved = cmCompare.right.orig; // The cm instance displaying original value.
         diffView = cmCompare.right; // Diff view controller (used to update diff).
         otWrapper = new ot.CodeMirrorAdapter(cmEditor); // Ot wrapper for obtaining/applying operations.
+
+        // mode selector
+        this._modeSelect = this._dialog.find('#mode_select').first();
+
+        Object.keys(COMMON.ATTRIBUTE_MULTILINE_TYPES).forEach(function (type) {
+            self._modeSelect.append($('<option/>').text(type));
+        });
+
+        cmEditor.setOption('mode', undefined);
+        cmSaved.setOption('mode', undefined);
+
+        if (COMMON.ATTRIBUTE_MULTILINE_TYPES.hasOwnProperty(params.multilineType)) {
+            this._modeSelect.val(params.multilineType);
+            if (params.multilineType !== COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext) {
+                cmEditor.setOption('mode', CONSTANTS.MODE[params.multilineType]);
+                cmSaved.setOption('mode', CONSTANTS.MODE[params.multilineType]);
+            }
+        } else {
+            this._modeSelect.val(COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
+        }
+
+        this._modeSelect.on('change', function (event) {
+            var modeSelect = event.target,
+                mode = modeSelect.options[modeSelect.selectedIndex].textContent;
+
+            cmEditor.setOption('mode', CONSTANTS.MODE[mode]);
+            cmSaved.setOption('mode', CONSTANTS.MODE[mode]);
+        });
 
         this._saveBtn.on('click', function (event) {
             event.preventDefault();
@@ -274,9 +285,14 @@ define([
                 self._compareTitles.show();
                 cmSaved.refresh();
                 diffView.setShowDifferences(true);
+                // if (self._activeSelection.length > 1 && compareShown === false) {
+                //     growl('More than one node were selected. Comparing with the value from [' + (nodeName ||
+                //         self._activeSelection[0]) + '] which is the first node in the selection.', 'info', 1000);
+                // }
                 if (self._storedValue === cmEditor.getValue()) {
                     growl('There are no differences...', 'info', 1000);
                 }
+                compareShown = true;
             }
 
             cmEditor.focus();
@@ -336,7 +352,6 @@ define([
             this._okBtn.hide();
             this._saveBtn.hide();
             this._compareBtn.hide();
-            cmEditor.setValue(params.value || '');
         } else {
             if (client.gmeConfig.documentEditing.enable === true &&
                 isConnected(client.getNetworkStatus()) && this._activeSelection.length === 1) {
@@ -415,13 +430,15 @@ define([
                             'persisted by saving.', 'success', 5000);
                         client.addEventListener(client.CONSTANTS.NETWORK_STATUS_CHANGED, newNetworkStatus);
                     });
-            } else {
-                cmEditor.setValue(params.value || '');
             }
 
-            territory[this._activeSelection[0]] = {children: 0};
-            uiId = client.addUI(null, nodeEventHandler);
-            client.updateTerritory(uiId, territory);
+            if (this._activeSelection.length === 1) {
+                territory[this._activeSelection[0]] = {children: 0};
+                uiId = client.addUI(null, nodeEventHandler);
+                client.updateTerritory(uiId, territory);
+            } else {
+                this._compareBtn.hide();
+            }
         }
     };
 
