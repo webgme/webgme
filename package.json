@@ -25,9 +25,9 @@
   "dependencies": {
     "bower": "1.8.0",
     "q": "1.5.0",
-    "requirejs": "2.1.20",
     "require-uncached": "1.0.3",
-    "webgme-engine": "webgme/webgme-engine#ot-attribute-editing",
+    "requirejs": "2.1.20",
+    "webgme-engine": "github:webgme/webgme-engine#ot-attribute-editing",
     "webgme-user-management-page": "0.3.3"
   },
   "devDependencies": {
@@ -50,7 +50,7 @@
   "typings": "typings/webgme.d.ts",
   "scripts": {
     "start": "node app.js",
-    "prepublish": "node ./utils/prepublish.js",
+    "prepublishOnly": "node ./utils/prepublish.js",
     "build": "node ./utils/build/dist/build.js",
     "postinstall": "node ./utils/postinstall.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",

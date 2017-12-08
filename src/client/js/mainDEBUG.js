@@ -80,7 +80,7 @@ require.config({
         debug: 'common/lib/debug/debug',
         q: 'common/lib/q/q',
         superagent: 'common/lib/superagent/superagent',
-        ot: 'common/lib/ot/ot',
+        'webgme-ot': 'common/lib/webgme-ot/webgme-ot',
 
         moment: 'bower_components/moment/moment',
         blockies: 'lib/blockies/blockies',

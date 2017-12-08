@@ -15,7 +15,7 @@ define([
     'bootstrap-notify',
 
     'q',
-    'ot',
+    'webgme-ot',
     'superagent',
     'jszip',
     'debug',

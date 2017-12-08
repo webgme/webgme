@@ -10,7 +10,7 @@
 
 define([
     'codemirror',
-    'ot',
+    'webgme-ot',
     './constants',
     'common/Constants',
     'client/logger',
