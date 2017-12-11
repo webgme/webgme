@@ -64,6 +64,14 @@ div.code-editor-dialog {
                 .CodeMirror {
                   width: 100%;
                   height: 100%;
+                  .other-client {
+                    &:hover {
+                      border-left-width: 8px !important;
+                      margin-left: -4px !important;
+                      margin-right: -4px !important;
+                      cursor: default;
+                    }
+                  }
                 }
               }
             }

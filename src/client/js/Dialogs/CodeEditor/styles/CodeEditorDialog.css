@@ -49,6 +49,11 @@ div.code-editor-dialog .modal-dialog {
               div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare .CodeMirror-merge .CodeMirror-merge-pane .CodeMirror {
                 width: 100%;
                 height: 100%; }
+                div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare .CodeMirror-merge .CodeMirror-merge-pane .CodeMirror .other-client:hover {
+                  border-left-width: 8px !important;
+                  margin-left: -4px !important;
+                  margin-right: -4px !important;
+                  cursor: default; }
           div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare.not-comparing {
             height: 100%; }
             div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare.not-comparing .CodeMirror-merge-pane {
