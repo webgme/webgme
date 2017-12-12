@@ -1,4 +1,4 @@
-/*globals define, $*/
+/*globals define, $, WebGMEGlobal, unescape*/
 /*jshint browser: true*/
 
 /**
@@ -93,7 +93,7 @@ define([
                         data = $(data).find('svg').first().prop('outerHTML');
                     }
 
-                    return 'data:image/svg+xml;base64,' + window.btoa(data);
+                    return 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(data)));
                 } catch (e) {
                     return null;
                 }
@@ -183,7 +183,8 @@ define([
                 }
 
                 if (doUri === true) {
-                    data = $(data).data = 'data:image/svg+xml;base64,' + window.btoa(data);
+                    data = $(data).data = 'data:image/svg+xml;base64,' +
+                        window.btoa(unescape(encodeURIComponent(data)));
                 } else {
                     data = $(data);
                 }

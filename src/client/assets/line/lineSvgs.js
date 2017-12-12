@@ -1,8 +1,14 @@
+/*globals define, unescape*/
+/*jshint browser: true*/
 /**
+ *
+ * Returns the data uris that can be used in an img-element to display the originating svgs
+ *
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['js/Constants', 'js/RegistryKeys'], function (CONSTANTS, REGISTRY_KEYS) {
+define(['common/util/ejs', 'js/Constants', 'js/RegistryKeys'], function (ejs, CONSTANTS, REGISTRY_KEYS) {
     'use strict';
     var line_svg_directory = {},
         arrowExtra = '-xwide-xlong';
@@ -431,5 +437,18 @@ define(['js/Constants', 'js/RegistryKeys'], function (CONSTANTS, REGISTRY_KEYS) 
         'd="M5,10.5C15,-9.5,40,30.5,45,10.5" stroke-width="1" stroke-dasharray="0" ' +
         'style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path></svg>';
 
-    return line_svg_directory;
+    var dataUri = {};
+
+    Object.keys(line_svg_directory)
+        .forEach(function (groupName) {
+            dataUri[groupName] = {};
+
+            Object.keys(line_svg_directory[groupName])
+                .forEach(function (itemName) {
+                    dataUri[groupName][itemName] = 'data:image/svg+xml;base64,' +
+                        window.btoa(unescape(encodeURIComponent(line_svg_directory[groupName][itemName])));
+                });
+        });
+
+    return dataUri;
 });
