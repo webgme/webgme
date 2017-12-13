@@ -14,10 +14,9 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
     SvgSelectWidget = function (propertyDesc) {
         var self = this,
-            i,
+            key,
             item,
-            onClick,
-            opt;
+            onClick;
 
         WidgetBase.call(this, propertyDesc);
 
@@ -32,14 +31,14 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         self._dropDown.append(self._dropDownList);
 
         //set inner HTML of dropdown button
-        self._dropDownButton.html('<span>' + self._items[self._value] + '</span>');
+        self._dropDownButton.html('<span><img src="' + self._items[self._value] + '"/></span>');
         onClick = function (event) {
             self.setValue($(event.currentTarget).attr('data-value'));
             self.fireFinishChange();
         };
 
-        for (i in self._items) {
-            item = $('<li data-value="' + i + '"><a href="#">' + self._items[i] + '</a></li>');
+        for (key in self._items) {
+            item = $('<li data-value="' + key + '"><a href="#"><img src="' + self._items[key] + '"/></a></li>');
             item.on('click', onClick);
             self._dropDownItems.push(item);
             self._dropDownList.append(item);
