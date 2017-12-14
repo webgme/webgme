@@ -1,6 +1,6 @@
 {
   "name": "webgme",
-  "version": "2.20.0",
+  "version": "2.20.1-beta1",
   "description": "Web-based Generic Modeling Environment",
   "engines": {
     "node": ">=4.0.0"
@@ -25,9 +25,9 @@
   "dependencies": {
     "bower": "1.8.0",
     "q": "1.5.0",
-    "requirejs": "2.1.20",
     "require-uncached": "1.0.3",
-    "webgme-engine": "2.18.5",
+    "requirejs": "2.1.20",
+    "webgme-engine": "github:webgme/webgme-engine#ot-attribute-editing",
     "webgme-user-management-page": "0.3.3"
   },
   "devDependencies": {
@@ -50,7 +50,8 @@
   "typings": "typings/webgme.d.ts",
   "scripts": {
     "start": "node app.js",
-    "prepublish": "node ./utils/prepublish.js",
+    "prepublishOnly": "node ./utils/prepublish.js",
+    "build": "node ./utils/build/dist/build.js",
     "postinstall": "node ./utils/postinstall.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
     "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",

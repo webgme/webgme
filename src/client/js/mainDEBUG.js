@@ -58,6 +58,7 @@ require.config({
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
         ravenjs: 'bower_components/raven-js/dist/raven',
         clipboard: 'bower_components/clipboard/dist/clipboard.min',
+        diff_match_patch: 'bower_components/google-diff-match-patch/diff_match_patch_uncompressed',
 
         //RaphaelJS family
         eve: 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
@@ -79,6 +80,7 @@ require.config({
         debug: 'common/lib/debug/debug',
         q: 'common/lib/q/q',
         superagent: 'common/lib/superagent/superagent',
+        'webgme-ot': 'common/lib/webgme-ot/webgme-ot',
 
         moment: 'bower_components/moment/moment',
         blockies: 'lib/blockies/blockies',

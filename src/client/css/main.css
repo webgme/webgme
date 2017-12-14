@@ -2,6 +2,7 @@
 @import url("../bower_components/bootstrap/dist/css/bootstrap-theme.min.css");
 @import url("../bower_components/codemirror/lib/codemirror.css");
 @import url("../bower_components/codemirror/theme/monokai.css");
+@import url("../bower_components/codemirror/addon/merge/merge.css");
 @import url("codemirror/codemirror.bootstrap.css");
 
 @import url("webgme_bootstrap_overrides.css");
@@ -192,4 +193,9 @@ div.spacer {
     left: 0;
     width: 100%;
     height: 7px;
+}
+
+/* Make sure the notifications are shown within modal windows*/
+[data-notify="container"] {
+    z-index: 1051 !important;
 }

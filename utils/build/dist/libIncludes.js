@@ -15,6 +15,7 @@ define([
     'bootstrap-notify',
 
     'q',
+    'webgme-ot',
     'superagent',
     'jszip',
     'debug',
@@ -27,6 +28,7 @@ define([
     'blockies',
     'd3',
     'codemirror',
+    'diff_match_patch',
     'epiceditor',
     'clipboard',
 

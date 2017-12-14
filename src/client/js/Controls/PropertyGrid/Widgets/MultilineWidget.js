@@ -17,13 +17,6 @@ define([
     MultilineWidget = function (propertyDesc) {
         var self = this;
 
-        function saving(oked, value) {
-            if (oked) {
-                self.setValue(value);
-            }
-            self.fireFinishChange();
-        }
-
         WidgetBase.call(this, propertyDesc);
 
         this._readOnly = false;

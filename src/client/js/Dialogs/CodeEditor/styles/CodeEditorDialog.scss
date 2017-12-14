@@ -7,6 +7,7 @@ div.code-editor-dialog {
 
     width: 90%;
     height: 90%;
+    min-height: 800px;
 
     .modal-content {
       height: 100%;
@@ -33,8 +34,60 @@ div.code-editor-dialog {
       .modal-body {
         max-height: none;
         height: 85%;
-        .CodeMirror {
+        width: 100%;
+        display: flex;
+        .compare-container {
+          width: 100%;
           height: 100%;
+          .title-container {
+            position: relative;
+            width: 100%;
+            .diff-title {
+              display: inline-block;
+              width: 47%;
+              &.title-divider {
+                width: 6%;
+              }
+              &.saved-title {
+                position: absolute;
+              }
+            }
+          }
+          .codemirror-compare {
+            width: 100%;
+            height: 97%;
+            .CodeMirror-merge {
+              width: 100%;
+              height: 100%;
+              .CodeMirror-merge-pane {
+                height: 100%;
+                .CodeMirror {
+                  width: 100%;
+                  height: 100%;
+                  .other-client {
+                    &:hover {
+                      border-left-width: 8px !important;
+                      margin-left: -4px !important;
+                      margin-right: -4px !important;
+                      cursor: default;
+                    }
+                  }
+                }
+              }
+            }
+            &.not-comparing {
+              height: 100%;
+              .CodeMirror-merge-pane {
+                width: 100%;
+                &.CodeMirror-merge-pane-rightmost {
+                  display: none;
+                }
+              }
+              .CodeMirror-merge-gap {
+                display: none;
+              }
+            }
+          }
         }
       }
       .modal-footer {

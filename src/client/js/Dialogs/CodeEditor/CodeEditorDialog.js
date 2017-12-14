@@ -5,15 +5,21 @@
  * used for any codemirror based (and pop-up dialog styled) jobs
  *
  * @author kecso / https://github.com/kecso
+ * @author pmeijer / https://github.com/pmeijer
  */
 
 define([
     'codemirror',
-    'text!./templates/CodeEditorDialog.html',
+    'webgme-ot',
     './constants',
     'common/Constants',
+    'client/logger',
+    'js/Loader/LoaderCircles',
     'js/Dialogs/Confirm/ConfirmDialog',
+    './CLIENT_COLORS',
+    'text!./templates/CodeEditorDialog.html',
     'css!./styles/CodeEditorDialog.css',
+    'codemirror/addon/merge/merge',
     'codemirror/mode/clike/clike',
     'codemirror/mode/css/css',
     'codemirror/mode/erlang/erlang',
@@ -28,7 +34,7 @@ define([
     'codemirror/mode/python/python',
     'codemirror/mode/ttcn/ttcn',
     'codemirror/mode/yaml/yaml'
-], function (CodeMirror, dialogTemplate, CONSTANTS, COMMON, ConfirmDialog) {
+], function (CodeMirror, ot, CONSTANTS, COMMON, Logger, LoaderCircles, ConfirmDialog, CLIENT_COLORS, dialogTemplate) {
     'use strict';
 
     function CodeEditorDialog() {
@@ -38,101 +44,156 @@ define([
         this._saveBtn = this._dialog.find('.btn-save');
         this._okBtn = this._dialog.find('.btn-ok');
         this._cancelBtn = this._dialog.find('.btn-cancel');
+        this._compareBtn = this._dialog.find('.btn-compare');
+        this._compareContainer = this._dialog.find('.compare-container');
+        this._compareEl = this._dialog.find('.codemirror-compare');
+        this._compareTitles = this._dialog.find('.title-container');
     }
 
     CodeEditorDialog.prototype.show = function (params) {
         var self = this,
+            otherClients = {},
+            territory = {},
             codemirrorOptions = {
+                value: params.value || '',
                 readOnly: params.readOnly,
+                origRight: params.value || '',
                 lineNumbers: true,
-                matchBrackets: true,
+                showDifferences: false,
                 fullscreen: false,
+                revertButtons: true
             },
+            comparing = false,
+            compareShown = false,
+            nodeName,
+            cmCompare,
+            cmEditor,
+            cmSaved,
+            diffView,
+            otWrapper,
+            uiId,
+            intervalId,
+            logger,
             oked,
             client,
-            activeObject;
+            activeObjectId,
+            docId;
 
-        function hasDifferentValue() {
-            var editorValue = self._editor.getValue(),
-                nodeObj,
-                i;
+        this._savedValue = params.value || '';
+        this._storedValue = params.value || '';
 
-            for (i = 0; i < self._activeSelection.length; i += 1) {
-                nodeObj = client.getNode(self._activeSelection[i]);
-                if (nodeObj && nodeObj.getOwnAttribute(params.name) !== editorValue) {
-                    return true;
+        function growl(msg, level, delay) {
+            $.notify({
+                icon: level === 'danger' ? 'fa fa-exclamation-triangle' : '',
+                message: msg
+            }, {
+                delay: delay,
+                hideDuration: 0,
+                type: level,
+                offset: {
+                    x: 20,
+                    y: 37
+                }
+            });
+        }
+
+        function nodeEventHandler(events) {
+            var newAttr,
+                i,
+                nodeObj;
+
+            for (i = 0; i < events.length; i += 1) {
+                if (events[i].etype === 'load') {
+                    nodeObj = client.getNode(events[i].eid);
+                    nodeName = nodeObj.getAttribute('name');
+                } else if (events[i].etype === 'update') {
+                    nodeObj = client.getNode(events[i].eid);
+                    newAttr = nodeObj.getAttribute(params.name);
+                    if (self._storedValue !== newAttr) {
+                        growl('Stored value was updated', 'info', 1000);
+                        self._storedValue = newAttr;
+                        cmSaved.setValue(newAttr);
+                        if (comparing) {
+                            diffView.forceUpdate();
+                        }
+                    }
+                } else if (events[i].etype === 'unload') {
+                    growl('Node was deleted! Make sure to copy your text to preserve changes.', 'danger', 10000);
+                } else {
+                    // "Technical events" not used.
                 }
             }
+        }
 
-            return false;
+        function hasDifferentValue() {
+            return self._savedValue !== cmEditor.getValue();
         }
 
         function save() {
-
+            var newValue;
             if (params.readOnly || hasDifferentValue() === false) {
                 return;
             }
 
             client.startTransaction();
-
+            newValue = cmEditor.getValue();
             self._activeSelection.forEach(function (id) {
-                client.setAttribute(id, params.name, self._editor.getValue());
+                client.setAttribute(id, params.name, newValue);
             });
 
             client.completeTransaction();
+
+            self._savedValue = newValue;
         }
 
-        function promptIfToSave(cb) {
-            var dialog;
+        function isConnected(status) {
+            return status === COMMON.STORAGE.CONNECTED || status === COMMON.STORAGE.RECONNECTED;
+        }
 
-            if (params.readOnly || hasDifferentValue() === false) {
-                cb(false);
-            } else {
-                dialog = new ConfirmDialog();
-                dialog.show({
-                    severity: 'info',
-                    iconClass: 'fa fa-floppy-o',
-                    title: 'Save',
-                    question: 'The saved value(s) at the current node(s) differ from the one in the editor. ' +
-                        'Would you like to save the changes?',
-                    okLabel: 'Yes',
-                    cancelLabel: 'No',
-                    onHideFn: function (yes) {
-                        cb(yes);
+        function newNetworkStatus(c, status) {
+            var disconnectedAt,
+                disconnectTimeout;
+
+            if (status === COMMON.STORAGE.DISCONNECTED) {
+                disconnectedAt = Date.now();
+                disconnectTimeout = client.gmeConfig.documentEditing.disconnectTimeout;
+
+                Object.keys(otherClients).forEach(function (id) {
+                    if (otherClients[id].selection) {
+                        otherClients[id].selection.clear();
                     }
-                }, function () {
-
                 });
+
+                intervalId = setInterval(function () {
+                    var timeLeft = Math.ceil((disconnectTimeout - (Date.now() - disconnectedAt)) / 1000),
+                        msg = 'Connection was lost. If not reconnected within ' + timeLeft +
+                        ' seconds, the channel could be closed. You can save your changes and wait for reconnection.';
+
+                    if (timeLeft >= 0) {
+                        growl(msg, 'danger', 3000);
+                    } else {
+                        clearInterval(intervalId);
+                    }
+                }, disconnectTimeout / 10);
+            } else if (isConnected(status)) {
+                clearInterval(intervalId);
+                growl('Reconnected - all is fine.', 'success', 3000);
+            } else {
+                clearInterval(intervalId);
+                growl('There were connection issues - the page needs to be refreshed. ' +
+                    'Make sure to copy any text you would like to preserve.', 'danger', 30000);
             }
         }
 
         client = params.client || WebGMEGlobal.Client;
-        this._savedValue = params.value;
+        logger = Logger.createWithGmeConfig('gme:Dialogs:CodeEditorDialog', client.gmeConfig);
 
-        activeObject = params.activeObject || WebGMEGlobal.State.getActiveObject();
+        activeObjectId = params.activeObject || WebGMEGlobal.State.getActiveObject();
         this._activeSelection = params.activeSelection || WebGMEGlobal.State.getActiveSelection();
 
         if (!this._activeSelection || this._activeSelection.length === 0) {
-            this._activeSelection = [activeObject];
+            this._activeSelection = [activeObjectId];
         }
-
-        // mode selector
-        this._modeSelect = this._dialog.find('#mode_select').first();
-
-        Object.keys(COMMON.ATTRIBUTE_MULTILINE_TYPES).forEach(function (type) {
-            self._modeSelect.append($('<option/>').text(type));
-        });
-
-        if (COMMON.ATTRIBUTE_MULTILINE_TYPES.hasOwnProperty(params.multilineType)) {
-            this._modeSelect.val(params.multilineType);
-            if (params.multilineType !== COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext) {
-                codemirrorOptions.mode = CONSTANTS.MODE[params.multilineType];
-            }
-        } else {
-            this._modeSelect.val(COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
-        }
-
-        this._modeSelect.on('change', this.changeMode.bind(this));
 
         if (params.iconClass) {
             this._icon.addClass(params.iconClass);
@@ -152,7 +213,39 @@ define([
             $(this._cancelBtn).text(params.cancelLabel);
         }
 
-        this._editor = CodeMirror.fromTextArea(this._dialog.find('#codemirror-area').first().get(0), codemirrorOptions);
+        cmCompare = CodeMirror.MergeView(self._compareEl.get(0), codemirrorOptions);
+        cmEditor = cmCompare.edit; // The cm instance for editing.
+        cmSaved = cmCompare.right.orig; // The cm instance displaying original value.
+        diffView = cmCompare.right; // Diff view controller (used to update diff).
+        otWrapper = new ot.CodeMirrorAdapter(cmEditor); // Ot wrapper for obtaining/applying operations.
+
+        // mode selector
+        this._modeSelect = this._dialog.find('#mode_select').first();
+
+        Object.keys(COMMON.ATTRIBUTE_MULTILINE_TYPES).forEach(function (type) {
+            self._modeSelect.append($('<option/>').text(type));
+        });
+
+        cmEditor.setOption('mode', undefined);
+        cmSaved.setOption('mode', undefined);
+
+        if (COMMON.ATTRIBUTE_MULTILINE_TYPES.hasOwnProperty(params.multilineType)) {
+            this._modeSelect.val(params.multilineType);
+            if (params.multilineType !== COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext) {
+                cmEditor.setOption('mode', CONSTANTS.MODE[params.multilineType]);
+                cmSaved.setOption('mode', CONSTANTS.MODE[params.multilineType]);
+            }
+        } else {
+            this._modeSelect.val(COMMON.ATTRIBUTE_MULTILINE_TYPES.plaintext);
+        }
+
+        this._modeSelect.on('change', function (event) {
+            var modeSelect = event.target,
+                mode = modeSelect.options[modeSelect.selectedIndex].textContent;
+
+            cmEditor.setOption('mode', CONSTANTS.MODE[mode]);
+            cmSaved.setOption('mode', CONSTANTS.MODE[mode]);
+        });
 
         this._saveBtn.on('click', function (event) {
             event.preventDefault();
@@ -176,7 +269,38 @@ define([
             self._dialog.modal('hide');
         });
 
-        this._dialog.on('hide.bs.modal', function () {
+        self._compareTitles.hide();
+        this._compareBtn.on('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (comparing) {
+                self._compareBtn.text('Compare');
+                self._compareEl.addClass('not-comparing');
+                self._compareTitles.hide();
+                diffView.setShowDifferences(false);
+            } else {
+                self._compareBtn.text('Hide Compare');
+                self._compareEl.removeClass('not-comparing');
+                self._compareTitles.show();
+                cmSaved.refresh();
+                diffView.setShowDifferences(true);
+                // if (self._activeSelection.length > 1 && compareShown === false) {
+                //     growl('More than one node were selected. Comparing with the value from [' + (nodeName ||
+                //         self._activeSelection[0]) + '] which is the first node in the selection.', 'info', 1000);
+                // }
+                if (self._storedValue === cmEditor.getValue()) {
+                    growl('There are no differences...', 'info', 1000);
+                }
+                compareShown = true;
+            }
+
+            cmEditor.focus();
+
+            comparing = !comparing;
+        });
+
+        this._dialog.on('hide.bs.modal', function (e) {
             var doSave = false;
 
             function close() {
@@ -184,42 +308,138 @@ define([
                     save();
                 }
 
+                if (uiId) {
+                    client.removeUI(uiId);
+                }
+
+                if (docId) {
+                    client.unwatchDocument({docId: docId}, function (err) {
+                        if (err) {
+                            logger.error(err);
+                        }
+                    });
+
+                    client.removeEventListener(client.CONSTANTS.NETWORK_STATUS_CHANGED, newNetworkStatus);
+                }
+
                 self._dialog.remove();
                 self._dialog.empty();
                 self._dialog = undefined;
             }
 
-            if (typeof oked === 'boolean') {
+            if (typeof oked === 'boolean' || params.readOnly || hasDifferentValue() === false) {
                 doSave = oked;
                 close();
             } else {
-                // If accidentally closed prompt to save if saved values are different.
-                promptIfToSave(function (save) {
-                    doSave = save;
-                    close();
-                });
+                growl('You made changes without saving - you cannot exit without deciding whether to save or not',
+                    'warning', 4000);
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
             }
         });
 
         this._dialog.on('shown.bs.modal', function () {
-            self._editor.focus();
-            self._editor.refresh();
+            cmEditor.focus();
+            cmEditor.refresh();
         });
 
-        this._dialog.modal('show');
+        this._dialog.modal({show: true});
 
-        this._editor.setValue(params.value);
+        this._loader = new LoaderCircles({containerElement: this._dialog});
 
         if (params.readOnly) {
             this._okBtn.hide();
-            this._cancelBtn.hide();
-        }
-    };
+            this._saveBtn.hide();
+            this._compareBtn.hide();
+        } else {
+            if (client.gmeConfig.documentEditing.enable === true &&
+                isConnected(client.getNetworkStatus()) && this._activeSelection.length === 1) {
 
-    CodeEditorDialog.prototype.changeMode = function (event) {
-        var modeSelect = event.target,
-            mode = modeSelect.options[modeSelect.selectedIndex].textContent;
-        this._editor.setOption('mode', CONSTANTS.MODE[mode]);
+                self._loader.start();
+                client.watchDocument({
+                        projectId: client.getActiveProjectId(),
+                        branchName: client.getActiveBranchName(),
+                        nodeId: this._activeSelection[0],
+                        attrName: params.name,
+                        attrValue: params.value,
+                    },
+                    function atOperation(operation) {
+                        otWrapper.applyOperation(operation);
+                        if (comparing) {
+                            //diffView.forceUpdate();
+                        }
+                    },
+                    function atSelection(eData) {
+                        var colorIndex;
+
+                        if (otherClients.hasOwnProperty(eData.socketId) === false) {
+                            colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
+                            otherClients[eData.socketId] = {
+                                userId: eData.userId,
+                                selection: null,
+                                color: CLIENT_COLORS[colorIndex]
+                            };
+                        }
+
+                        // Clear the current selection for that user...
+                        if (otherClients[eData.socketId].selection) {
+                            otherClients[eData.socketId].selection.clear();
+                        }
+
+                        // .. and if there is a new selection, set it in the editor.
+                        if (eData.selection) {
+                            otherClients[eData.socketId].selection = otWrapper.setOtherSelection(eData.selection,
+                                otherClients[eData.socketId].color, otherClients[eData.socketId].userId);
+                        }
+                    },
+                    function (err, initData) {
+                        if (err) {
+                            logger.error(err);
+                            growl(err.message, 'danger', 5000);
+                            return;
+                        }
+
+                        docId = initData.docId;
+                        cmEditor.setValue(initData.document);
+                        if (comparing) {
+                            diffView.forceUpdate();
+                        }
+
+                        otWrapper.registerCallbacks({
+                            'change': function (operation) {
+                                client.sendDocumentOperation({
+                                    docId: docId,
+                                    operation: operation,
+                                    selection: otWrapper.getSelection()
+                                });
+
+                                if (comparing) {
+                                    //diffView.forceUpdate();
+                                }
+                            },
+                            'selectionChange': function () {
+                                client.sendDocumentSelection({
+                                    docId: docId,
+                                    selection: otWrapper.getSelection()
+                                });
+                            }
+                        });
+                        self._loader.stop();
+                        growl('A channel for close collaboration is open. Changes still have to be ' +
+                            'persisted by saving.', 'success', 5000);
+                        client.addEventListener(client.CONSTANTS.NETWORK_STATUS_CHANGED, newNetworkStatus);
+                    });
+            }
+
+            if (this._activeSelection.length === 1) {
+                territory[this._activeSelection[0]] = {children: 0};
+                uiId = client.addUI(null, nodeEventHandler);
+                client.updateTerritory(uiId, territory);
+            } else {
+                this._compareBtn.hide();
+            }
+        }
     };
 
     return CodeEditorDialog;

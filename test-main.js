@@ -39,6 +39,7 @@ require.config({
         debug: './node_modules/webgme-engine/src/common/lib/debug/debug',
         chance: './node_modules/webgme-engine/src/common/lib/chance/chance',
         q: './node_modules/webgme-engine/src/common/lib/q/q',
+        'webgme-ot': './node_modules/webgme-engine/src/common/lib/webgme-ot/webgme-ot',
 
 
         // webgme app specific libs

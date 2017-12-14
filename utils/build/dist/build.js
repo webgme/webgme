@@ -48,6 +48,7 @@ var requirejs = require('requirejs'),
 
             q: 'empty:',
             superagent: 'empty:',
+            'webgme-ot': 'empty:',
             jszip: 'empty:',
             debug: 'empty:',
             urlparse: 'empty:',
@@ -59,6 +60,7 @@ var requirejs = require('requirejs'),
             blockies: 'empty:',
             d3: 'empty:',
             clipboard: 'empty:',
+            diff_match_patch: 'empty:',
 
             AutoRouterActionApplier: 'client/lib/autorouter/action-applier',
 
@@ -124,6 +126,7 @@ var requirejs = require('requirejs'),
             superagent: path.join(webgmeEngineSrc, 'common/lib/superagent/superagent'),
             debug: path.join(webgmeEngineSrc, 'common/lib/debug/debug'),
             chance: path.join(webgmeEngineSrc, 'common/lib/chance/chance'),
+            'webgme-ot': path.join(webgmeEngineSrc, 'common/lib/webgme-ot/webgme-ot'),
 
             jszip: 'client/bower_components/jszip/dist/jszip',
             urlparse: 'client/lib/purl/purl.min',
@@ -135,6 +138,7 @@ var requirejs = require('requirejs'),
             d3: 'client/bower_components/d3/d3',
             epiceditor: 'client/bower_components/EpicEditor/epiceditor/js/epiceditor',
             clipboard: 'client/bower_components/clipboard/dist/clipboard',
+            diff_match_patch: 'client/bower_components/google-diff-match-patch/diff_match_patch_uncompressed',
 
             AutoRouterActionApplier: 'empty:',
 

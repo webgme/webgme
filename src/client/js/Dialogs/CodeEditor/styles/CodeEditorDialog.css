@@ -3,7 +3,8 @@
 */
 div.code-editor-dialog .modal-dialog {
   width: 90%;
-  height: 90%; }
+  height: 90%;
+  min-height: 800px; }
   div.code-editor-dialog .modal-dialog .modal-content {
     height: 100%;
     width: 100%; }
@@ -21,8 +22,45 @@ div.code-editor-dialog .modal-dialog {
       color: #2e6da4; }
     div.code-editor-dialog .modal-dialog .modal-content .modal-body {
       max-height: none;
-      height: 85%; }
-      div.code-editor-dialog .modal-dialog .modal-content .modal-body .CodeMirror {
+      height: 85%;
+      width: 100%;
+      display: flex; }
+      div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container {
+        width: 100%;
         height: 100%; }
+        div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .title-container {
+          position: relative;
+          width: 100%; }
+          div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .title-container .diff-title {
+            display: inline-block;
+            width: 47%; }
+            div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .title-container .diff-title.title-divider {
+              width: 6%; }
+            div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .title-container .diff-title.saved-title {
+              position: absolute; }
+        div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare {
+          width: 100%;
+          height: 97%; }
+          div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare .CodeMirror-merge {
+            width: 100%;
+            height: 100%; }
+            div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare .CodeMirror-merge .CodeMirror-merge-pane {
+              height: 100%; }
+              div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare .CodeMirror-merge .CodeMirror-merge-pane .CodeMirror {
+                width: 100%;
+                height: 100%; }
+                div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare .CodeMirror-merge .CodeMirror-merge-pane .CodeMirror .other-client:hover {
+                  border-left-width: 8px !important;
+                  margin-left: -4px !important;
+                  margin-right: -4px !important;
+                  cursor: default; }
+          div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare.not-comparing {
+            height: 100%; }
+            div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare.not-comparing .CodeMirror-merge-pane {
+              width: 100%; }
+              div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare.not-comparing .CodeMirror-merge-pane.CodeMirror-merge-pane-rightmost {
+                display: none; }
+            div.code-editor-dialog .modal-dialog .modal-content .modal-body .compare-container .codemirror-compare.not-comparing .CodeMirror-merge-gap {
+              display: none; }
     div.code-editor-dialog .modal-dialog .modal-content .modal-footer form label {
       font-weight: lighter; }
