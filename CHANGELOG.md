@@ -1,5 +1,25 @@
 # Change Log
 
+## [v2.21.0](https://github.com/webgme/webgme/tree/v2.21.0) (2017-12-18)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.20.0...v2.21.0)
+
+**Implemented enhancements:**
+
+- Broken link in the documentation [\#1554](https://github.com/webgme/webgme/issues/1554)
+- Bump webgme-engine to 2.19.1 [\#1558](https://github.com/webgme/webgme/pull/1558) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Plugin MetaGME Paradigm Importer does not properly import \(anymore?\) [\#1560](https://github.com/webgme/webgme/issues/1560)
+- Line-selectors in Property Editor do not display all arrow ends [\#1556](https://github.com/webgme/webgme/issues/1556)
+- InvalidCharacterError: Failed to execute 'btoa' on 'Window': The string to be encoded contains characters outside of the... [\#1555](https://github.com/webgme/webgme/issues/1555)
+- Fixes \#1555 Fixes \#1556 encode svgs and use image tags in selector [\#1557](https://github.com/webgme/webgme/pull/1557) ([pmeijer](https://github.com/pmeijer))
+
+**Merged pull requests:**
+
+- Bump webgme-engine 2.19.2 [\#1561](https://github.com/webgme/webgme/pull/1561) ([kecso](https://github.com/kecso))
+- Multline code-editor edits attributes using operational transformations [\#1559](https://github.com/webgme/webgme/pull/1559) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.20.0](https://github.com/webgme/webgme/tree/v2.20.0) (2017-11-21)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.19.0...v2.20.0)
 
