@@ -47,4 +47,4 @@ workerList.nedb
 # ignore generated documentation
 typed_docs/
 
-package-lock.json
+# package-lock.json
