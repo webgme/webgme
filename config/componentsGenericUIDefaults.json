@@ -115,7 +115,15 @@
         "container": "east",
         "DEBUG_ONLY": false
       }
-    ]
+    ],
+    "paneOptionsOverwrites": {
+      "east": {
+        "initClosed": false
+      },
+      "west": {
+        "initClosed": false
+      }
+    }
   },
   "GenericUIProjectRepositoryWidget": {
     "commitBadges": {
