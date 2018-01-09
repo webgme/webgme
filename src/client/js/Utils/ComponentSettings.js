@@ -8,6 +8,41 @@ define(['common/util/util', 'superagent'], function (UTIL, superagent) {
 
     'use strict';
 
+    // Only send out one setting update at a time.
+    var ongoingRequests = [];
+
+    function _sendUpdate(updateInfo) {
+        superagent[updateInfo.method]('api/user/settings/' + updateInfo.componentId)
+            .send(updateInfo.newSettings)
+            .end(function (err, res) {
+                ongoingRequests.shift();
+
+                if (ongoingRequests.length > 0) {
+                    _sendUpdate(ongoingRequests[0]);
+                }
+
+                if (err || res.status !== 200) {
+                    updateInfo.cb(err || new Error('Did not return status 200: ' + res.status));
+                } else {
+                    if (typeof WebGMEGlobal !== 'undefined') {
+                        if (WebGMEGlobal.userInfo && WebGMEGlobal.userInfo.settings) {
+                            WebGMEGlobal.userInfo.settings[updateInfo.componentId] = res.body;
+                        }
+                    }
+
+                    updateInfo.cb(null, res.body);
+                }
+            });
+    }
+
+    function _queueUpdate(updateInfo) {
+        ongoingRequests.push(updateInfo);
+
+        if (ongoingRequests.length === 1) {
+            _sendUpdate(updateInfo);
+        }
+    }
+
     /**
      * Updates the defaultSettings based on passed settings.
      *
@@ -57,22 +92,12 @@ define(['common/util/util', 'superagent'], function (UTIL, superagent) {
      * @param {object} newSettings - Settings that will be merged with the current stored ones.
      */
     function updateComponentSettings(componentId, newSettings, callback) {
-        superagent.patch('api/user/settings/' + componentId)
-            .send(newSettings)
-            .end(function (err, res) {
-                if (err || res.status !== 200) {
-                    callback(err || new Error('Did not return status 200: ' + res.status));
-                    return;
-                }
-
-                if (typeof WebGMEGlobal !== 'undefined') {
-                    if (WebGMEGlobal.userInfo && WebGMEGlobal.userInfo.settings) {
-                        WebGMEGlobal.userInfo.settings[componentId] = res.body;
-                    }
-                }
-
-                callback(null, res.body);
-            });
+        _queueUpdate({
+            method: 'patch',
+            componentId: componentId,
+            newSettings: newSettings,
+            cb: callback
+        });
     }
 
     /**
@@ -84,22 +109,12 @@ define(['common/util/util', 'superagent'], function (UTIL, superagent) {
      * @param {object} newSettings - Settings that will be merged with the current stored ones.
      */
     function overwriteComponentSettings(componentId, newSettings, callback) {
-        superagent.put('api/user/settings/' + componentId)
-            .send(newSettings)
-            .end(function (err, res) {
-                if (err || res.status !== 200) {
-                    callback(err || new Error('Did not return status 200: ' + res.status));
-                    return;
-                }
-
-                if (typeof WebGMEGlobal !== 'undefined') {
-                    if (WebGMEGlobal.userInfo && WebGMEGlobal.userInfo.settings) {
-                        WebGMEGlobal.userInfo.settings[componentId] = res.body;
-                    }
-                }
-
-                callback(null, res.body);
-            });
+        _queueUpdate({
+            method: 'put',
+            componentId: componentId,
+            newSettings: newSettings,
+            cb: callback
+        });
     }
 
     return {

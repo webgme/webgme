@@ -74,13 +74,13 @@ define(['jquery-layout',
                     spacing_open: SPACING_OPEN, //jshint ignore: line
                     spacing_closed: SPACING_CLOSED, //jshint ignore: line
                     onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                        self._onEastResize();
+                        self._onEastResize(true);
                     },
                     onopen: function () {
-                        self._toggleHiddenClosed('east', false);
+                        self._updatePaneSettings('east', {initClosed: false});
                     },
                     onclose: function () {
-                        self._toggleHiddenClosed('east', true);
+                        self._updatePaneSettings('east', {initClosed: true});
                     }
                 },
                 west: {
@@ -92,13 +92,13 @@ define(['jquery-layout',
                     spacing_open: SPACING_OPEN, //jshint ignore: line
                     spacing_closed: SPACING_CLOSED, //jshint ignore: line
                     onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                        self._onWestResize();
+                        self._onWestResize(true);
                     },
                     onopen: function () {
-                        self._toggleHiddenClosed('west', false);
+                        self._updatePaneSettings('west', {initClosed: false});
                     },
                     onclose: function () {
-                        self._toggleHiddenClosed('west', true);
+                        self._updatePaneSettings('west', {initClosed: true});
                     }
                 },
                 center: {
@@ -206,23 +206,31 @@ define(['jquery-layout',
         }
     };
 
-    DefaultLayout.prototype._onEastResize = function () {
+    DefaultLayout.prototype._onEastResize = function (updateSettings) {
         var len = this._eastPanels.length,
             w = this._eastPanel.width(),
             h = this._eastPanel.height(),
             pHeight = Math.floor(h / len),
             i;
 
+        if (updateSettings === true && w >= SIDE_PANEL_WIDTH) {
+            this._updatePaneSettings('east', {size: w});
+        }
+
         for (i = 0; i < len; i += 1) {
             this._eastPanels[i].setSize(w, pHeight);
         }
     };
 
-    DefaultLayout.prototype._onWestResize = function () {
+    DefaultLayout.prototype._onWestResize = function (updateSettings) {
         var len = this._westPanels.length,
             w = this._westPanel.width(),
             h = this._westPanel.height(),
             h0;
+
+        if (updateSettings === true && w >= SIDE_PANEL_WIDTH) {
+            this._updatePaneSettings('west', {size: w});
+        }
 
         //TODO: fix this
         //second widget takes all the available space
@@ -232,15 +240,13 @@ define(['jquery-layout',
         }
     };
 
-    DefaultLayout.prototype._toggleHiddenClosed = function (paneName, hidden) {
+    DefaultLayout.prototype._updatePaneSettings = function (paneName, paneOption) {
         var self = this,
-            newSetting = {paneOptionsOverwrites: {}};
+            newSettings = {paneOptionsOverwrites: {}};
 
-        newSetting.paneOptionsOverwrites[paneName] = {
-            initClosed: hidden
-        };
+        newSettings.paneOptionsOverwrites[paneName] = paneOption;
 
-        ComponentSettings.updateComponentSettings(DefaultLayout.getComponentId(), newSetting, function (err, res) {
+        ComponentSettings.updateComponentSettings(DefaultLayout.getComponentId(), newSettings, function (err, res) {
             if (err) {
                 self._logger.error(err);
             } else {
