@@ -1,4 +1,4 @@
-/*globals define, DEBUG, WebGMEGlobal, $ */
+/*globals define, WebGMEGlobal, $ */
 /*jshint browser: true*/
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
@@ -6,10 +6,10 @@
  */
 
 define(['jquery-layout',
-        'js/logger',
-        'js/Utils/ComponentSettings',
-        'text!./templates/DefaultLayout.html',
-        'text!./DefaultLayoutConfig.json'
+    'js/logger',
+    'js/Utils/ComponentSettings',
+    'text!./templates/DefaultLayout.html',
+    'text!./DefaultLayoutConfig.json'
 ], function (_jQueryLayout,
              Logger,
              ComponentSettings,
@@ -48,7 +48,65 @@ define(['jquery-layout',
     };
 
     DefaultLayout.prototype.init = function () {
-        var self = this;
+        var self = this,
+            options = {
+                defaults: {},
+
+                north: {
+                    closable: false,
+                    resizable: false,
+                    slidable: false,
+                    spacing_open: 0, //jshint ignore: line
+                    size: 64
+                },
+                south: {
+                    closable: false,
+                    resizable: false,
+                    slidable: false,
+                    spacing_open: 0, //jshint ignore: line
+                    size: 27        //has to match footer CSS settings (height + border)
+                },
+                east: {
+                    size: SIDE_PANEL_WIDTH,
+                    minSize: SIDE_PANEL_WIDTH,
+                    resizable: true,
+                    slidable: false,
+                    spacing_open: SPACING_OPEN, //jshint ignore: line
+                    spacing_closed: SPACING_CLOSED, //jshint ignore: line
+                    onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+                        self._onEastResize(true);
+                    },
+                    onopen: function () {
+                        self._updatePaneSettings('east', {initClosed: false});
+                    },
+                    onclose: function () {
+                        self._updatePaneSettings('east', {initClosed: true});
+                    }
+                },
+                west: {
+                    size: SIDE_PANEL_WIDTH,
+                    minSize: SIDE_PANEL_WIDTH,
+                    showOverflowOnHover: true,
+                    resizable: true,
+                    slidable: false,
+                    spacing_open: SPACING_OPEN, //jshint ignore: line
+                    spacing_closed: SPACING_CLOSED, //jshint ignore: line
+                    onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+                        self._onWestResize(true);
+                    },
+                    onopen: function () {
+                        self._updatePaneSettings('west', {initClosed: false});
+                    },
+                    onclose: function () {
+                        self._updatePaneSettings('west', {initClosed: true});
+                    }
+                },
+                center: {
+                    onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+                        self._onCenterResize();
+                    }
+                }
+            };
 
         this._body = $('body');
         this._body.html(this._template);
@@ -64,51 +122,20 @@ define(['jquery-layout',
         this._westPanels = [];
         this._centerPanels = [];
 
-        this._body.layout({
-            defaults: {},
+        // http://layout.jquery-dev.com/documentation.cfm#Options
+        if (this._config.hasOwnProperty('paneOptionsOverwrites')) {
+            ['north', 'south', 'east', 'west', 'center']
+                .forEach(function (pName) {
+                    if (self._config.paneOptionsOverwrites.hasOwnProperty(pName) && options.hasOwnProperty(pName)) {
+                        Object.keys(self._config.paneOptionsOverwrites[pName])
+                            .forEach(function (oName) {
+                                options[pName][oName] = self._config.paneOptionsOverwrites[pName][oName];
+                            });
+                    }
+                });
+        }
 
-            north: {
-                closable: false,
-                resizable: false,
-                slidable: false,
-                spacing_open: 0, //jshint ignore: line
-                size: 64
-            },
-            south: {
-                closable: false,
-                resizable: false,
-                slidable: false,
-                spacing_open: 0, //jshint ignore: line
-                size: 27        //has to match footer CSS settings (height + border)
-            },
-            east: {
-                size: SIDE_PANEL_WIDTH,
-                minSize: SIDE_PANEL_WIDTH,
-                resizable: true,
-                slidable: false,
-                spacing_open: SPACING_OPEN, //jshint ignore: line
-                spacing_closed: SPACING_CLOSED, //jshint ignore: line
-                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    self._onEastResize();
-                }
-            }, west: {
-                size: SIDE_PANEL_WIDTH,
-                minSize: SIDE_PANEL_WIDTH,
-                showOverflowOnHover:true,
-                resizable: true,
-                slidable: false,
-                spacing_open: SPACING_OPEN, //jshint ignore: line
-                spacing_closed: SPACING_CLOSED, //jshint ignore: line
-                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    self._onWestResize();
-                }
-            },
-            center: {
-                onresize: function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    self._onCenterResize();
-                }
-            }
-        });
+        this._body.layout(options);
     };
 
     DefaultLayout.prototype.addToContainer = function (panel, container) {
@@ -179,23 +206,31 @@ define(['jquery-layout',
         }
     };
 
-    DefaultLayout.prototype._onEastResize = function () {
+    DefaultLayout.prototype._onEastResize = function (updateSettings) {
         var len = this._eastPanels.length,
             w = this._eastPanel.width(),
             h = this._eastPanel.height(),
             pHeight = Math.floor(h / len),
             i;
 
+        if (updateSettings === true && w >= SIDE_PANEL_WIDTH) {
+            this._updatePaneSettings('east', {size: w});
+        }
+
         for (i = 0; i < len; i += 1) {
             this._eastPanels[i].setSize(w, pHeight);
         }
     };
 
-    DefaultLayout.prototype._onWestResize = function () {
+    DefaultLayout.prototype._onWestResize = function (updateSettings) {
         var len = this._westPanels.length,
             w = this._westPanel.width(),
             h = this._westPanel.height(),
             h0;
+
+        if (updateSettings === true && w >= SIDE_PANEL_WIDTH) {
+            this._updatePaneSettings('west', {size: w});
+        }
 
         //TODO: fix this
         //second widget takes all the available space
@@ -203,6 +238,21 @@ define(['jquery-layout',
             h0 = this._westPanels[0].$pEl.outerHeight(true);
             this._westPanels[1].setSize(w, h - h0);
         }
+    };
+
+    DefaultLayout.prototype._updatePaneSettings = function (paneName, paneOption) {
+        var self = this,
+            newSettings = {paneOptionsOverwrites: {}};
+
+        newSettings.paneOptionsOverwrites[paneName] = paneOption;
+
+        ComponentSettings.updateComponentSettings(DefaultLayout.getComponentId(), newSettings, function (err, res) {
+            if (err) {
+                self._logger.error(err);
+            } else {
+                self._logger.debug('New settings stored in user', res);
+            }
+        });
     };
 
     return DefaultLayout;
