@@ -55,7 +55,6 @@ require.config({
     },
     paths: {
         css: 'bower_components/require-css/css.min',
-        text: 'common/lib/requirejs/text',
 
         //jQuery and stuff
         jquery: 'bower_components/jquery/dist/jquery',
@@ -102,10 +101,12 @@ require.config({
         panel: '/panel',
 
         // common libs
-        superagent: 'common/lib/superagent/superagent',
-        debug: 'common/lib/debug/debug',
-        q: 'common/lib/q/q',
         chance: 'common/chance/chance',
+        debug: 'common/lib/debug/debug',
+        ejs: 'common/lib/ejs/ejs',
+        q: 'common/lib/q/q',
+        superagent: 'common/lib/superagent/superagent',
+        text: 'common/lib/requirejs/text',
         'webgme-ot': 'common/lib/webgme-ot/webgme-ot',
 
         moment: 'bower_components/moment/moment',

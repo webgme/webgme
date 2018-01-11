@@ -8,7 +8,7 @@
  * @author pmeijer / https://github.com/pmeijer
  */
 
-define(['common/util/ejs', 'js/Constants', 'js/RegistryKeys'], function (ejs, CONSTANTS, REGISTRY_KEYS) {
+define(['ejs', 'js/Constants', 'js/RegistryKeys'], function (ejs, CONSTANTS, REGISTRY_KEYS) {
     'use strict';
     var line_svg_directory = {},
         arrowExtra = '-xwide-xlong';
