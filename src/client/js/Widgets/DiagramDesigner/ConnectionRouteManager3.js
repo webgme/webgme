@@ -585,7 +585,9 @@ define([
         for (j = boxObject.ports.length; j--;) {
             id = boxObject.ports[j].id;
             if (!newIds[id]) {
-                this._invokeAutoRouterMethod('removePort', [boxObject.ports[j]]);  // Not sure FIXME
+                // TODO: There is no API call in the AutoRouter/ActionApplier
+                // TODO: for removing port based on ids (this never worked)
+                //this._invokeAutoRouterMethod('removePort', [boxObject.ports[j]]);  // Not sure FIXME
             }
         }
     };
