@@ -39,21 +39,16 @@ var requirejs = require('requirejs'),
             executor: path.join(webgmeEngineSrc, 'common/executor'),
             plugin: path.join(webgmeEngineSrc, 'plugin'),
 
-            text: path.join(webgmeEngineSrc, 'common/lib/requirejs/text'),
             css: 'client/bower_components/require-css/css',
             // Temporary fix to ensure that the CSS plugins internal modules are loaded correctly.
             // https://github.com/requirejs/r.js/issues/289
             'css-builder': 'client/bower_components/require-css/css-builder',
             normalize: 'client/bower_components/require-css/normalize',
 
-            q: 'empty:',
-            superagent: 'empty:',
-            'webgme-ot': 'empty:',
+
             jszip: 'empty:',
-            debug: 'empty:',
             urlparse: 'empty:',
             underscore: 'empty:',
-            chance: 'empty:',
             ravenjs: 'empty:',
             backbone: 'empty:',
             moment: 'empty:',
@@ -61,6 +56,15 @@ var requirejs = require('requirejs'),
             d3: 'empty:',
             clipboard: 'empty:',
             diff_match_patch: 'empty:',
+
+            // common libs
+            chance: 'empty:',
+            ejs: 'empty:',
+            debug: 'empty:',
+            q: 'empty:',
+            superagent: 'empty:',
+            text: path.join(webgmeEngineSrc, 'common/lib/requirejs/text'),
+            'webgme-ot': 'empty:',
 
             AutoRouterActionApplier: 'client/lib/autorouter/action-applier',
 
@@ -114,18 +118,19 @@ var requirejs = require('requirejs'),
     libConfig = {
         baseUrl: path.join(__dirname, '../../../src'),
         paths: {
-
-            text: path.join(webgmeEngineSrc, 'common/lib/requirejs/text'),
             css: 'client/bower_components/require-css/css',
             // Temporary fix to ensure that the CSS plugins internal modules are loaded correctly.
             // https://github.com/requirejs/r.js/issues/289
             'css-builder': 'client/bower_components/require-css/css-builder',
             normalize: 'client/bower_components/require-css/normalize',
 
+            // common libs
+            chance: path.join(webgmeEngineSrc, 'common/lib/chance/chance'),
+            debug: path.join(webgmeEngineSrc, 'common/lib/debug/debug'),
+            ejs: path.join(webgmeEngineSrc, 'common/lib/ejs/ejs'),
             q: path.join(webgmeEngineSrc, 'common/lib/q/q'),
             superagent: path.join(webgmeEngineSrc, 'common/lib/superagent/superagent'),
-            debug: path.join(webgmeEngineSrc, 'common/lib/debug/debug'),
-            chance: path.join(webgmeEngineSrc, 'common/lib/chance/chance'),
+            text: path.join(webgmeEngineSrc, 'common/lib/requirejs/text'),
             'webgme-ot': path.join(webgmeEngineSrc, 'common/lib/webgme-ot/webgme-ot'),
 
             jszip: 'client/bower_components/jszip/dist/jszip',

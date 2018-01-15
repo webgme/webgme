@@ -6,7 +6,7 @@
  */
 
 define([
-    'common/util/ejs',
+    'ejs',
     'js/Constants',
     'text!assets/decoratorSVGList.json'
 ], function (ejs, CONSTANTS, DecoratorSVGIconList) {
