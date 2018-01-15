@@ -70,9 +70,10 @@ var startWorker = function() {
         AutoRouterWorker.prototype._handleMessage = function(msg) {
             var response,
                 action = msg[0],
+                lightResult,
                 result;
 
-            response = [action, msg[1].slice()];  // Copy the input args
+            response = [action, JSON.parse(JSON.stringify(msg[1]))];  // Copy the input args
 
             // If routing async, decorate the request
             if (action === 'routeAsync') {
@@ -87,8 +88,23 @@ var startWorker = function() {
                 worker.postMessage(['BugReplayList', this._getActionSequence()]);
             }
 
-            response.push(result);
+
             if (respondToAll || this.respondTo[action]) {
+                if (result) {
+                    if (action === 'addBox') {
+                        lightResult = {id: result.box.id};
+                        lightResult.ports = Object.keys(result.ports).map(function (key) {
+                            return {id: key};
+                        });
+                    }
+                }
+
+                if (lightResult) {
+                    response.push(lightResult);
+                } else {
+                    response.push(result);
+                }
+
                 this.logger.debug('Response:', response);
                 worker.postMessage(response);
             }
