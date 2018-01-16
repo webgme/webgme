@@ -1,5 +1,24 @@
 # Change Log
 
+## [v2.22.0](https://github.com/webgme/webgme/tree/v2.22.0) (2018-01-15)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.21.0...v2.22.0)
+
+**Implemented enhancements:**
+
+- validVisualizers button nearly hidden [\#1563](https://github.com/webgme/webgme/issues/1563)
+- Automated dangling connection removal [\#1465](https://github.com/webgme/webgme/issues/1465)
+- Fixes \#1563 Make open dialog buttons in property-editor larger [\#1569](https://github.com/webgme/webgme/pull/1569) ([pmeijer](https://github.com/pmeijer))
+- Bump user-management-page to v0.3.4 [\#1568](https://github.com/webgme/webgme/pull/1568) ([pmeijer](https://github.com/pmeijer))
+- Bump webgme-engine to 2.19.3 [\#1567](https://github.com/webgme/webgme/pull/1567) ([pmeijer](https://github.com/pmeijer))
+- Expose pane options in layout config and store opened/closed- and size-state in user-settings [\#1565](https://github.com/webgme/webgme/pull/1565) ([pmeijer](https://github.com/pmeijer))
+- Bump year to 2018. [\#1562](https://github.com/webgme/webgme/pull/1562) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Uncaught exceptions in model with lots of connections [\#1545](https://github.com/webgme/webgme/issues/1545)
+- Bump webgme-engine to 2.19.3 [\#1567](https://github.com/webgme/webgme/pull/1567) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1545 RangeError in Connection Drawing [\#1566](https://github.com/webgme/webgme/pull/1566) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.21.0](https://github.com/webgme/webgme/tree/v2.21.0) (2017-12-18)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.20.0...v2.21.0)
 
