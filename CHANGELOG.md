@@ -1,6 +1,19 @@
 # Change Log
 
-## [v2.22.0](https://github.com/webgme/webgme/tree/v2.22.0) (2018-01-15)
+## [v2.22.1](https://github.com/webgme/webgme/tree/v2.22.1) (2018-01-29)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.22.0...v2.22.1)
+
+**Implemented enhancements:**
+
+- Bump webgme-engine to v2.19.4 [\#1574](https://github.com/webgme/webgme/pull/1574) ([kecso](https://github.com/kecso))
+- Bump user-management-page to v0.3.5 [\#1573](https://github.com/webgme/webgme/pull/1573) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Details of failed Plugin Results are not shown in 2.22 [\#1570](https://github.com/webgme/webgme/issues/1570)
+- Bump webgme-engine to v2.19.4 [\#1574](https://github.com/webgme/webgme/pull/1574) ([kecso](https://github.com/kecso))
+
+## [v2.22.0](https://github.com/webgme/webgme/tree/v2.22.0) (2018-01-16)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.21.0...v2.22.0)
 
 **Implemented enhancements:**
