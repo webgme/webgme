@@ -200,7 +200,11 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.server.timeout = -1`
  - If greater than -1 will set the [timeout property of the http-server](https://nodejs.org/api/http.html#http_server_timeout). (This can be used to enable large, > 1Gb, file uploads.)
 - `config.server.maxWorkers = 10`
- - Maximum number of child processes spawned by the default worker manager.
+ - Maximum number of child processes spawned by the default worker manager (plus one waiting).
+- `config.server.maxQueuedWorkerRequests = -1`
+ - Maximum number of queued server worker requests when all workers are busy (if `-1` there is no limit). When the limit is met, the worker request will return with an error immediately.
+- `config.server.workerDisconnectTimeout = 2000`
+ - After a disconnection, the time in ms that a worker will wait for reconnection before terminating its execution.
 - `config.server.workerManager.path = 'node_modules/webgme-engine/src/server/worker/serverworkermanager'`
  - Path to module (implementing `node_modules/webgme-engine/src/server/worker/WorkerManagerBase`) handling worker requests.
 - `config.server.workerManager.options = {}`
