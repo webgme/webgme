@@ -77,7 +77,8 @@ define([
             oked,
             client,
             activeObjectId,
-            docId;
+            docId,
+            watcherId;
 
         this._savedValue = params.value || '';
         this._storedValue = params.value || '';
@@ -313,7 +314,7 @@ define([
                 }
 
                 if (docId) {
-                    client.unwatchDocument({docId: docId}, function (err) {
+                    client.unwatchDocument({docId: docId, watcherId: watcherId}, function (err) {
                         if (err) {
                             logger.error(err);
                         }
@@ -401,6 +402,7 @@ define([
                         }
 
                         docId = initData.docId;
+                        watcherId = initData.watcherId;
                         cmEditor.setValue(initData.document);
                         if (comparing) {
                             diffView.forceUpdate();
@@ -410,6 +412,7 @@ define([
                             'change': function (operation) {
                                 client.sendDocumentOperation({
                                     docId: docId,
+                                    watcherId: watcherId,
                                     operation: operation,
                                     selection: otWrapper.getSelection()
                                 });
@@ -421,6 +424,7 @@ define([
                             'selectionChange': function () {
                                 client.sendDocumentSelection({
                                     docId: docId,
+                                    watcherId: watcherId,
                                     selection: otWrapper.getSelection()
                                 });
                             }
