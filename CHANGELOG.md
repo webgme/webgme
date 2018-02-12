@@ -1,5 +1,17 @@
 # Change Log
 
+## [v2.23.0](https://github.com/webgme/webgme/tree/v2.23.0) (2018-02-12)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.22.1...v2.23.0)
+
+**Implemented enhancements:**
+
+- Bump webgme-engine to v2.19.5 [\#1576](https://github.com/webgme/webgme/pull/1576) ([pmeijer](https://github.com/pmeijer))
+- Closes \#1582 code-editor passes watcherId to doc s.t. multiple conns can be handled [\#1575](https://github.com/webgme/webgme/pull/1575) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Operational transforms cannot have multiple channels open from the same client [\#1572](https://github.com/webgme/webgme/issues/1572)
+
 ## [v2.22.1](https://github.com/webgme/webgme/tree/v2.22.1) (2018-01-29)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.22.0...v2.22.1)
 
