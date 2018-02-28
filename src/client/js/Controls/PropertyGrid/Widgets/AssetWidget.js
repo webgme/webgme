@@ -28,6 +28,11 @@ define([
     AssetWidget = function (propertyDesc) {
         WidgetBase.call(this, propertyDesc);
         var self = this;
+
+        if (propertyDesc.readOnly) {
+            this._alwaysReadOnly = true;
+        }
+
         this._logger = Logger.create('gme:js:Controls:PropertyGrid:Widgets:AssetWidget',
             WebGMEGlobal.gmeConfig.client.log);
 

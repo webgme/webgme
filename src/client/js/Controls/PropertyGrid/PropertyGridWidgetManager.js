@@ -61,7 +61,7 @@ define([
         if (propDesc.multiline) {
             SpecificWidget = PROPERTY_GRID_WIDGETS.MULTILINE;
         }
-        if (readOnly && type !== 'boolean') {
+        if (readOnly && type !== 'boolean' && type !== 'asset') {
             widget = new LabelWidget(propDesc);
         } else if (SpecificWidget) {
             switch (SpecificWidget) {

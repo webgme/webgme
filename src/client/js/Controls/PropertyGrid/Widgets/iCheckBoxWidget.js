@@ -19,6 +19,10 @@ define([
 
         WidgetBase.call(this, propertyDesc);
 
+        if (propertyDesc.readOnly) {
+            this._alwaysReadOnly = true;
+        }
+
         this.__checkbox = new ICheckBox({
             checkedText: 'TRUE',
             uncheckedText: 'FALSE',
