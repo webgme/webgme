@@ -67,13 +67,6 @@ define(['jquery'], function () {
                     inputCtrl.addClass(editClass);
                 }
 
-                //add any custom css specified 
-                keys = Object.keys(extraCss);
-
-                for (i = keys.length - 1; i >= 0; i--) {
-                    inputCtrl.css(keys[i], extraCss[keys[i]]);
-                }
-
                 //set css properties to fix Bootstrap's modification
                 h = Math.max(h, minHeight);
                 inputCtrl.outerWidth(w).outerHeight(h);
@@ -83,6 +76,13 @@ define(['jquery'], function () {
                     'line-height': h + 'px',
                     'font-size':   h - fontSizeAdjust
                 });
+
+                //add any custom css specified
+                keys = Object.keys(extraCss);
+
+                for (i = keys.length - 1; i >= 0; i--) {
+                    inputCtrl.css(keys[i], extraCss[keys[i]]);
+                }
 
 
                 el.html(inputCtrl);
@@ -94,6 +94,10 @@ define(['jquery'], function () {
 
                 //finally put the control in focus
                 inputCtrl.focus();
+
+                inputCtrl.on('click', function (event) {
+                    event.stopPropagation();
+                });
 
                 //hook up event handlers to 'save' and 'cancel'
                 inputCtrl.keydown(

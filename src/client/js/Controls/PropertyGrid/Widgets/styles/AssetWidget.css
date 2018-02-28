@@ -12,6 +12,8 @@ div.asset-widget {
   position: relative;
   background-color: rgba(0, 0, 0, 0.025);
   border: 1px dashed #aaaaaa; }
+  div.asset-widget .edit-area {
+    height: 92%; }
   div.asset-widget .btn-dialog-open {
     position: absolute;
     right: 0;

@@ -14,6 +14,10 @@ div.asset-widget {
   background-color: rgba(0, 0, 0, 0.025);
   border: 1px dashed #aaaaaa;
 
+  .edit-area {
+    height: 92%;
+  }
+
   .btn-dialog-open {
     position: absolute;
     right: 0;
