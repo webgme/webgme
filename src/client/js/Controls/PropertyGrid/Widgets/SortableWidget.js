@@ -11,7 +11,7 @@ define([
 
     var SortableWidget,
         SORTABLE_EL = $(),
-        SORTABLE_BASE = $('<ul class="ui-sortable"></ul>');
+        SORTABLE_BASE = $('<ul class="ui-sortable" style="padding: 5px 0 0 0; list-style-type: none;"></ul>');
 
     SortableWidget = function (propertyDesc) {
         var self = this;
@@ -21,11 +21,15 @@ define([
         this._readOnly = false;
         this.__sortable = SORTABLE_BASE.clone();
 
-        console.log(propertyDesc);
-        console.log(this.valueItems);
-        propertyDesc.valueItems.map((sortable) => {
+        this.valueItems.map((sortable) => {
             self.addSortable(sortable);
         });
+
+        this.__sortable.sortable({
+            stop: function (event, ui) {
+                self.propertyValue = self.getResult();
+            }
+        }).disableSelection();
 
         this.el.append(this.__sortable);
     };
@@ -45,9 +49,17 @@ define([
 
     SortableWidget.prototype.addSortable = function(sortable) {
         var self = this;
-        console.log(`sortable: ${sortable}`);
-        self.__sortable.append(`<li class="alert alert-info ui-sortable-handle" title="${sortable}">${sortable}</li>`);
-        console.log(`made: ${sortable}`);
+        self.__sortable.append(`<li class="alert alert-info ui-sortable-handle" style="margin: 0 4px 4px 4px; padding: 4px;" title="${sortable}">${sortable}</li>`);
+    };
+
+    SortableWidget.prototype.getResult = function () {
+        var result = [];
+
+        this.__sortable.children('li').each(function (index, li) {
+            result.push($(li).text().trim());
+        });
+
+        return result;
     };
 
     return SortableWidget;
