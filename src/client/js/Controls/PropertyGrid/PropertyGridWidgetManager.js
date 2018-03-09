@@ -22,6 +22,7 @@ define([
     'js/Controls/PropertyGrid/Widgets/MultiSelectWidget',
     'js/Controls/PropertyGrid/Widgets/SvgSelectWidget',
     'js/Controls/PropertyGrid/Widgets/MultilineWidget',
+    'js/Controls/PropertyGrid/Widgets/SortableWidget',
     './PropertyGridWidgets'
 ], function (StringWidget,
              NumberBoxWidget,
@@ -40,6 +41,7 @@ define([
              MultiSelectWidget,
              SvgSelectWidget,
              MultilineWidget,
+             SortableWidget,
              PROPERTY_GRID_WIDGETS) {
 
     'use strict';
@@ -53,7 +55,8 @@ define([
     PropertyGridWidgetManager.prototype.getWidgetForProperty = function (propDesc) {
         var type = propDesc.valueType || typeof propDesc.value,
             readOnly = propDesc.readOnly === true,
-            isOption = _.isArray(propDesc.valueItems),
+            isSortable = type.toLowerCase() == 'sortable',
+            isOption = _.isArray(propDesc.valueItems) && !isSortable,
             isColor = colorUtil.isColor(propDesc.value),
             SpecificWidget = propDesc.widget,
             widget;
@@ -92,6 +95,8 @@ define([
             }
         } else if (isOption) {
             widget = new OptionWidget(propDesc);
+        } else if (isSortable) {
+            widget = new SortableWidget(propDesc);
         } else if (isColor) {
             widget = new ColorPickerWidget(propDesc);
         } else if (type === 'asset') {
