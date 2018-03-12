@@ -179,7 +179,7 @@ define([
             self._finishChange(args);
         });
 
-        spnName.text(widget.propertyText || widget.propertyName);
+        spnName.text(widget.propertyName || widget.propertyText);
         spnName.attr('title', widget.propertyText || widget.propertyName);
 
         if (propertyDesc.options) {

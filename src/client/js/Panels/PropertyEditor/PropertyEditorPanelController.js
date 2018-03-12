@@ -476,6 +476,10 @@ define(['js/logger',
                     }
                 }
 
+                if (commonAttrMeta[key].description) {
+                    dst[extKey].text = commonAttrMeta[key].description;
+                }
+
                 //if the attribute value is an enum, display the enum values
                 if (commonAttrMeta[key].enum && commonAttrMeta[key].enum.length > 0) {
                     dst[extKey].valueItems = commonAttrMeta[key].enum.slice(0);
@@ -743,8 +747,10 @@ define(['js/logger',
                     delete commonAttrMeta[attrName];
                 }
             } else if (initPhase) {
-                commonAttrMeta[attrName] = {};
-                _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
+                if (attrMetaDescriptor.hidden !== true) {
+                    commonAttrMeta[attrName] = {};
+                    _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
+                }
             }
         }
     };

@@ -147,11 +147,13 @@ define([
                 var desc = _.extend({}, {
                     name: attrName,
                     type: attrMeta.type,
+                    description: attrMeta.description,
                     defaultValue: attrValue,
                     min: attrMeta.min,
                     max: attrMeta.max,
                     regexp: attrMeta.regexp,
-                    readonly: attrMeta.readonly
+                    readonly: attrMeta.readonly,
+                    hidden: attrMeta.hidden
                 });
 
                 //we will not let 'name' attribute to be modified as that is used UI-wise
@@ -569,6 +571,13 @@ define([
 
         if (attrDesc.readonly) {
             attrSchema.readonly = true;
+        }
+
+        if (attrDesc.description) {
+            attrSchema.description = attrDesc.description;
+        }
+        if (attrDesc.hidden) {
+            attrSchema.hidden = true;
         }
 
         if (attrDesc.multiline) {

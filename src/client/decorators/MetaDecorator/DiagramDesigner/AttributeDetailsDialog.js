@@ -152,10 +152,12 @@ define([
                 eValues,
                 attrDesc = {
                     name: self._inputName.val(),
+                    description: self._description.val(),
                     type: self._inputType.val(),
                     defaultValue: self._inputDefaultValue.val(),
                     isEnum: self._cbEnum.is(':checked'),
                     readonly: self._cbReadonly.is(':checked'),
+                    hidden: self._cbHidden.is(':checked'),
                 },
                 cValue;
 
@@ -305,6 +307,7 @@ define([
         this._btnDelete = this._dialog.find('.btn-delete').first();
 
         this._inputName = this._el.find('#inputName').first();
+        this._description = this._el.find('#description').first();
         this._inputType = this._el.find('#inputType').first();
 
         // Default value controls
@@ -321,6 +324,7 @@ define([
         this._inputEnumValues = this._el.find('#inputEnumValues').first();
 
         this._cbReadonly = this._el.find('#cbReadonly').first();
+        this._cbHidden = this._el.find('#cbHidden').first();
 
         //extended options
         this._pRegExp = this._el.find('#pRegExp');
@@ -414,8 +418,14 @@ define([
         //fill controls based on the currently edited attribute
         this._inputName.val(attributeDesc.name);
         this._inputType.val(attributeDesc.type);
+        this._description.val(attributeDesc.description);
+
         if (attributeDesc.readonly) {
             this._cbReadonly.attr('checked', true);
+        }
+
+        if (attributeDesc.hidden) {
+            this._cbHidden.attr('checked', true);
         }
 
         if (attributeDesc.type === 'boolean') {
