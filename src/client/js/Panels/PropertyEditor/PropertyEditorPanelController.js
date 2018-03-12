@@ -747,7 +747,7 @@ define(['js/logger',
                     delete commonAttrMeta[attrName];
                 }
             } else if (initPhase) {
-                if (attrMetaDescriptor.hidden !== true) {
+                if (attrMetaDescriptor.hidden !== true || node.isMetaNode()) {
                     commonAttrMeta[attrName] = {};
                     _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
                 }
