@@ -89,6 +89,7 @@ define([
                     // Wait for the new value to be accepted..
                     self.__btnAttach.show();
                     self.__assetLink.show();
+                    self.__editArea.empty();
                 }
             });
 
