@@ -8,10 +8,12 @@ define([
     'js/Controls/PropertyGrid/Widgets/WidgetBase',
     'blob/BlobClient',
     'js/logger',
+    'common/regexp',
     'css!./styles/AssetWidget.css'
 ], function (WidgetBase,
              BlobClient,
-             Logger) {
+             Logger,
+             RegExp) {
 
     'use strict';
 
@@ -25,6 +27,12 @@ define([
 
     AssetWidget = function (propertyDesc) {
         WidgetBase.call(this, propertyDesc);
+        var self = this;
+
+        if (propertyDesc.readOnly) {
+            this._alwaysReadOnly = true;
+        }
+
         this._logger = Logger.create('gme:js:Controls:PropertyGrid:Widgets:AssetWidget',
             WebGMEGlobal.gmeConfig.client.log);
 
@@ -37,6 +45,9 @@ define([
 
         this.__assetLink = ASSET_LINK.clone();
         this.__el.append(this.__assetLink);
+
+        this.__editArea = $('<div>', {class: 'edit-area'});
+        this.__el.append(this.__editArea);
 
         this.__fileDropTarget = this.__el;
 
@@ -52,6 +63,36 @@ define([
         this._attachFileDropHandlers();
 
         this.updateDisplay();
+
+        this.__el.on('dblclick', function () {
+            if (self._isReadOnly || self.__progressBar.is(':visible')) {
+                return;
+            }
+
+            self.__btnAttach.hide();
+            self.__assetLink.hide();
+
+            self.__editArea.editInPlace({
+                class: 'in-place-edit',
+                value: self.propertyValue,
+                enableEmpty: true,
+                css: {
+                    'font-size': '11px'
+                },
+                onChange: function (oldValue, newValue) {
+                    if (RegExp.BLOB_HASH.test(newValue) || newValue === '') {
+                        self.setValue(newValue);
+                        self.fireFinishChange();
+                    }
+                },
+                onFinish: function () {
+                    // Wait for the new value to be accepted..
+                    self.__btnAttach.show();
+                    self.__assetLink.show();
+                }
+            });
+
+        });
     };
 
     AssetWidget.prototype = Object.create(WidgetBase.prototype);
@@ -293,6 +334,7 @@ define([
 
     AssetWidget.prototype.destroy = function () {
         this._detachFileDropHandlers();
+        this.__el.off('dblclick');
         clearTimeout(this.__timeoutId);
         WidgetBase.prototype.destroy.call(this);
     };
