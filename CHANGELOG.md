@@ -1,5 +1,20 @@
 # Change Log
 
+## [v2.24.0](https://github.com/webgme/webgme/tree/v2.24.0) (2018-03-12)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.23.0...v2.24.0)
+
+**Implemented enhancements:**
+
+- Feature Request: Add sortable type for Plugin Config Widget template [\#1579](https://github.com/webgme/webgme/issues/1579)
+- Bump webgme-engine to 2.19.6 [\#1582](https://github.com/webgme/webgme/pull/1582) ([kecso](https://github.com/kecso))
+- Add description and hidden in schema for Attributes [\#1581](https://github.com/webgme/webgme/pull/1581) ([kecso](https://github.com/kecso))
+- Add and expose sortable widget. [\#1580](https://github.com/webgme/webgme/pull/1580) ([finger563](https://github.com/finger563))
+- Enable copying and manually editing/pasting blob-hashes in asset widget [\#1578](https://github.com/webgme/webgme/pull/1578) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Enable copying and manually editing/pasting blob-hashes in asset widget [\#1578](https://github.com/webgme/webgme/pull/1578) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.23.0](https://github.com/webgme/webgme/tree/v2.23.0) (2018-02-12)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.22.1...v2.23.0)
 
