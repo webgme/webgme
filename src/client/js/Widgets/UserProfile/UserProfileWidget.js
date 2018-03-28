@@ -69,11 +69,14 @@ define([
 
                 document.body.appendChild(tempAnchor);
 
-                // Send the logout request.
-                tempAnchor.click();
-
+                // Make sure to clear the cookie before posting logout (and the parent closes the page).
+                document.cookie =  WebGMEGlobal.gmeConfig.authentication.jwt.cookieId +
+                    '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
                 //While the server processes the request - post logout message to the parent.
                 window.parent.postMessage('logout', '*');
+
+                // Send the logout request.
+                tempAnchor.click();
             });
 
             widget.append(logoutEl);
