@@ -16,10 +16,11 @@ define([
     'common/storage/util',
     'js/util',
     'common/regexp',
+    'superagent',
     'text!./templates/ProjectsDialog.html',
     'css!./styles/ProjectsDialog.css'
 ], function (Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDialog,
-             StorageUtil, clientUtil, REGEXP, projectsDialogTemplate) {
+             StorageUtil, clientUtil, REGEXP, superagent, projectsDialogTemplate) {
 
     'use strict';
 
@@ -245,6 +246,13 @@ define([
         });
 
         //hook up event handlers - SELECT project in the list
+
+
+        // If we do not block firing double click, the project will always open
+        this._tableBody.on('dblclick', 'input', function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        });
 
         this._tableBody.on('dblclick', 'tr', function (event) {
             selectedId = $(this).data(DATA_PROJECT)._id;
@@ -534,7 +542,8 @@ define([
                     viewed: lastViewed.getTime(),
                     created: createdAt.getTime(),
                     name: projectName.toUpperCase(),
-                    owner: owner.toUpperCase()
+                    owner: owner.toUpperCase(),
+                    info: projectData.info.description
                 });
 
                 // owner
@@ -547,6 +556,33 @@ define([
                 $('<td/>').addClass('name').append(span)
                     .append('<span class="name-read-only">[Read-Only]</span>')
                     .appendTo(tblRow);
+
+                //info
+                span = $('<input/>').addClass('description')
+                    .val(projectData.info.kind)
+                    .prop('placeholder', 'describe the project')
+                    .data('projectId', this._projectIds[i])
+                    .data('description', projectData.info.kind)
+                    .prop('disabled', projectData.rights.write !== true).keyup(function (event) {
+                        var owner, projectName, projectId, newDescription;
+                        if (event.keyCode === 13) {
+                            projectId = $(this).data('projectId');
+                            newDescription = $(this).val();
+
+                            if ($(this).data('description') !== $(this).val()) {
+                                projectName = StorageUtil.getProjectNameFromProjectId(projectId);
+                                owner = StorageUtil.getOwnerFromProjectId(projectId);
+                                self._updateProjectDescription(owner, projectName, newDescription, function (err) {
+                                    if (err) {
+                                        self._logger.error(err);
+                                    } else {
+                                        $(this).data('description', newDescription);
+                                    }
+                                })
+                            }
+                        }
+                    });
+                $('<td/>').append(span).appendTo(tblRow);
 
                 // modified
                 span = $('<span/>').attr('title', getTitle(i, 'modified', projectData.info.modifier, lastModified))
@@ -677,6 +713,18 @@ define([
         });
 
         sortedRows.detach().appendTo(this._tableBody);
+    };
+
+    ProjectsDialog.prototype._updateProjectDescription = function (owner, projectName, description, callback) {
+        superagent('PATCH', 'api/projects/' + owner + '/' + projectName)
+            .send({kind: description})
+            .end(function (err, res) {
+                if (err || res.status !== 200) {
+                    callback(new Error('cannot update project info'));
+                } else {
+                    callback(null);
+                }
+            });
     };
 
     ProjectsDialog.prototype._createProject = function (projectName,
