@@ -559,26 +559,42 @@ define([
 
                 //info
                 span = $('<input/>').addClass('description')
-                    .val(projectData.info.kind)
+                    .val(projectData.info.description)
                     .prop('placeholder', 'describe the project')
                     .data('projectId', this._projectIds[i])
-                    .data('description', projectData.info.kind)
+                    .data('description', projectData.info.description)
                     .prop('disabled', projectData.rights.write !== true).keyup(function (event) {
-                        var owner, projectName, projectId, newDescription;
+                        var owner, projectName, projectId, newDescription, confirm,
+                            uiItem = $(this);
+
                         if (event.keyCode === 13) {
                             projectId = $(this).data('projectId');
                             newDescription = $(this).val();
 
-                            if ($(this).data('description') !== $(this).val()) {
+                            if (uiItem.data('description') !== uiItem.val()) {
                                 projectName = StorageUtil.getProjectNameFromProjectId(projectId);
                                 owner = StorageUtil.getOwnerFromProjectId(projectId);
-                                self._updateProjectDescription(owner, projectName, newDescription, function (err) {
-                                    if (err) {
-                                        self._logger.error(err);
-                                    } else {
-                                        $(this).data('description', newDescription);
-                                    }
-                                })
+                                confirm = new ConfirmDialog();
+
+                                confirm.show(
+                                    {
+                                        title: 'Update project info',
+                                        question: 'Updating the project\'s info affects all branches.',
+                                        onHideFn: function () {
+                                            uiItem.val(uiItem.data('description'));
+                                        }
+                                    },
+                                    function () {
+                                        self._updateProjectDescription(owner, projectName, newDescription,
+                                            function (err) {
+                                                if (err) {
+                                                    self._logger.error(err);
+                                                } else {
+                                                    uiItem.data('description', newDescription);
+                                                    uiItem.val(newDescription);
+                                                }
+                                            });
+                                    });
                             }
                         }
                     });
@@ -717,7 +733,7 @@ define([
 
     ProjectsDialog.prototype._updateProjectDescription = function (owner, projectName, description, callback) {
         superagent('PATCH', 'api/projects/' + owner + '/' + projectName)
-            .send({kind: description})
+            .send({description: description})
             .end(function (err, res) {
                 if (err || res.status !== 200) {
                     callback(new Error('cannot update project info'));
