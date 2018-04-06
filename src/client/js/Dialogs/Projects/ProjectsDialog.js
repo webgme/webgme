@@ -573,7 +573,11 @@ define([
                     .prop('placeholder', 'describe the project')
                     .data('projectId', this._projectIds[i])
                     .data('description', projectData.info.description)
-                    .prop('disabled', projectData.rights.write !== true).keyup(function (event) {
+                    .prop('disabled', projectData.rights.write !== true)
+                    .focusout(function (/*event*/) {
+                        $(this).val($(this).data('description'));
+                    })
+                    .keyup(function (event) {
                         var owner, projectName, projectId, newDescription, confirm,
                             uiItem = $(this);
 
@@ -584,26 +588,16 @@ define([
                             if (uiItem.data('description') !== uiItem.val()) {
                                 projectName = StorageUtil.getProjectNameFromProjectId(projectId);
                                 owner = StorageUtil.getOwnerFromProjectId(projectId);
-                                confirm = new ConfirmDialog();
-
-                                confirm.show(
-                                    {
-                                        title: 'Update project info',
-                                        question: 'Updating the project\'s info affects all branches.',
-                                        onHideFn: function () {
+                                self._updateProjectDescription(owner, projectName, newDescription,
+                                    function (err) {
+                                        if (err) {
+                                            self._logger.error(err);
                                             uiItem.val(uiItem.data('description'));
+                                        } else {
+                                            uiItem.data('description', newDescription);
+                                            uiItem.val(newDescription);
                                         }
-                                    },
-                                    function () {
-                                        self._updateProjectDescription(owner, projectName, newDescription,
-                                            function (err) {
-                                                if (err) {
-                                                    self._logger.error(err);
-                                                } else {
-                                                    uiItem.data('description', newDescription);
-                                                    uiItem.val(newDescription);
-                                                }
-                                            });
+                                        $(uiItem).blur();
                                     });
                             }
                         }
