@@ -105,7 +105,7 @@ define([
 
         //set dialog title
         this._dialog.find('h3').first().text('Branches of project [' +
-            StorageUtil.getProjectDisplayedNameFromProjectId(this._projectId) + ']');
+            WebGMEGlobal.getProjectDisplayedNameFromProjectId(this._projectId) + ']');
         //get controls
         this._el = this._dialog.find('.modal-body').first();
         this._ul = this._el.find('ul').first();

@@ -160,9 +160,12 @@ define([
                         nodePath;
 
                     if (typeof gmeConfig.client.pageTitle !== 'string') {
-                        document.title = WebGMEGlobal.gmeConfig.authentication.enable ?
-                            StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
-                            StorageUtil.getProjectNameFromProjectId(projectId);
+                        if (WebGMEGlobal.gmeConfig.authentication.enable &&
+                            StorageUtil.getOwnerFromProjectId(projectId) !== WebGMEGlobal.userInfo._id) {
+                            document.title = WebGMEGlobal.getProjectDisplayedNameFromProjectId(projectId);
+                        } else {
+                            document.title = StorageUtil.getProjectNameFromProjectId(projectId);
+                        }
                     }
 
                     layoutManager.setPanelReadOnly(client.isProjectReadOnly());
@@ -483,6 +486,7 @@ define([
                 var userPattern = {},
                     tempUI;
                 userPattern[nodePath] = {children: 0};
+
                 function eventHandler(events) {
                     var i,
                         activeNode;

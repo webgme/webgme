@@ -38,6 +38,7 @@ define([
         this._filter = undefined;
         this._userId = null;
         this._ownerId = null;
+        this._visibleOwnerId = null;
         this._creatingNew = createNew;
         this._createType = createType || 'seed';
         this._logger.debug('Created');
@@ -137,9 +138,14 @@ define([
         }
 
         function deleteProject(projectId) {
-            var projectDisplayedName = WebGMEGlobal.gmeConfig.authentication.enable ?
-                StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
-                StorageUtil.getProjectNameFromProjectId(projectId);
+            var projectDisplayedName;
+
+            if (WebGMEGlobal.gmeConfig.authentication.enable &&
+                StorageUtil.getOwnerFromProjectId(projectId) !== WebGMEGlobal.userInfo._id) {
+                projectDisplayedName = WebGMEGlobal.getProjectDisplayedNameFromProjectId(projectId);
+            } else {
+                projectDisplayedName = StorageUtil.getProjectNameFromProjectId(projectId);
+            }
 
             var refreshList = function () {
                     //self._refreshProjectList.call(self);
@@ -211,14 +217,17 @@ define([
         this._ownerIdList = this._panelCreateNew.find('ul.ownerId-list');
         this._selectedOwner = this._panelCreateNew.find('.selected-owner-id');
         this._ownerId = this._userId;
-        this._selectedOwner.text(this._ownerId);
+        this._visibleOwnerId = WebGMEGlobal.getDisplayName(this._userId);
+        this._selectedOwner.text(this._visibleOwnerId);
 
-        this._ownerIdList.append($('<li><a class="ownerId-selection">' + self._userId + '</a></li>'));
+        this._ownerIdList.append($('<li><a class="ownerId-selection" data-id="' + self._userId + '">' +
+            self._visibleOwnerId + '</a></li>'));
 
         if (WebGMEGlobal.userInfo.adminOrgs.length > 0) {
             this._ownerIdList.append($('<li role="separator" class="divider"></li>'));
             WebGMEGlobal.userInfo.adminOrgs.forEach(function (orgInfo) {
-                self._ownerIdList.append($('<li><a class="ownerId-selection">' + orgInfo._id + '</a></li>'));
+                self._ownerIdList.append($('<li><a class="ownerId-selection" ' +
+                    'data-id="' + WebGMEGlobal.getDisplayName(orgInfo._id) + '">' + orgInfo._id + '</a></li>'));
             });
         }
 
@@ -348,12 +357,13 @@ define([
         });
 
         this._ownerIdList.on('click', 'a.ownerId-selection', function (/*event*/) {
-            var newOwnerId = $(this).text(),
+            var newOwnerId = $(this).data('id'),
                 projectName = self._txtNewProjectName.val(),
                 projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
                     newOwnerId, projectName);
             self._ownerId = newOwnerId;
-            self._selectedOwner.text(newOwnerId);
+            self._visibleOwnerId = $(this).text();
+            self._selectedOwner.text(self._visibleOwnerId);
 
             if (isValidProjectName(projectName, projectId) === false) {
                 self._panelCreateNew.addClass('has-error');
@@ -513,7 +523,7 @@ define([
         this._tableHead.find('th').removeClass('reverse-order in-order');
 
         function getTitle(projectIdx, type, username, date) {
-            var name = StorageUtil.getProjectDisplayedNameFromProjectId(self._projectIds[projectIdx]);
+            var name = WebGMEGlobal.getProjectDisplayedNameFromProjectId(self._projectIds[projectIdx]);
 
             return name + ' was ' + type + ' by ' + (username || 'N/A') + ' at ' + clientUtil.formattedDate(date);
         }
@@ -524,7 +534,7 @@ define([
 
                 projectData = this._projectList[this._projectIds[i]];
                 projectName = StorageUtil.getProjectNameFromProjectId(this._projectIds[i]);
-                owner = StorageUtil.getOwnerFromProjectId(this._projectIds[i]);
+                owner = WebGMEGlobal.getDisplayName(StorageUtil.getOwnerFromProjectId(this._projectIds[i]));
 
                 tblRow = TABLE_ROW_BASE.clone();
                 // Else time is when the #677 introduced.

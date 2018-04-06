@@ -179,7 +179,7 @@ define(['js/util',
                 if (client.getProjectObject() && client.getProjectObject().projectId !== result.projectId) {
                     resultHeader.addClass(RESULT_WARNING_CLASS);
                     spanResultTitle.text(pluginName + ' - was invoked on different project (' +
-                        storageUtil.getProjectDisplayedNameFromProjectId(result.projectId) + ').');
+                        WebGMEGlobal.getProjectDisplayedNameFromProjectId(result.projectId) + ').');
                 } else {
                     resultHeader.addClass(RESULT_SUCCESS_CLASS);
                     spanResultTitle.text(pluginName);
