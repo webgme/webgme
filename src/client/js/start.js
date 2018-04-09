@@ -269,19 +269,19 @@ require(
                             WebGMEGlobal._displayNames[userData._id] = userData.displayName;
                         });
 
-                        WebGMEGlobal.getDisplayName = function (userId) {
+                        WebGMEGlobal.getUserDisplayName = function (userId) {
                             return WebGMEGlobal._displayNames[userId] || userId;
                         };
 
                         WebGMEGlobal.getProjectDisplayedNameFromProjectId = function (projectId) {
-                            return WebGMEGlobal.getDisplayName(StorageUtil.getOwnerFromProjectId(projectId)) +
+                            return WebGMEGlobal.getUserDisplayName(StorageUtil.getOwnerFromProjectId(projectId)) +
                                 ' ' + StorageUtil.CONSTANTS.PROJECT_DISPLAYED_NAME_SEP + ' ' +
                                 StorageUtil.getProjectNameFromProjectId(projectId);
                         };
                     } else {
                         log.error('Unable to get display name list for users!');
 
-                        WebGMEGlobal.getDisplayName = function (userId) {
+                        WebGMEGlobal.getUserDisplayName = function (userId) {
                             return userId;
                         };
 

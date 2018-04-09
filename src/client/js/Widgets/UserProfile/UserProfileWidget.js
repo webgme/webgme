@@ -31,7 +31,7 @@ define([
 
     UserProfileWidget.prototype._initializeUI = function (opts) {
         var widget = $(TEMPLATE),
-            userName = WebGMEGlobal.getDisplayName(WebGMEGlobal.userInfo._id),
+            userName = WebGMEGlobal.getUserDisplayName(WebGMEGlobal.userInfo._id),
             logoutEl,
             referrer,
             logoutUrl;

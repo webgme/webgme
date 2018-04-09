@@ -187,7 +187,7 @@ define(['js/logger', 'js/Dialogs/Confirm/ConfirmDialog'], function (Logger, Conf
                                 message: com.message,
                                 parents: com.parents,
                                 timestamp: com.time,
-                                user: com.updater.map(WebGMEGlobal.getDisplayName).join(',')
+                                user: com.updater.map(WebGMEGlobal.getUserDisplayName).join(',')
                             };
 
                             self._view.addCommit(commitObject);

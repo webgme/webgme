@@ -123,7 +123,7 @@ define([
         var roomName = this._getBranchRoomName(eventData),
             self = this,
             colorInd,
-            displayName = WebGMEGlobal.getDisplayName(eventData.userId),
+            displayName = WebGMEGlobal.getUserDisplayName(eventData.userId),
             userInfo;
 
         this.rooms[roomName] = this.rooms[roomName] || {
