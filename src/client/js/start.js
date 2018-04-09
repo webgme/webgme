@@ -18,6 +18,7 @@ require(
         'superagent',
         'q',
         'ravenjs',
+        'common/storage/util',
 
         'angular',
         'angular-ui-bootstrap',
@@ -26,7 +27,7 @@ require(
         'isis-ui-components-templates'
     ],
     function (jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, bootstrap, bootstrapNotify, underscore,
-              backbone, webGME, util, gmeConfigJson, packageJson, Logger, superagent, Q, Raven) {
+              backbone, webGME, util, gmeConfigJson, packageJson, Logger, superagent, Q, Raven, StorageUtil) {
 
         'use strict';
         var gmeConfig = JSON.parse(gmeConfigJson),
@@ -39,7 +40,7 @@ require(
         WebGMEGlobal.version = gmeConfig.client.appVersion;
         WebGMEGlobal.webgmeVersion = webgmeEnginePackage.version;
 
-        defaultRavenOpts = { release: WebGMEGlobal.version };
+        defaultRavenOpts = {release: WebGMEGlobal.version};
 
         if (gmeConfig.client.errorReporting && gmeConfig.client.errorReporting.enable === true) {
             Raven.config(
@@ -151,7 +152,7 @@ require(
                 return deferred.promise;
             }
 
-            function requestPluginMetadata () {
+            function requestPluginMetadata() {
                 var deferred = Q.defer();
 
                 superagent.get('/api/plugins/metadata')
@@ -208,8 +209,8 @@ require(
                         userInfo.adminOrgs = [];
 
                         Q.allSettled(userInfo.orgs.map(function (orgId) {
-                                return checkIfAdminInOrg(userInfo._id, orgId);
-                            }))
+                            return checkIfAdminInOrg(userInfo._id, orgId);
+                        }))
                             .then(function () {
                                 WebGMEGlobal.userInfo = userInfo;
                                 userDeferred.resolve(userInfo);
@@ -223,7 +224,7 @@ require(
             return userDeferred.promise.nodeify(callback);
         }
 
-        function getDefaultComponentSettings (callback) {
+        function getDefaultComponentSettings(callback) {
             var deferred = Q.defer();
             superagent.get('/api/componentSettings')
                 .end(function (err, res) {
@@ -257,13 +258,50 @@ require(
             return deferred.promise.nodeify(callback);
         }
 
+        function loadDisplayNames(callback) {
+            var deferred = Q.defer();
+            superagent.get('/api/users')
+                .query({displayName: true})
+                .end(function (err, res) {
+                    if (res.status === 200) {
+                        WebGMEGlobal._displayNames = {};
+                        res.body.forEach(function (userData) {
+                            WebGMEGlobal._displayNames[userData._id] = userData.displayName;
+                        });
+
+                        WebGMEGlobal.getUserDisplayName = function (userId) {
+                            return WebGMEGlobal._displayNames[userId] || userId;
+                        };
+
+                        WebGMEGlobal.getProjectDisplayedNameFromProjectId = function (projectId) {
+                            return WebGMEGlobal.getUserDisplayName(StorageUtil.getOwnerFromProjectId(projectId)) +
+                                ' ' + StorageUtil.CONSTANTS.PROJECT_DISPLAYED_NAME_SEP + ' ' +
+                                StorageUtil.getProjectNameFromProjectId(projectId);
+                        };
+                    } else {
+                        log.error('Unable to get display name list for users!');
+
+                        WebGMEGlobal.getUserDisplayName = function (userId) {
+                            return userId;
+                        };
+
+                        WebGMEGlobal.getProjectDisplayedNameFromProjectId =
+                            StorageUtil.getProjectDisplayedNameFromProjectId;
+                    }
+
+                    deferred.resolve();
+                });
+            return deferred.promise.nodeify(callback);
+        }
+
         Q.all([
-                domDeferred.promise,
-                loadExtraCssFiles(),
-                populateAvailableExtensionPoints(),
-                populateUserInfo(),
-                getDefaultComponentSettings()
-            ])
+            domDeferred.promise,
+            loadExtraCssFiles(),
+            populateAvailableExtensionPoints(),
+            populateUserInfo(),
+            getDefaultComponentSettings(),
+            loadDisplayNames()
+        ])
             .then(function (result) {
                 var gmeApp = result[0];
                 webGME.start(function (client) {

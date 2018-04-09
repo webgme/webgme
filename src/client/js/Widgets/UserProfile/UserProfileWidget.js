@@ -31,7 +31,7 @@ define([
 
     UserProfileWidget.prototype._initializeUI = function (opts) {
         var widget = $(TEMPLATE),
-            userName = WebGMEGlobal.userInfo._id,
+            userName = WebGMEGlobal.getUserDisplayName(WebGMEGlobal.userInfo._id),
             logoutEl,
             referrer,
             logoutUrl;
@@ -70,7 +70,7 @@ define([
                 document.body.appendChild(tempAnchor);
 
                 // Make sure to clear the cookie before posting logout (and the parent closes the page).
-                document.cookie =  WebGMEGlobal.gmeConfig.authentication.jwt.cookieId +
+                document.cookie = WebGMEGlobal.gmeConfig.authentication.jwt.cookieId +
                     '=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
                 //While the server processes the request - post logout message to the parent.
                 window.parent.postMessage('logout', '*');

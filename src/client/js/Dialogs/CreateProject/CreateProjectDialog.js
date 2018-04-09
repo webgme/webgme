@@ -259,7 +259,7 @@ define(['js/Loader/LoaderCircles',
 
             for (i = 0; i < projectList.length; i += 1) {
                 projectId = projectList[i]._id;
-                displayedProjectName = StorageUtil.getProjectDisplayedNameFromProjectId(projectId);
+                displayedProjectName = WebGMEGlobal.getProjectDisplayedNameFromProjectId(projectId);
                 self._optGroupDuplicate.append($('<option>', {
                         text: displayedProjectName,
                         value: projectId

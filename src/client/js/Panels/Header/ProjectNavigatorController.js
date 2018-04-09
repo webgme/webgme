@@ -339,10 +339,10 @@ define([
         self.projects = {};
 
         callback = callback || function (err) {
-                if (err) {
-                    self.logger.error(err);
-                }
-            };
+            if (err) {
+                self.logger.error(err);
+            }
+        };
 
         self.gmeClient.getProjects(params, function (err, projectsData) {
             var projectId,
@@ -439,14 +439,17 @@ define([
             projectDisplayedName;
 
         rights = rights || {
-                delete: true,
-                read: true,
-                write: true
-            };
+            delete: true,
+            read: true,
+            write: true
+        };
 
-        projectDisplayedName = WebGMEGlobal.gmeConfig.authentication.enable ?
-            StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
-            StorageUtil.getProjectNameFromProjectId(projectId);
+        if (WebGMEGlobal.gmeConfig.authentication.enable &&
+            StorageUtil.getOwnerFromProjectId(projectId) !== WebGMEGlobal.userInfo._id) {
+            projectDisplayedName = WebGMEGlobal.getProjectDisplayedNameFromProjectId(projectId);
+        } else {
+            projectDisplayedName = StorageUtil.getProjectNameFromProjectId(projectId);
+        }
 
         updateProjectList = function () {
             self.updateProjectList.call(self);
@@ -637,7 +640,7 @@ define([
 
         function deleteBranch(data) {
             var deleteBranchModal = new ConfirmDialog(),
-                deleteItem = StorageUtil.getProjectDisplayedNameFromProjectId(data.projectId) +
+                deleteItem = WebGMEGlobal.getProjectDisplayedNameFromProjectId(data.projectId) +
                     '  ::  ' + data.branchId;
             deleteBranchModal.show({deleteItem: deleteItem}, function () {
                 self.gmeClient.deleteBranch(data.projectId,
@@ -931,7 +934,7 @@ define([
             currentBranch = self.$scope.navigator.items[self.navIdBranch];
 
         callback = callback || function () {
-            };
+        };
 
         //check if there is need for a change at all
         if (currentProject && currentProject.id === projectId && currentBranch &&

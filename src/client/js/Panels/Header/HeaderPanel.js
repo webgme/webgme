@@ -8,7 +8,6 @@
 
 define([
     'js/PanelBase/PanelBase',
-    'js/Widgets/ProjectTitle/ProjectTitleWidget',
     'js/Widgets/UserProfile/UserProfileWidget',
     'js/Widgets/ConnectedUsers/ConnectedUsersWidget',
     'js/Toolbar/Toolbar',
@@ -17,7 +16,6 @@ define([
     'js/Utils/WebGMEUrlManager',
     'js/Utils/ComponentSettings'
 ], function (PanelBase,
-             ProjectTitleWidget,
              UserProfileWidget,
              ConnectedUsersWidget,
              toolbar,
@@ -106,7 +104,6 @@ define([
             '</dropdown-navigator></div>',
             {class: 'inline'}
         );
-        //new ProjectTitleWidget(projectTitleEl, this._client);
         navBarInner.append(projectTitleEl);
         navBarInner.append($('<div class="spacer pull-right"></div>'));
 

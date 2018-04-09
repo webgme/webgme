@@ -16,10 +16,11 @@ define([
     'common/storage/util',
     'js/util',
     'common/regexp',
+    'superagent',
     'text!./templates/ProjectsDialog.html',
     'css!./styles/ProjectsDialog.css'
 ], function (Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDialog,
-             StorageUtil, clientUtil, REGEXP, projectsDialogTemplate) {
+             StorageUtil, clientUtil, REGEXP, superagent, projectsDialogTemplate) {
 
     'use strict';
 
@@ -37,6 +38,7 @@ define([
         this._filter = undefined;
         this._userId = null;
         this._ownerId = null;
+        this._visibleOwnerId = null;
         this._creatingNew = createNew;
         this._createType = createType || 'seed';
         this._logger.debug('Created');
@@ -136,9 +138,14 @@ define([
         }
 
         function deleteProject(projectId) {
-            var projectDisplayedName = WebGMEGlobal.gmeConfig.authentication.enable ?
-                StorageUtil.getProjectDisplayedNameFromProjectId(projectId) :
-                StorageUtil.getProjectNameFromProjectId(projectId);
+            var projectDisplayedName;
+
+            if (WebGMEGlobal.gmeConfig.authentication.enable &&
+                StorageUtil.getOwnerFromProjectId(projectId) !== WebGMEGlobal.userInfo._id) {
+                projectDisplayedName = WebGMEGlobal.getProjectDisplayedNameFromProjectId(projectId);
+            } else {
+                projectDisplayedName = StorageUtil.getProjectNameFromProjectId(projectId);
+            }
 
             var refreshList = function () {
                     //self._refreshProjectList.call(self);
@@ -210,14 +217,17 @@ define([
         this._ownerIdList = this._panelCreateNew.find('ul.ownerId-list');
         this._selectedOwner = this._panelCreateNew.find('.selected-owner-id');
         this._ownerId = this._userId;
-        this._selectedOwner.text(this._ownerId);
+        this._visibleOwnerId = WebGMEGlobal.getUserDisplayName(this._userId);
+        this._selectedOwner.text(this._visibleOwnerId);
 
-        this._ownerIdList.append($('<li><a class="ownerId-selection">' + self._userId + '</a></li>'));
+        this._ownerIdList.append($('<li><a class="ownerId-selection" data-id="' + self._userId + '">' +
+            self._visibleOwnerId + '</a></li>'));
 
         if (WebGMEGlobal.userInfo.adminOrgs.length > 0) {
             this._ownerIdList.append($('<li role="separator" class="divider"></li>'));
             WebGMEGlobal.userInfo.adminOrgs.forEach(function (orgInfo) {
-                self._ownerIdList.append($('<li><a class="ownerId-selection">' + orgInfo._id + '</a></li>'));
+                self._ownerIdList.append($('<li><a class="ownerId-selection" ' +
+                    'data-id="' + WebGMEGlobal.getUserDisplayName(orgInfo._id) + '">' + orgInfo._id + '</a></li>'));
             });
         }
 
@@ -245,6 +255,13 @@ define([
         });
 
         //hook up event handlers - SELECT project in the list
+
+
+        // If we do not block firing double click, the project will always open
+        this._tableBody.on('dblclick', 'input', function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        });
 
         this._tableBody.on('dblclick', 'tr', function (event) {
             selectedId = $(this).data(DATA_PROJECT)._id;
@@ -340,12 +357,13 @@ define([
         });
 
         this._ownerIdList.on('click', 'a.ownerId-selection', function (/*event*/) {
-            var newOwnerId = $(this).text(),
+            var newOwnerId = $(this).data('id'),
                 projectName = self._txtNewProjectName.val(),
                 projectId = StorageUtil.getProjectIdFromOwnerIdAndProjectName(
                     newOwnerId, projectName);
             self._ownerId = newOwnerId;
-            self._selectedOwner.text(newOwnerId);
+            self._visibleOwnerId = $(this).text();
+            self._selectedOwner.text(self._visibleOwnerId);
 
             if (isValidProjectName(projectName, projectId) === false) {
                 self._panelCreateNew.addClass('has-error');
@@ -505,7 +523,7 @@ define([
         this._tableHead.find('th').removeClass('reverse-order in-order');
 
         function getTitle(projectIdx, type, username, date) {
-            var name = StorageUtil.getProjectDisplayedNameFromProjectId(self._projectIds[projectIdx]);
+            var name = WebGMEGlobal.getProjectDisplayedNameFromProjectId(self._projectIds[projectIdx]);
 
             return name + ' was ' + type + ' by ' + (username || 'N/A') + ' at ' + clientUtil.formattedDate(date);
         }
@@ -516,7 +534,7 @@ define([
 
                 projectData = this._projectList[this._projectIds[i]];
                 projectName = StorageUtil.getProjectNameFromProjectId(this._projectIds[i]);
-                owner = StorageUtil.getOwnerFromProjectId(this._projectIds[i]);
+                owner = WebGMEGlobal.getUserDisplayName(StorageUtil.getOwnerFromProjectId(this._projectIds[i]));
 
                 tblRow = TABLE_ROW_BASE.clone();
                 // Else time is when the #677 introduced.
@@ -534,7 +552,8 @@ define([
                     viewed: lastViewed.getTime(),
                     created: createdAt.getTime(),
                     name: projectName.toUpperCase(),
-                    owner: owner.toUpperCase()
+                    owner: owner.toUpperCase(),
+                    info: projectData.info.description
                 });
 
                 // owner
@@ -547,6 +566,43 @@ define([
                 $('<td/>').addClass('name').append(span)
                     .append('<span class="name-read-only">[Read-Only]</span>')
                     .appendTo(tblRow);
+
+                //info
+                span = $('<input/>').addClass('description')
+                    .val(projectData.info.description)
+                    .prop('placeholder', 'describe the project')
+                    .data('projectId', this._projectIds[i])
+                    .data('description', projectData.info.description)
+                    .prop('disabled', projectData.rights.write !== true)
+                    .focusout(function (/*event*/) {
+                        $(this).val($(this).data('description'));
+                    })
+                    .keyup(function (event) {
+                        var owner, projectName, projectId, newDescription, confirm,
+                            uiItem = $(this);
+
+                        if (event.keyCode === 13) {
+                            projectId = $(this).data('projectId');
+                            newDescription = $(this).val();
+
+                            if (uiItem.data('description') !== uiItem.val()) {
+                                projectName = StorageUtil.getProjectNameFromProjectId(projectId);
+                                owner = StorageUtil.getOwnerFromProjectId(projectId);
+                                self._updateProjectDescription(owner, projectName, newDescription,
+                                    function (err) {
+                                        if (err) {
+                                            self._logger.error(err);
+                                            uiItem.val(uiItem.data('description'));
+                                        } else {
+                                            uiItem.data('description', newDescription);
+                                            uiItem.val(newDescription);
+                                        }
+                                        $(uiItem).blur();
+                                    });
+                            }
+                        }
+                    });
+                $('<td/>').append(span).appendTo(tblRow);
 
                 // modified
                 span = $('<span/>').attr('title', getTitle(i, 'modified', projectData.info.modifier, lastModified))
@@ -677,6 +733,18 @@ define([
         });
 
         sortedRows.detach().appendTo(this._tableBody);
+    };
+
+    ProjectsDialog.prototype._updateProjectDescription = function (owner, projectName, description, callback) {
+        superagent('PATCH', 'api/projects/' + owner + '/' + projectName)
+            .send({description: description})
+            .end(function (err, res) {
+                if (err || res.status !== 200) {
+                    callback(new Error('cannot update project info'));
+                } else {
+                    callback(null);
+                }
+            });
     };
 
     ProjectsDialog.prototype._createProject = function (projectName,

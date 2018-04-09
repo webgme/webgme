@@ -377,7 +377,7 @@ define([
                         if (otherClients.hasOwnProperty(eData.socketId) === false) {
                             colorIndex = Object.keys(otherClients).length % CLIENT_COLORS.length;
                             otherClients[eData.socketId] = {
-                                userId: eData.userId,
+                                userId: WebGMEGlobal.getUserDisplayName(eData.userId),
                                 selection: null,
                                 color: CLIENT_COLORS[colorIndex]
                             };

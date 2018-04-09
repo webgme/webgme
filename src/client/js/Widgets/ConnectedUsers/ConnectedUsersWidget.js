@@ -51,9 +51,9 @@ define([
 
         this.rooms = {
             //<projectId>%<branchName>: {
-                    //users: {},
-                    //colors: {}
-                //}
+            //users: {},
+            //colors: {}
+            //}
         };
 
         this.userId = WebGMEGlobal.userInfo._id;
@@ -123,12 +123,13 @@ define([
         var roomName = this._getBranchRoomName(eventData),
             self = this,
             colorInd,
+            displayName = WebGMEGlobal.getUserDisplayName(eventData.userId),
             userInfo;
 
         this.rooms[roomName] = this.rooms[roomName] || {
-                users: {},
-                colors: COLORS.slice()
-            };
+            users: {},
+            colors: COLORS.slice()
+        };
 
         if (this.rooms[roomName].users.hasOwnProperty(eventData.userId) === true) {
             this.logger.debug('New user was already added', eventData.userId);
@@ -144,11 +145,12 @@ define([
 
         userInfo = {
             userId: eventData.userId,
+            displayName: displayName,
             color: this.rooms[roomName].colors[colorInd],
             $el: $('<button/>', {
                 class: 'user-badge btn btn-xs',
-                title: eventData.userId,
-                text: eventData.userId[0].toUpperCase() // Display first letter of the user.
+                title: displayName,
+                text: displayName[0].toUpperCase()// Display first letter only.
             }),
             state: {}
         };
@@ -207,7 +209,7 @@ define([
         if (eventData.state && userInfo.state.activeObject !== eventData.state.activeObject) {
             userInfo.state.activeObject = eventData.state.activeObject;
 
-            userInfo.$el.prop('title', userInfo.userId + '@' + userInfo.state.activeObject);
+            userInfo.$el.prop('title', userInfo.displayName + '@' + userInfo.state.activeObject);
         }
     };
 

@@ -122,7 +122,7 @@ define(['js/logger', 'js/Dialogs/Confirm/ConfirmDialog'], function (Logger, Conf
                             self._view._dialog.setSelectorValue();
                         }
                     });
-                });
+            });
         };
 
         self._view.onSelectBranch = function (branchName) {
@@ -187,7 +187,7 @@ define(['js/logger', 'js/Dialogs/Confirm/ConfirmDialog'], function (Logger, Conf
                                 message: com.message,
                                 parents: com.parents,
                                 timestamp: com.time,
-                                user: com.updater.join(',')
+                                user: com.updater.map(WebGMEGlobal.getUserDisplayName).join(',')
                             };
 
                             self._view.addCommit(commitObject);
