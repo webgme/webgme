@@ -286,7 +286,7 @@ require(
                         };
 
                         WebGMEGlobal.getProjectDisplayedNameFromProjectId =
-                            StorageUtils.getProjectDisplayedNameFromProjectId;
+                            StorageUtil.getProjectDisplayedNameFromProjectId;
                     }
 
                     deferred.resolve();
