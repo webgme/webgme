@@ -88,6 +88,11 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - The algorithm used for encryption (should not be edited w/o changing keys appropriately).
 - `config.authentication.jwt.tokenGenerator = 'node_modules/webgme-engine/src/server/middleware/auth/localtokengenerator.js'`
  - Replaceable module for generating tokens in case webgme should not generated new tokens by itself.
+- `config.authentication.admin = null`
+ - If specified, will create an admin account at the given username at server startup. By default a random password will be generated and logged in the terminal - to specify a password add a `:`, e.g. `'admin:password'`. 
+(Once the admin exists the password will not be updated at startup.)
+- `config.authentication.publicOrganizations = []`
+ - Array of organizations to be created at server startup. New users will be added as members to these organizations. (Note that the guest account will not be added to the organizations.)
 
 ##### bin
 
@@ -191,6 +196,20 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Used by the GUI when highlighting/selecting the default project to seed from.
 - `config.seedProjects.basePaths = ['node_modules/webgme-engine/seeds']`
  - List of directories where project seeds are stored.
+- `config.seedProjects.createAtStartup= []`
+ - Array of descriptions of projects to be created at server start up. The descriptions have the following form:
+```
+{
+  seedId: 'EmptyProject',
+  projectName: 'StartProject',
+  creatorId: 'siteAdminOrAnAdminInOwnerOrg', // If not given the creator will be the auth.admin
+  ownerId: 'MyPublicOrg' // If not given will be the creator
+  rights: {
+    MyPublicOrg: { read: true, write: false, delete: false }, // The owner will have full access by default
+    guest: { read: true }
+  }
+}
+```
 
 ##### server
 - `config.server.port = 8888`
