@@ -1,6 +1,22 @@
 # Change Log
 
-## [v2.24.0](https://github.com/webgme/webgme/tree/v2.24.0) (2018-03-12)
+## [v2.25.0](https://github.com/webgme/webgme/tree/v2.25.0) (2018-04-10)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.24.0...v2.25.0)
+
+**Implemented enhancements:**
+
+- Allow inferred users to have displayName [\#1592](https://github.com/webgme/webgme/issues/1592)
+- Show info in project browser [\#1591](https://github.com/webgme/webgme/issues/1591)
+- Point to webgme-engine 2.19.7 and webgme-user-management-page 0.3.7 [\#1594](https://github.com/webgme/webgme/pull/1594) ([kecso](https://github.com/kecso))
+- Closes \#1591 Show info in project browser and use display name for users if defined [\#1593](https://github.com/webgme/webgme/pull/1593) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- CoreInternalError: ASSERT failed [\#1585](https://github.com/webgme/webgme/issues/1585)
+- iframe logout is not completing logout request [\#1584](https://github.com/webgme/webgme/issues/1584)
+- Fixes \#1584 make sure to clear cookie in browser at logout [\#1588](https://github.com/webgme/webgme/pull/1588) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.24.0](https://github.com/webgme/webgme/tree/v2.24.0) (2018-03-13)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.23.0...v2.24.0)
 
 **Implemented enhancements:**
