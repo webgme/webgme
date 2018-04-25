@@ -11,8 +11,9 @@ define([
     'js/Dialogs/AddOrUpdateLibrary/AddOrUpdateLibraryDialog',
     'js/Loader/ProgressNotification',
     'common/regexp',
-    'common/storage/constants'
-], function (Logger, ConfirmDialog, AddOrUpdateLibraryDialog, ProgressNotification, REGEXP, CONSTANTS) {
+    'common/storage/constants',
+    'common/core/constants'
+], function (Logger, ConfirmDialog, AddOrUpdateLibraryDialog, ProgressNotification, REGEXP, CONSTANTS, CORECONSTANTS) {
     'use strict';
 
     var LibraryManager = function (client, mainLogger) {
@@ -322,7 +323,8 @@ define([
             for (i = 0; i < availableNames.length; i += 1) {
                 if (!this._libraryInfos[availableNames[i]]) {
                     info = client.getLibraryInfo(availableNames[i]);
-                    if (info && info.projectId && info.branchName) {
+                    if (info && info.projectId && info.branchName &&
+                        availableNames[i].indexOf(CORECONSTANTS.NAMESPACE_SEPARATOR) === -1) {
                         this._watchProject(info.projectId);
                         this._libraryInfos[availableNames[i]] = {
                             projectId: info.projectId,
