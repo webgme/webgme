@@ -83,6 +83,7 @@ define([
         ASSETS_DECORATOR_SVG_FOLDER: 'assets/DecoratorSVG/',
 
         /*WebGME state constants*/
+        STATE_TO_BE_ACTIVE_OBJECT: '_toBeActiveObject',
         STATE_ACTIVE_OBJECT: 'activeObject',
         STATE_ACTIVE_SELECTION: 'activeSelection',
         STATE_ACTIVE_ASPECT: 'activeAspect',

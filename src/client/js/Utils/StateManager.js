@@ -34,6 +34,7 @@ define([
                 objId = objId === 'root' ? '' : objId;
                 logger.debug('registerActiveObject, objId: ', objId);
                 opts = opts || {};
+                this.set(CONSTANTS.STATE_TO_BE_ACTIVE_OBJECT, objId, opts);
                 this.set(CONSTANTS.STATE_ACTIVE_OBJECT, objId, opts);
             },
 

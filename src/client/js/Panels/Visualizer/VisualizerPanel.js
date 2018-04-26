@@ -186,7 +186,7 @@ define(['js/logger',
             event.preventDefault();
         });
 
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function (model, activeObjectId, opts) {
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_TO_BE_ACTIVE_OBJECT, function (model, activeObjectId, opts) {
             if (opts.invoker !== self) {
                 self._onSelectedObjectChanged(activeObjectId, opts);
             }
@@ -378,9 +378,9 @@ define(['js/logger',
 
         // Only set the visualizer only if we were able to select some valid one.
         if (setActiveViz && visualizerToSet) {
-            setTimeout(function () {
-                self._setActiveVisualizer(visualizerToSet);
-            }, 0);
+            //setTimeout(function () {
+            self._setActiveVisualizer(visualizerToSet);
+            //}, 0);
         }
     };
 

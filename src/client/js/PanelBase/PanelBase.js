@@ -73,6 +73,7 @@ define(['jquery', 'js/logger'], function (_jquery, Logger) {
     PanelBase.prototype.destroy = function () {
         this.clear();
         this.$el.remove();
+        this._destroyedInstance = true;
     };
 
     /* METHOD CALLED WHEN THE PARENT CONTAINER SIZE HAS CHANGED AND WIDGET SHOULD RESIZE ITSELF ACCORDINGLY */
