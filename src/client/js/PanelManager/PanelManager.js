@@ -17,7 +17,7 @@ define(['js/logger', 'js/Constants'], function (Logger, CONSTANTS) {
 
     PanelManager.prototype.setActivePanel = function (p) {
         if (this._activePanel !== p) {
-            if (this._activePanel) {
+            if (this._activePanel && !this._activePanel._destroyedInstance) {
                 //deactivate currently active panel
                 this._activePanel.setActive(false);
             }

@@ -172,6 +172,20 @@ define([
                 _WebGMEState.on('change', function (model, options) {
                     logger.debug('', model, options);
                 });
+
+                var orgSet = _WebGMEState.set.bind(_WebGMEState);
+
+                _WebGMEState.set = function (stateDesc, value, opts) {
+                    if (stateDesc === CONSTANTS.STATE_ACTIVE_OBJECT) {
+                        orgSet(CONSTANTS.STATE_TO_BE_ACTIVE_OBJECT, value, opts);
+                    } else if (stateDesc && typeof stateDesc === 'object' &&
+                        stateDesc.hasOwnProperty(CONSTANTS.STATE_ACTIVE_OBJECT)) {
+                        // Here value is the opts..
+                        orgSet(CONSTANTS.STATE_TO_BE_ACTIVE_OBJECT, stateDesc[CONSTANTS.STATE_ACTIVE_OBJECT], value);
+                    }
+
+                    orgSet(stateDesc, value, opts);
+                };
             }
 
             return _WebGMEState;

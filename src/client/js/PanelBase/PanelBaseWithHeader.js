@@ -117,6 +117,7 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
     PanelBaseWithHeader.prototype.destroy = function () {
         this.clear();
         this.$_el.remove();
+        this._destroyedInstance = true;
     };
 
     PanelBaseWithHeader.prototype.setTitle = function (text) {
