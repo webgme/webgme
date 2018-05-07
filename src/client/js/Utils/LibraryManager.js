@@ -347,7 +347,8 @@ define([
             this._clearWatchers();
             for (i = 0; i < availableNames.length; i += 1) {
                 info = client.getLibraryInfo(availableNames[i]);
-                if (info && info.projectId && info.branchName) {
+                if (info && info.projectId && info.branchName &&
+                    availableNames[i].indexOf(CORECONSTANTS.NAMESPACE_SEPARATOR) === -1) {
                     this._watchProject(info.projectId);
                     this._libraryInfos[availableNames[i]] = {
                         projectId: info.projectId,
