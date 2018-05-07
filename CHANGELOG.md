@@ -1,5 +1,18 @@
 # Change Log
 
+## [v2.26.0](https://github.com/webgme/webgme/tree/v2.26.0) (2018-05-07)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.25.0...v2.26.0)
+
+**Implemented enhancements:**
+
+- Prevent new active object event when switching to new viz via node registery look-up [\#1598](https://github.com/webgme/webgme/pull/1598) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Changes in embedded libraries should not trigger library notification to the user. [\#1596](https://github.com/webgme/webgme/issues/1596)
+- Release testing fixes [\#1602](https://github.com/webgme/webgme/pull/1602) ([kecso](https://github.com/kecso))
+- Fixes \#1596 Changes in embedded libraries should not trigger library notification to the user. [\#1597](https://github.com/webgme/webgme/pull/1597) ([kecso](https://github.com/kecso))
+
 ## [v2.25.0](https://github.com/webgme/webgme/tree/v2.25.0) (2018-04-10)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.24.0...v2.25.0)
 
