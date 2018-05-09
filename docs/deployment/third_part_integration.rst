@@ -92,7 +92,7 @@ Alternatively, or if you should forget the admin password, you can change the pa
 
 .. code-block:: bash
 
-    node node_modules\webgme-engine\src\bin\usermanager.js passwd admin newPassWord
+    node node_modules/webgme-engine/src/bin/usermanager.js passwd admin newPassWord
 
 
 For more details about authentication and authorization in WebGME `these tutorials have a dedicated section <https://github.com/webgme/tutorials/tree/master/_session6_auth>`_.
