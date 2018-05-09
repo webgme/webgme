@@ -86,11 +86,11 @@ gmeConfig
 The configuration files in the ``config`` directory is where you set the configuration for your webgme app. By default
 the ``config/config.default.js`` and is the entry point of where you manually can overwrite the parameters. It loads
 ``config/config.webgme.js`` where webgme-cli adds parameters for the generated components (e.g. plugin). A full list of
-all possible parameters and how to switch between configuration files is documented `here https://github.com/webgme/webgme/blob/master/config/README.md`_.
+all possible parameters and how to switch between configuration files is documented `here <https://github.com/webgme/webgme/blob/master/config/README.md>`_.
 
 Starting the server
 -------------------
-Make sure you have mongodb running. Look back at the dependencies section (todo link). As mentioned before the app.js file is
+Make sure you have mongodb running. Look back at the dependencies section. As mentioned before the app.js file is
 the starting point for the webgme server. To invoke it with node.js simply do:
 
 .. code-block:: bash

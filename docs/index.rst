@@ -59,3 +59,4 @@ How to build a Design Studio with WebGME
     deployment/authentication.rst
     deployment/secure_deployment.rst
     deployment/scaling_up.rst
+    deployment/third_part_integration.rst
