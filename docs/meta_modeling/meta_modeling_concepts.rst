@@ -20,6 +20,8 @@ Containment
 
 * Containment is a strong relationship: if a parent node is deleted so are all its children
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/kVLq32SoFM4>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -43,6 +45,8 @@ Base Relationship/Inheritance
 * A node’s base is its prototype
 
     - Prototypal/Prototypical inheritance: asking for a property of a node traverses the base-chain till a value is reached
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/vMTveKozhY0>`_.
 
 .. raw:: html
 
@@ -71,6 +75,8 @@ Attributes
     - Read-only - the value can only be edited at meta-nodes
     - Enumeration, min, max, regex, multiline, etc.
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/8098zuY2Snk>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -86,6 +92,8 @@ Pointers
 * Named one-to-one relation between two nodes, the owner and the target
 * Target of a pointer is either another node or NULL
 * base is a built-in pointer (inheritance)
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/EvpSbCxcYSs>`_.
 
 .. raw:: html
 
@@ -106,6 +114,8 @@ Connections
 * In the Property Editor we can see that it’s just two pointers
 * If any of the src or dst pointers are NULL, the connection appears as a regular box annotated with << Connection >>
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/0xYusMMBt1I>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -125,6 +135,8 @@ Sets
     - Similar to Composition - but members are visualized/edited
 
 * Meta-nodes are the members of the built-in set, MetaAspectSet, owned by the ROOT
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/w5XwVu3ZQ0E>`_.
 
 .. raw:: html
 
@@ -148,6 +160,8 @@ Mixins
     - In case of colliding definitions, the base node has precedence
     - Collisions among mixins resolved based on GUID
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/Fd6lbKdfYXY>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -162,6 +176,8 @@ Aspects
 
 * Defines filtered views of your composition/containment (by selecting a set of valid children types)
 * Defined aspects show up as tabs in the Composition view
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/JQXFCUnlwyI>`_.
 
 .. raw:: html
 
@@ -181,6 +197,8 @@ Constraints
     - To enable :code:`config.core.enableCustomConstraints = true;`
 
 * Constraints will be evaluated for every node that is of the meta-type where
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/KZZ2LGp2WLY>`_.
 
 .. raw:: html
 

@@ -62,6 +62,7 @@ The ``activeNode`` is the invocation point of a plugin and in the next sub-secti
 (With the node map it is possible to retrieve nodes without any asynchronous function call - this makes the writing, and
 especially demonstration of the code easier. The asynchronous API functions in webgme do use promises which makes this a bit easier to deal with.)
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/agHG2DkM35k>`_.
 
 .. raw:: html
 
@@ -80,6 +81,8 @@ we must register it at the appropriate nodes. In our case we want the `ModelicaC
 This video shows how we register the plugin and how we can enable the gme-logger for the *ModelicaCodeGenerator* in the browser.
 (Note that after updating the localStorage the page must be refreshed. The page must also be refreshed each time we update
 the plugin code on the server.)
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/4r8McbtV4m8>`_.
 
 .. raw:: html
 
@@ -131,6 +134,8 @@ The first video shows how to iterate over the children of the ``Circuit`` and ch
 here are; ``self.META`` property of the plugin which is a mapping from the name of a meta-node to the actual core-node,
 and the helper-method ``isMetaTypeOf`` which checks if the first node is of type of the second node.
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/7k6NS9v4ybI>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -142,6 +147,8 @@ and the helper-method ``isMetaTypeOf`` which checks if the first node is of type
 Next we need to implement the extraction of the data we need in order to generate the Modelica code. For this we will
 implement two helper functions that populates the ``modelJson.components`` and ``modelJson.connections`` array respectively.
 At the end we will serialize the data using the standard built-in ``JSON.stringify`` function.
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/kF_p1Y2Bttw>`_.
 
 .. raw:: html
 
@@ -181,6 +188,8 @@ To generate the actual code we can use a templating engine such as `ejs <http://
 There are also other more fitting `templating engines available in JavaScript <https://colorlib.com/wp/top-templating-engines-for-javascript/>`_.
 For simplicity here, we will make a simple string concatenation to generate the Modelica code.
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/6Ug0DIFcuEs>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -196,6 +205,8 @@ storage for files through the `blob-storage <https://github.com/webgme/webgme/wi
 
 In the video below we will show how to upload the generated file onto the storage and how to provide a download link to
 the invoker of the plugin.
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/CmDqSHGn91I>`_.
 
 .. raw:: html
 
