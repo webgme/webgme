@@ -1,11 +1,10 @@
 Integrating a WebGME Design Studio with CPS-VO
 ==============================================
+This section is intended for you who have developed a design studio with `WebGME <https://webgme.org>`_ and want to
+make it publicly accessible for users on https://cps-vo.org.
 
-This documentation is intended for you who have developed a design studio with `WebGME <https://webgme.org>`_ and want to
- make it publicly accessible for users on https://cps-vo.org.
-
-An integration between a WebGME design studio in and CPS-VO simply means that a link to the design studio is available
-from a group on CPS-VO with the addition that the user's identity at cps-vo is forwarded to the WebGME server.
+An integration between a WebGME design studio within CPS-VO simply means that a link to the design studio is available
+from a group on CPS-VO. Additionally the user's identity at CPS-VO is forwarded to the WebGME server.
 By disabling the option for users to register on your WebGME deployment, you can ensure that only people with user-accounts
 on CPS-VO (and access to your particular group) are able to logon to your deployment.
 
@@ -23,16 +22,16 @@ Step 1: Enabling authentication on your WebGME Server
 ----------------------------------------------------
 Before turning on authentication you must generate a set of  `RSA Keys <https://en.wikipedia.org/wiki/RSA_(cryptosystem)>`_.
 These are used to encrypt (the private key) and decrypt (the public key) the tokens containing the users identity.
-Sharing the private key with CPS-VO allows it to forward the users identity to WebGME. One way of doing this is to set
-the token query when navigating to your WebGME site, e.g. ``https://mywebgme.org?token=<tokenString>``.
+Sharing the private key with CPS-VO allows it to forward the users identity to WebGME. (One way of doing this is to set
+the token query when navigating to your WebGME site, e.g. ``https://mywebgme.org?token=<tokenString>``.)
 
 1.  Create a new directory, e.g. ``mkdir token_keys``, next to your checked out repository. (It's important that these keys are outside the cwd of the running WebGME server.)
-2.  Using openssl (available for  `windows <http://gnuwin32.sourceforge.net/packages/openssl.htm>`_ a private key  is generated with:
+2.  Using openssl (available for  `windows here <http://gnuwin32.sourceforge.net/packages/openssl.htm>`_) a private key  is generated with:
     ``openssl genrsa -out token_keys/private_key 1024``
-3. The public key is generated from the private key with:
+3.  The public key is generated from the private key with:
     ``openssl rsa -in token_keys/private_key -pubout > token_keys/public_key``
 
-With the keys ready the next step is to configure WebGME to enable authentication/authorization. Since you probably want
+With the keys generated the next step is to configure WebGME to enable authentication/authorization. Since you probably want
 to have a different configuration for deploying the server then when you're developing your application it's advised to
 create a new configuration that appends to your default configuration.
 
@@ -87,6 +86,14 @@ The following addition to the ``config.deployment.js`` above will create a user 
 
 
 You should now be able to login to the profile page at ``<host>/profile/login``, once logged in make sure to change the password from the WebGME profile interface.
+
+Alternatively, or if you should forget the admin password, you can change the password from using the following command
+(make sure to set the correct environment variable for the configuration by setting ``NODE_ENV=deployment``):
+
+.. code-block:: bash
+
+    node node_modules\webgme-engine\src\bin\usermanager.js passwd admin newPassWord
+
 
 For more details about authentication and authorization in WebGME `these tutorials have a dedicated section <https://github.com/webgme/tutorials/tree/master/_session6_auth>`_.
 
