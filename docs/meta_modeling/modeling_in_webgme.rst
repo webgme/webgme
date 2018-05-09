@@ -7,6 +7,8 @@ in order for that to work in practise some more concepts are needed.
 
 Before going into the details of the data-model let's first have a look at the default GUI of webgme...
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/SddGyiYtJ34>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">

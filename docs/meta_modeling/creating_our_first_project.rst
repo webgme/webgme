@@ -34,6 +34,8 @@ of these are **strong** relationships, the removal of any of these would remove 
 
     The **Composition** tab in the **Object Browser** shows all the nodes in our project-tree.
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/xR0rmcVFcgY>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">

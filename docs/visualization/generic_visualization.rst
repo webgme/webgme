@@ -18,6 +18,8 @@ Customizing SVGs
 Without creating a decorator the webgme gui provides support for dynamic SVGs where data from the models can be accessed
 and displayed...
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/l5m4CF4w8fE>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">

@@ -10,14 +10,14 @@ However we recommend using Chrome for a couple of reasons:
 As a developer of a webgme app you will however be required to host your own webgme server and for that you will need
 to install some dependencies in addition to having access to a browser.
 
-* `Node.js <https://nodejs.org/>`_ (version >= 4, CI tests are performed on versions 4.x, 6.x and LTS is recommended).
-* `MongoDB <https://www.mongodb.com/>`_ (version >= 2.6).
+* `Node.js <https://nodejs.org/>`_ (version >= 6, CI tests are currently performed on versions 6.x, 8.x and LTS is recommended).
+* `MongoDB <https://www.mongodb.com/>`_ (version >= 3.0).
 * `Git <https://git-scm.com>`_ (must be available in PATH).
 * (Optional) `Redis <https://redis.io/>`_ Note that this is only needed if you intend on running `multiple webgme nodes <https://github.com/webgme/webgme/wiki/Multiple-Nodes>`_.
 
 Installing Node.js
 ---------------
-When you have followed the instructions below make sure that the command below works and prints v6.11.4 or similar.
+When you have followed the instructions below make sure that the command below works and prints v8.9.4 or similar.
 
 .. code-block:: bash
 
@@ -55,7 +55,7 @@ or
 
 .. code-block:: bash
 
-  nvm install v6.11.4
+  nvm install v8.9.4
 
 
 Installing MongoDB

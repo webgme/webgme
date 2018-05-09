@@ -6,6 +6,8 @@ are starting to collaborate on projects - it's time to turn the authentication o
 
 The video below shows how to enable authentication and how the user schema works.
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/xS6_FK8kZhE>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">

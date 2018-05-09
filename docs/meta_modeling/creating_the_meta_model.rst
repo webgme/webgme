@@ -32,6 +32,8 @@ Later we will add sub-types of components corresponding to components such as ``
 
 The video below shows how you can add these types as meta-nodes starting from your empty project.
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/raf1gkglZTw>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -51,6 +53,8 @@ Next section illustrates how we can make the ``Connection`` in to an actual conn
 Inside the ``Component`` the ``Pins`` determine where the ``Connections`` connect the ``Components`` together.
 
 The video below shows how to add these containment rules to our meta-model using the Meta Editor.
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/EPUbPbRhHsA>`_.
 
 .. raw:: html
 
@@ -125,6 +129,8 @@ In the video an additional `abstract` base type, ``TwoPinComponent``, that defin
 approach is not only more elegant and convenient, but also more efficient since the raw data for the two pins can be shared
 and requires less data to be loaded from the server.
 
+`Click here to open the video in a browser. <https://www.youtube.com/embed/ZNNLJ-fb85g>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -146,6 +152,8 @@ modeling more comprehensible, it is often useful to be able to visually propagat
 the parent node. The way this is solved in webgme is through the meta-property (implemented as a registry) ``isPort``.
 Note that the usage of this property only takes effect if the decorator (the UI component responsible for drawing the box
 on the canvas) implements logic using this property - this is the case for both the default Model- and SVG-Decorators.
+
+`Click here to open the video in a browser. <https://www.youtube.com/embed/QSthYt-j6oI>`_.
 
 .. raw:: html
 

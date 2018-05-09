@@ -1,7 +1,7 @@
 SSL/TLS
 ================
-The webgme server itself does not provide a secure connection. Instead we recommend using a reverse-proxy
-in front of the webgme server that encrypts the data. `Nginx <https://www.nginx.com/>`_ is a commonly used one and an
+The WebGME server itself does not provide a secure connection. Instead we recommend using a reverse-proxy
+in front of the WebGME server that encrypts the data. `Nginx <https://www.nginx.com/>`_ is a commonly used one and an
 example configuration for a webgme-app can be viewed here
 `here <https://github.com/webgme/webgme.org/blob/master/aws/nginx.conf>`_.
 
