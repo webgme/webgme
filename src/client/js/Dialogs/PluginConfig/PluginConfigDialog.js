@@ -240,14 +240,14 @@ define([
                 pluginConfigEntry.minValue !== null &&
                 pluginConfigEntry.minValue !== '') {
                 descEl = descEl || DESCRIPTION_BASE.clone();
-                descEl.append(' The minimum value is: ' + pluginConfigEntry.minValue + '.');
+                descEl.append(' min=' + pluginConfigEntry.minValue);
             }
 
             if (pluginConfigEntry.maxValue !== undefined &&
                 pluginConfigEntry.maxValue !== null &&
                 pluginConfigEntry.maxValue !== '') {
                 descEl = descEl || DESCRIPTION_BASE.clone();
-                descEl.append(' The maximum value is: ' + pluginConfigEntry.maxValue + '.');
+                descEl.append(' max=' + pluginConfigEntry.maxValue);
             }
 
             if (id === GLOBAL_OPTS_ID && pluginConfigEntry.name === 'runOnServer' && pluginConfigEntry.readOnly === true) {

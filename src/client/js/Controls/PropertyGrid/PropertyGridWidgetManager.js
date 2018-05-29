@@ -23,6 +23,7 @@ define([
     'js/Controls/PropertyGrid/Widgets/SvgSelectWidget',
     'js/Controls/PropertyGrid/Widgets/MultilineWidget',
     'js/Controls/PropertyGrid/Widgets/SortableWidget',
+    'js/Controls/PropertyGrid/Widgets/RangeWidget',
     './PropertyGridWidgets'
 ], function (StringWidget,
              NumberBoxWidget,
@@ -42,6 +43,7 @@ define([
              SvgSelectWidget,
              MultilineWidget,
              SortableWidget,
+             RangeWidget,
              PROPERTY_GRID_WIDGETS) {
 
     'use strict';
@@ -58,16 +60,23 @@ define([
             isSortable = type.toLowerCase() == 'sortable',
             isOption = _.isArray(propDesc.valueItems) && !isSortable,
             isColor = colorUtil.isColor(propDesc.value),
-            SpecificWidget = propDesc.widget,
+            specificWidget = propDesc.widget,
             widget;
 
         if (propDesc.multiline) {
-            SpecificWidget = PROPERTY_GRID_WIDGETS.MULTILINE;
+            specificWidget = PROPERTY_GRID_WIDGETS.MULTILINE;
         }
+
+        if (typeof propDesc.increment === 'number' &&
+            typeof propDesc.minValue === 'number' &&
+            typeof propDesc.maxValue === 'number') {
+            specificWidget = PROPERTY_GRID_WIDGETS.RANGE_WIDGET;
+        }
+
         if (readOnly && type !== 'boolean' && type !== 'asset') {
             widget = new LabelWidget(propDesc);
-        } else if (SpecificWidget) {
-            switch (SpecificWidget) {
+        } else if (specificWidget) {
+            switch (specificWidget) {
                 case PROPERTY_GRID_WIDGETS.DIALOG_WIDGET:
                     widget = new DialogWidget(propDesc);
                     break;
@@ -89,8 +98,11 @@ define([
                 case PROPERTY_GRID_WIDGETS.MULTILINE:
                     widget = new MultilineWidget(propDesc);
                     break;
+                case PROPERTY_GRID_WIDGETS.RANGE_WIDGET:
+                    widget = new RangeWidget(propDesc);
+                    break;
                 default:
-                    widget = new SpecificWidget(propDesc);
+                    widget = new specificWidget(propDesc);
                     break;
             }
         } else if (isOption) {

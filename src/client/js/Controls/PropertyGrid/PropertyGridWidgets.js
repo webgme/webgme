@@ -16,6 +16,7 @@ define([], function () {
         MULTI_SELECT_WIDGET: 'MULTI_SELECT_WIDGET',
         COLOR_PICKER: 'COLOR_PICKER',
         SVG_SELECT: 'SVG_SELECT',
-        MULTILINE: 'MULTILINE'
+        MULTILINE: 'MULTILINE',
+        RANGE_WIDGET: 'RANGE_WIDGET'
     };
 });
