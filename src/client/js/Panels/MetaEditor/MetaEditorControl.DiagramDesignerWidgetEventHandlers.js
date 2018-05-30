@@ -533,6 +533,7 @@ define(['js/logger',
             self = this,
             metaInfoToBeLost = [],
             toRemoveFromMeta = [],
+            connectionsToRemove = [],
             doDelete,
             confirmDialog,
             confirmMsg,
@@ -606,19 +607,25 @@ define(['js/logger',
 
         this.logger.debug('_onSelectionDelete', idList);
 
-        deleteConnection = function (connectionID) {
+        deleteConnection = function (connectionID, nodesToBeRemoved) {
             var connDesc = self._connectionListByID[connectionID];
 
+            if (nodesToBeRemoved.indexOf(connDesc.GMESrcId) !== -1 ||
+                nodesToBeRemoved.indexOf(connDesc.GMEDstId) !== -1) {
+                // the connection was already been removed
+                return;
+            }
+
             if (connDesc.type === MetaRelations.META_RELATIONS.CONTAINMENT) {
-                self._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
+                self._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstId, idList.length > 1);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTER) {
-                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false);
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false, idList.length > 1);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
                 self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.MIXIN) {
                 self._deleteMixinRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.SET) {
-                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true);
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true, idList.length > 1);
             }
         };
 
@@ -651,10 +658,14 @@ define(['js/logger',
                         }
                     }
                 } else if (self._connectionListByID.hasOwnProperty(itemsToDelete[len])) {
-                    //entity is a connection, just simply delete it
-                    deleteConnection(itemsToDelete[len]);
+                    // collect the ids as the endpoints might be removed as well
+                    connectionsToRemove.push(itemsToDelete[len]);
                 }
             }
+
+            connectionsToRemove.forEach(function (id) {
+                deleteConnection(id, toRemoveFromMeta);
+            });
 
             // Here we remove all nodes from the meta (after meta-nodes referring to them have been cleaned).
             toRemoveFromMeta.forEach(function (id) {
@@ -1257,7 +1268,7 @@ define(['js/logger',
         if (selectedIds.length === 1) {
             if (self._connectionListByID.hasOwnProperty(selectedIds[0]) &&
                 (self._connectionListByID[selectedIds[0]].type === 'pointer' ||
-                self._connectionListByID[selectedIds[0]].type === 'set')) {
+                    self._connectionListByID[selectedIds[0]].type === 'set')) {
                 type = self._connectionListByID[selectedIds[0]].type;
                 srcPath = self._connectionListByID[selectedIds[0]].GMESrcId;
                 dstPath = self._connectionListByID[selectedIds[0]].GMEDstId;
