@@ -70,7 +70,8 @@ define(['js/logger',
                         confirmDialog.show({
                             title: 'Invalid base modification',
                             question: 'The base of an object cannot be itself!',
-                            noCancelButton: true
+                            noCancelButton: true,
+                            iconClass: 'glyphicon glyphicon-exclamation-sign'
                         }, function () {
                         });
                         return;
@@ -89,7 +90,8 @@ define(['js/logger',
                                     title: 'Invalid base modification',
                                     question: 'Currently, modification from or to a base ' +
                                     'which has children is not allowed!',
-                                    noCancelButton: true
+                                    noCancelButton: true,
+                                    iconClass: 'glyphicon glyphicon-exclamation-sign'
                                 }, function () {
                                 });
                                 return;
@@ -99,7 +101,8 @@ define(['js/logger',
                                         confirmDialog.show({
                                             title: 'Invalid base modification',
                                             question: 'Change of base node would create circular inheritance!',
-                                            noCancelButton: true
+                                            noCancelButton: true,
+                                            iconClass: 'glyphicon glyphicon-exclamation-sign'
                                         }, function () {
                                         });
                                         return;
@@ -111,7 +114,8 @@ define(['js/logger',
                             confirmDialog.show({
                                 title: 'Confirm base change',
                                 question: 'Changing a base can cause invalid data ' +
-                                'in the target node and its descendants!'
+                                'in the target node and its descendants!',
+                                iconClass: 'glyphicon glyphicon-exclamation-sign'
                             }, function () {
                                 self._onCreateNewConnection(params);
                             });
@@ -119,7 +123,8 @@ define(['js/logger',
                             confirmDialog.show({
                                 title: 'Invalid base modification',
                                 question: 'Cannot change the base of the FCO!',
-                                noCancelButton: true
+                                noCancelButton: true,
+                                iconClass: 'glyphicon glyphicon-exclamation-sign'
                             }, function () {
                             });
                         }
@@ -127,7 +132,8 @@ define(['js/logger',
                         confirmDialog.show({
                             title: 'Invalid base modification',
                             question: 'Base already set to the new base!',
-                            noCancelButton: true
+                            noCancelButton: true,
+                            iconClass: 'glyphicon glyphicon-exclamation-sign'
                         }, function () {
                         });
                     }
@@ -146,7 +152,8 @@ define(['js/logger',
                         confirmDialog.show({
                             title: 'Invalid mixin target',
                             question: mixinCheckResult.reason,
-                            noCancelButton: true
+                            noCancelButton: true,
+                            iconClass: 'glyphicon glyphicon-exclamation-sign'
                         }, function () {
                         });
                         return;

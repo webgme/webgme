@@ -1254,6 +1254,7 @@ define(['js/logger',
                     question: 'Do you wish to propagate the containment relation removal throughout the project?',
                     okLabel: 'Propagate',
                     cancelLabel: 'Don\'t propagate',
+                    iconClass: 'glyphicon glyphicon-refresh',
                     onHideFn: function (oked) {
                         if (oked) {
                             self._client.workerRequests.removeMetaRule(containerID, undefined, 'containment',
@@ -1390,6 +1391,7 @@ define(['js/logger',
                     question: question,
                     okLabel: 'Propagate',
                     cancelLabel: 'Don\'t propagate',
+                    iconClass: 'glyphicon glyphicon-refresh',
                     onHideFn: function (oked) {
                         if (oked) {
                             self._client.workerRequests.removeMetaRule(sourceID, pointerName, isSet ? 'set' : 'pointer',
