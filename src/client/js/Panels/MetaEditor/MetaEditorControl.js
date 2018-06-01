@@ -780,9 +780,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be removed
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                    this._connectionListByID[connectionID],
-                    connType,
-                    pointerOrSetName) === true) {
+                this._connectionListByID[connectionID],
+                connType,
+                pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -825,9 +825,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be updated
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                    this._connectionListByID[connectionID],
-                    connType,
-                    pointerOrSetName) === true) {
+                this._connectionListByID[connectionID],
+                connType,
+                pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -1241,40 +1241,45 @@ define(['js/logger',
         }
     };
 
-    MetaEditorControl.prototype._deleteContainmentRelationship = function (containerID, objectID) {
+    MetaEditorControl.prototype._deleteContainmentRelationship = function (containerID, objectID, multiSelection) {
         var self = this,
             containerNode = this._client.getNode(containerID),
             objectNode = this._client.getNode(objectID),
             confirmDialog = new ConfirmDialog();
 
         if (containerNode && objectNode) {
-            confirmDialog.show({
-                title: 'Propagate Meta containment remove',
-                question: 'Do you wish to propagate the containment relation removal throughout the project?',
-                okLabel: 'Propagate',
-                cancelLabel: 'Don\'t propagate',
-                onHideFn: function (oked) {
-                    if (oked) {
-                        self._client.workerRequests.removeMetaRule(containerID, undefined, 'containment',
-                            objectID, function (err) {
-                                var errorDialog;
+            if (!multiSelection) {
+                confirmDialog.show({
+                    title: 'Propagate Meta containment remove',
+                    question: 'Do you wish to propagate the containment relation removal throughout the project?',
+                    okLabel: 'Propagate',
+                    cancelLabel: 'Don\'t propagate',
+                    iconClass: 'glyphicon glyphicon-refresh',
+                    onHideFn: function (oked) {
+                        if (oked) {
+                            self._client.workerRequests.removeMetaRule(containerID, undefined, 'containment',
+                                objectID, function (err) {
+                                    var errorDialog;
 
-                                if (err) {
-                                    errorDialog = new ConfirmDialog();
-                                    errorDialog.show({
-                                        title: 'Meta containment target removal propagation failed',
-                                        question: err,
-                                        noCancelButton: true
-                                    }, function () {
-                                    });
-                                }
-                            });
-                    } else {
-                        self._client.delChildMeta(containerID, objectID);
+                                    if (err) {
+                                        errorDialog = new ConfirmDialog();
+                                        errorDialog.show({
+                                            title: 'Meta containment target removal propagation failed',
+                                            question: err,
+                                            noCancelButton: true
+                                        }, function () {
+                                        });
+                                    }
+                                });
+                        } else {
+                            self._client.delChildMeta(containerID, objectID);
+                        }
                     }
-                }
-            }, function () {
-            });
+                }, function () {
+                });
+            } else {
+                self._client.delChildMeta(containerID, objectID);
+            }
         }
     };
 
@@ -1366,7 +1371,8 @@ define(['js/logger',
         }
     };
 
-    MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName, isSet) {
+    MetaEditorControl.prototype._deletePointerRelationship = function (sourceID,
+                                                                       targetID, pointerName, isSet, multiselection) {
         var self = this,
             sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
@@ -1379,48 +1385,67 @@ define(['js/logger',
         //NOTE: this method is called from inside a transaction, don't need to start/complete one
 
         if (sourceNode && targetNode) {
-            confirmDialog.show({
-                title: title,
-                question: question,
-                okLabel: 'Propagate',
-                cancelLabel: 'Don\'t propagate',
-                onHideFn: function (oked) {
-                    if (oked) {
-                        self._client.workerRequests.removeMetaRule(sourceID, pointerName, isSet ? 'set' : 'pointer',
-                            targetID, function (err) {
-                                var errorDialog;
+            if (!multiselection) {
+                confirmDialog.show({
+                    title: title,
+                    question: question,
+                    okLabel: 'Propagate',
+                    cancelLabel: 'Don\'t propagate',
+                    iconClass: 'glyphicon glyphicon-refresh',
+                    onHideFn: function (oked) {
+                        if (oked) {
+                            self._client.workerRequests.removeMetaRule(sourceID, pointerName, isSet ? 'set' : 'pointer',
+                                targetID, function (err) {
+                                    var errorDialog;
 
-                                if (err) {
-                                    errorDialog = new ConfirmDialog();
-                                    errorDialog.show({
-                                        title: 'Meta ' + (isSet ? 'set' : 'pointer') +
-                                        ' target removal propagation failed',
-                                        question: err,
-                                        noCancelButton: true
-                                    }, function () {
-                                    });
+                                    if (err) {
+                                        errorDialog = new ConfirmDialog();
+                                        errorDialog.show({
+                                            title: 'Meta ' + (isSet ? 'set' : 'pointer') +
+                                            ' target removal propagation failed',
+                                            question: err,
+                                            noCancelButton: true
+                                        }, function () {
+                                        });
+                                    }
+                                });
+                        } else {
+                            self._client.startTransaction();
+                            self._client.delPointerMetaTarget(sourceID, pointerName, targetID);
+                            pointerMetaDescriptor = self._client.getValidTargetItems(sourceID, pointerName);
+                            if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
+                                if (isSet === false) {
+                                    //single pointer
+                                    self._client.delPointerMeta(sourceID, pointerName);
+                                    self._client.delPointer(sourceID, pointerName);
+                                } else {
+                                    //pointer list
+                                    self._client.delPointerMeta(sourceID, pointerName);
+                                    self._client.deleteSet(sourceID, pointerName);
                                 }
-                            });
-                    } else {
-                        self._client.startTransaction();
-                        self._client.delPointerMetaTarget(sourceID, pointerName, targetID);
-                        pointerMetaDescriptor = self._client.getValidTargetItems(sourceID, pointerName);
-                        if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
-                            if (isSet === false) {
-                                //single pointer
-                                self._client.delPointerMeta(sourceID, pointerName);
-                                self._client.delPointer(sourceID, pointerName);
-                            } else {
-                                //pointer list
-                                self._client.delPointerMeta(sourceID, pointerName);
-                                self._client.deleteSet(sourceID, pointerName);
                             }
+                            self._client.completeTransaction();
                         }
-                        self._client.completeTransaction();
+                    }
+                }, function () {
+                });
+            } else {
+                self._client.startTransaction();
+                self._client.delPointerMetaTarget(sourceID, pointerName, targetID);
+                pointerMetaDescriptor = self._client.getValidTargetItems(sourceID, pointerName);
+                if (!pointerMetaDescriptor || pointerMetaDescriptor.length === 0) {
+                    if (isSet === false) {
+                        //single pointer
+                        self._client.delPointerMeta(sourceID, pointerName);
+                        self._client.delPointer(sourceID, pointerName);
+                    } else {
+                        //pointer list
+                        self._client.delPointerMeta(sourceID, pointerName);
+                        self._client.deleteSet(sourceID, pointerName);
                     }
                 }
-            }, function () {
-            });
+                self._client.completeTransaction();
+            }
         }
     };
 

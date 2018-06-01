@@ -114,7 +114,7 @@ define(['js/logger',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = {children: 0};
 
-            this._graphVizWidget.setTitle(desc.name.toUpperCase());
+            this._graphVizWidget.setTitle((desc.name || '').toUpperCase());
 
             // if (desc.parentId || desc.parentId === CONSTANTS.PROJECT_ROOT_ID) {
             //     this.$btnModelHierarchyUp.show();
@@ -194,7 +194,7 @@ define(['js/logger',
             data;
 
         data = _.extend({},
-            (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID ) ?
+            (this._currentNodeId || this._currentNodeId === CONSTANTS.PROJECT_ROOT_ID) ?
                 this._nodes[this._currentNodeId] : {});
 
         function loadRecursive(node) {
