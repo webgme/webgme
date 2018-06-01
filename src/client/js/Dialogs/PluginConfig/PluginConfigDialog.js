@@ -49,7 +49,7 @@ define([
         this._initDialog();
 
         this._dialog.on('hidden.bs.modal', function () {
-            var saveInUser = self._saveConfigurationCb.find('input').is(':checked');
+            var saveInUser = self._saveConfigurationCb.is(':checked');
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -80,7 +80,7 @@ define([
 
         this._divContainer = this._dialog.find('.modal-body');
 
-        this._saveConfigurationCb = this._dialog.find('.save-configuration');
+        this._saveConfigurationCb = this._dialog.find('.save-configuration').find('input');
         this._modalHeader = this._dialog.find('.modal-header');
 
         if (this._pluginMetadata.icon) {
@@ -105,7 +105,10 @@ define([
         this._modalHeader.prepend(iconEl);
 
         this._title = this._modalHeader.find('.modal-title');
-        this._title.text(this._pluginMetadata.name + ' ' + 'v' + this._pluginMetadata.version);
+        this._title.text(this._pluginMetadata.name);
+
+        this._modalHeader.find('.version').text('v' + this._pluginMetadata.version);
+        this._modalHeader.find('.description').text(this._pluginMetadata.description);
 
         // Generate the widget in the body
         this._generateSections();
@@ -114,6 +117,14 @@ define([
             self._closeAndSave();
             event.stopPropagation();
             event.preventDefault();
+        });
+
+        this._saveConfigurationCb.change(function () {
+            if (this.checked) {
+                self._btnSave.text('Save & Run...');
+            } else {
+                self._btnSave.text('Run...');
+            }
         });
 
         //save&run on CTRL + Enter
@@ -141,7 +152,8 @@ define([
                         subPreConfig;
 
                     if (!depMetadata) {
-                        throw new Error('Plugin "' + depInfo.id + '" is a dependency but metadata for it not available!');
+                        throw new Error('Plugin "' + depInfo.id +
+                            '" is a dependency but metadata for it not available!');
                     }
 
                     if (!joinedId) {
@@ -165,7 +177,7 @@ define([
                         self._generateConfigSection(newJoinedId, depMetadata.configStructure, subPreConfig);
                         traverseDependencies(depMetadata, newJoinedId, subPreConfig);
                     }
-            });
+                });
         }
 
         tarjan.addVertex(this._pluginMetadata.id);
@@ -250,7 +262,9 @@ define([
                 descEl.append(' max=' + pluginConfigEntry.maxValue);
             }
 
-            if (id === GLOBAL_OPTS_ID && pluginConfigEntry.name === 'runOnServer' && pluginConfigEntry.readOnly === true) {
+            if (id === GLOBAL_OPTS_ID &&
+                pluginConfigEntry.name === 'runOnServer' &&
+                pluginConfigEntry.readOnly === true) {
                 // Do not display the boolean box #676
                 descEl.css({
                     color: 'grey',
