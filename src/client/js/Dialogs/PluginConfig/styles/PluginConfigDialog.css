@@ -11,6 +11,10 @@
   font-size: 28px;
   display: inline-block;
   margin-right: 10px; }
+.plugin-config-dialog .modal-header .description {
+  padding-top: 6px;
+  font-style: italic;
+  max-width: 95%; }
 .plugin-config-dialog .modal-body {
   padding: 15px; }
   .plugin-config-dialog .modal-body .global-and-plugin-divider {

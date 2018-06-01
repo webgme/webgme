@@ -33,13 +33,20 @@ define([
         } else if (activeNode) {
             this._gmeNodeId = activeNode;
         }
-
+        //#940000
         this._client = propertyDesc.client;
 
         this._div = $('<div/>', {class: 'ptr-widget'});
         this.el.append(this._div);
 
         this.__label = $('<span/>', {class: 'user-select-on'});
+
+        if (this._gmeNodeId === this.propertyValue) {
+            this.isMetaNode = true;
+            this.__label.css('color', '#940000');
+
+        }
+
         this._div.append(this.__label);
 
         this.__label.on('click', function (e) {
@@ -53,6 +60,13 @@ define([
     };
 
     _.extend(MetaTypeWidget.prototype, PointerWidget.prototype);
+
+    MetaTypeWidget.prototype._updatePointerName = function (isReadOnly) {
+        PointerWidget.prototype._updatePointerName.call(this);
+        if (this.isMetaNode) {
+            this.__label.attr('title', 'This is the meta type - click to open node');
+        }
+    };
 
     MetaTypeWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
