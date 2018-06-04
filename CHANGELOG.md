@@ -1,6 +1,23 @@
 # Change Log
 
-## [v2.26.0](https://github.com/webgme/webgme/tree/v2.26.0) (2018-05-07)
+## [v2.27.0](https://github.com/webgme/webgme/tree/v2.27.0) (2018-06-04)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.26.0...v2.27.0)
+
+**Implemented enhancements:**
+
+- Indicate in the Property Editor that a node is a meta node [\#1586](https://github.com/webgme/webgme/issues/1586)
+- Point to webgme-engine 2.19.9 and webgme-user-management-page 0.4.0 [\#1611](https://github.com/webgme/webgme/pull/1611) ([pmeijer](https://github.com/pmeijer))
+- Show description in PluginConfig dialog and indicate meta-nodes in property-editor. [\#1609](https://github.com/webgme/webgme/pull/1609) ([pmeijer](https://github.com/pmeijer))
+- Adds a RangeWidget for numerical values with defined increment. [\#1608](https://github.com/webgme/webgme/pull/1608) ([pmeijer](https://github.com/pmeijer))
+- Make sure video links are present in the tutorial for pdf generation [\#1604](https://github.com/webgme/webgme/pull/1604) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- TypeError: Cannot read property 'toUpperCase' of undefined [\#1606](https://github.com/webgme/webgme/issues/1606)
+- Removing selection of owner, target and pointer in Meta-Editor raises uncaught exception [\#1605](https://github.com/webgme/webgme/issues/1605)
+- Fixes \#1605 Removing selection of owner, target and pointer in Meta-Editor raises uncaught exception [\#1610](https://github.com/webgme/webgme/pull/1610) ([kecso](https://github.com/kecso))
+
+## [v2.26.0](https://github.com/webgme/webgme/tree/v2.26.0) (2018-05-08)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.25.0...v2.26.0)
 
 **Implemented enhancements:**
