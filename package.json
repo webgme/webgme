@@ -1,6 +1,6 @@
 {
   "name": "webgme",
-  "version": "2.26.0",
+  "version": "2.27.0-beta1",
   "description": "Web-based Generic Modeling Environment",
   "engines": {
     "node": ">=4.0.0"
@@ -27,8 +27,8 @@
     "q": "1.5.0",
     "require-uncached": "1.0.3",
     "requirejs": "2.1.20",
-    "webgme-engine": "2.19.8",
-    "webgme-user-management-page": "0.3.7"
+    "webgme-engine": "2.19.9",
+    "webgme-user-management-page": "0.4.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",

@@ -303,24 +303,7 @@ define(['js/util',
                 nodeId = resultEntry.activeNode.id,
                 projectId = resultEntry.projectId,
                 patterns = {},
-                territoryId = client.addUI(this, function (events) {
-                    var nodeLoaded = false;
-                    events.forEach(function (event) {
-                        if (event.etype === 'load' && event.eid === nodeId) {
-                            nodeLoaded = true;
-                        }
-                    });
-
-                    if (nodeLoaded) {
-                        WebGMEGlobal.State.registerActiveObject(nodeId);
-                        WebGMEGlobal.State.registerActiveSelection([]);
-                        dialog.modal('hide');
-                    } else {
-                        self.logger.error('Could not load the linked node at path', nodeId);
-                    }
-
-                    client.removeUI(territoryId);
-                });
+                territoryId;
 
             if (client.getProjectObject() && client.getProjectObject().projectId === projectId) {
                 territoryId = client.addUI(this, function (events) {
@@ -331,6 +314,8 @@ define(['js/util',
                         }
                     });
 
+                    client.removeUI(territoryId);
+
                     if (nodeLoaded) {
                         WebGMEGlobal.State.registerActiveObject(nodeId);
                         WebGMEGlobal.State.registerActiveSelection([]);
@@ -338,8 +323,6 @@ define(['js/util',
                     } else {
                         self.logger.error('Could not load the linked node at path', nodeId);
                     }
-
-                    client.removeUI(territoryId);
                 });
 
                 patterns[nodeId] = {children: 0};
