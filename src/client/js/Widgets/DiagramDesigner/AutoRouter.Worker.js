@@ -25,9 +25,9 @@ var startWorker = function() {
     require({
         baseUrl: '.',
         paths: {
-            client: '/client',
+            client: 'client',
             underscore: '../../../bower_components/underscore/underscore-min',
-            debug: '/common/lib/debug/debug',
+            debug: 'common/lib/debug/debug',
             AutoRouterActionApplier: '../../../lib/autorouter/action-applier.min' // create a map file for debugging
         },
         shim: {

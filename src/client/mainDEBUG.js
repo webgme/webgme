@@ -17,7 +17,6 @@ WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPo
 
 // configure require path and modules
 require.config({
-    baseUrl: './',
     map: {
         '*': {
             // Map old paths to webgme-engine client path
@@ -67,12 +66,12 @@ require.config({
         raphael_vml: 'lib/raphael/raphael.vml',
 
         //WebGME custom modules
-        common: '/common',
-        blob: '/common/blob',
-        executor: '/common/executor',
-        plugin: '/plugin',
-        layout: '/layout',
-        panel: '/panel',
+        common: 'common',
+        blob: 'common/blob',
+        executor: 'common/executor',
+        plugin: 'plugin',
+        layout: 'layout',
+        panel: 'panel',
 
         // common libs
         chance: 'common/lib/chance/chance',
@@ -128,12 +127,12 @@ require.config({
 });
 
 require([
-    'css!/css/main.css',
+    'css!cssfiles/main.css',
 ], function () {
     'use strict';
 
     require([
-        '/js/start.js'
+        'js/start.js'
     ], function () {
 
     });
