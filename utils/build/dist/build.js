@@ -112,7 +112,7 @@ var requirejs = require('requirejs'),
     },
     cssConfig = {
         optimizeCss: 'standard',
-        cssIn: path.join(__dirname, '../../../src/client/css/main.css'),
+        cssIn: path.join(__dirname, '../../../src/client/cssfiles/main.css'),
         out: path.join(__dirname, '../../../src/client/dist/webgme.' + webgmeVersion + '.dist.main.css'),
     },
     libConfig = {
