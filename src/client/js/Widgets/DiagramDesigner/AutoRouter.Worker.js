@@ -1,7 +1,7 @@
 /*globals require,importScripts*/
 // This is the code for using the autorouter as a web worker.
 
-importScripts('/common/lib/requirejs/require.js');
+importScripts('common/lib/requirejs/require.js');
 
 var worker = this,
     window = {},  //jshint ignore: line
@@ -14,11 +14,11 @@ var worker = this,
  *
  * @return {undefined}
  */
-var startWorker = function() {
+var startWorker = function () {
     'use strict';
 
     // Queue any messages received while loading the dependencies
-    worker.onmessage = function(msg) {
+    worker.onmessage = function (msg) {
         msgQueue.push(msg);
     };
 
@@ -41,15 +41,16 @@ var startWorker = function() {
         'client/logger',
         'underscore'
     ],
-    function(
+    function (
         ActionApplier,
         Logger,
         _
     ) {
 
-        var AutoRouterWorker = function() {
+        var AutoRouterWorker = function () {
             // Add recording actions?
-            this.logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter:Worker', WebGMEGlobal.gmeConfig.client.log);
+            this.logger = Logger.create('gme:Widgets:DiagramDesigner:AutoRouter:Worker',
+                WebGMEGlobal.gmeConfig.client.log);
             this._recordActions = true;
             this.init();
 
@@ -61,13 +62,13 @@ var startWorker = function() {
             };
         };
 
-        AutoRouterWorker.prototype.handleMessage = function(msg) {
+        AutoRouterWorker.prototype.handleMessage = function (msg) {
             this.logger.debug('Received:', msg.data);
 
             this._handleMessage(msg.data);
         };
 
-        AutoRouterWorker.prototype._handleMessage = function(msg) {
+        AutoRouterWorker.prototype._handleMessage = function (msg) {
             var response,
                 action = msg[0],
                 lightResult,
@@ -83,7 +84,7 @@ var startWorker = function() {
 
             try {
                 result = this._invokeAutoRouterMethodUnsafe.apply(this, msg);
-            } catch(e) {
+            } catch (e) {
                 // Send error message
                 worker.postMessage(['BugReplayList', this._getActionSequence()]);
             }
@@ -115,7 +116,7 @@ var startWorker = function() {
          *
          * @return {undefined}
          */
-        AutoRouterWorker.prototype._updatePaths = function(paths) {
+        AutoRouterWorker.prototype._updatePaths = function (paths) {
             this.logger.debug('Updating paths');
             var id,
                 points,
@@ -149,7 +150,7 @@ var startWorker = function() {
 };
 
 // Set the WebGMEGlobal.gmeConfig.client config value for use in the loggers
-worker.onmessage = function(msg) {
+worker.onmessage = function (msg) {
     'use strict';
 
     WebGMEGlobal.gmeConfig.client = msg.data[0];
