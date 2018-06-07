@@ -1,12 +1,12 @@
 /*globals require,importScripts*/
 // This is the code for using the autorouter as a web worker.
 
-importScripts('common/lib/requirejs/require.js');
 
 var worker = this,
     window = {},  //jshint ignore: line
     WebGMEGlobal = {gmeConfig: {}},
     respondToAll = false,
+    basePath = '/',
     msgQueue = [];
 
 /**
@@ -17,18 +17,24 @@ var worker = this,
 var startWorker = function () {
     'use strict';
 
+    if (WebGMEGlobal.gmeConfig.server.prefix) {
+        basePath = '/' + WebGMEGlobal.gmeConfig.server.prefix + '/';
+    }
+
+    importScripts(basePath + 'common/lib/requirejs/require.js');
+
     // Queue any messages received while loading the dependencies
     worker.onmessage = function (msg) {
         msgQueue.push(msg);
     };
 
     require({
-        baseUrl: '.',
+        baseUrl: basePath,
         paths: {
             client: 'client',
-            underscore: '../../../bower_components/underscore/underscore-min',
+            underscore: 'bower_components/underscore/underscore-min',
             debug: 'common/lib/debug/debug',
-            AutoRouterActionApplier: '../../../lib/autorouter/action-applier.min' // create a map file for debugging
+            AutoRouterActionApplier: 'lib/autorouter/action-applier.min' // create a map file for debugging
         },
         shim: {
             debug: {
@@ -153,7 +159,7 @@ var startWorker = function () {
 worker.onmessage = function (msg) {
     'use strict';
 
-    WebGMEGlobal.gmeConfig.client = msg.data[0];
+    WebGMEGlobal.gmeConfig = msg.data[0];
     respondToAll = msg.data[1];
     startWorker();
 };

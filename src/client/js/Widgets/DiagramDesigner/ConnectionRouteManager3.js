@@ -41,7 +41,7 @@ define([
             workerFile = currentDir + '/AutoRouter.Worker.js';
 
             this.worker = new Worker(workerFile);
-            this.worker.postMessage([WebGMEGlobal.gmeConfig.client]);
+            this.worker.postMessage([WebGMEGlobal.gmeConfig]);
 
             this.worker.onmessage = this._handleWorkerResponse.bind(this);
 
