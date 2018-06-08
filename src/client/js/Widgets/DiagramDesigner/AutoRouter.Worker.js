@@ -17,8 +17,8 @@ var worker = this,
 var startWorker = function () {
     'use strict';
 
-    if (WebGMEGlobal.gmeConfig.server.prefix) {
-        basePath = '/' + WebGMEGlobal.gmeConfig.server.prefix + '/';
+    if (WebGMEGlobal.gmeConfig.client.mountedPath) {
+        basePath = WebGMEGlobal.gmeConfig.client.mountedPath + '/';
     }
 
     importScripts(basePath + 'common/lib/requirejs/require.js');
@@ -159,7 +159,7 @@ var startWorker = function () {
 worker.onmessage = function (msg) {
     'use strict';
 
-    WebGMEGlobal.gmeConfig = msg.data[0];
+    WebGMEGlobal.gmeConfig.client = msg.data[0];
     respondToAll = msg.data[1];
     startWorker();
 };
