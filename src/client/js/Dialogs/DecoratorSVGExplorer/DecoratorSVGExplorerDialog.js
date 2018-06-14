@@ -299,14 +299,14 @@ define([
 
                 if (fExtension === 'svg') {
                     imgName = imgName.substring(0, imgName.length - '.svg'.length);
-                    divImg.find('img').attr('src', WebGMEGlobal.gmeConfig.client.mountedPath + '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgPath);
+                    divImg.find('img').attr('src', CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgPath);
                 } else if (fExtension === 'ejs') {
                     divImg.find('img').attr('src',
                         WebGMEGlobal.SvgManager.getRawSvgContent(svgPath, self._clientNode, true, true));
                     btnSelect.disable(true);
                 } else {
                     // If there is a png or something else stored, we do not let it crash..
-                    divImg.find('img').attr('src', WebGMEGlobal.gmeConfig.client.mountedPath + '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgPath);
+                    divImg.find('img').attr('src', CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + svgPath);
                     btnEdit.disable(true);
                 }
 
