@@ -285,7 +285,7 @@ define([
                         divImg.find('img').attr('src',
                             WebGMEGlobal.SvgManager.getRawSvgContent(self._old, self._clientNode, true, true));
                     } else {
-                        divImg.find('img').attr('src', WebGMEGlobal.gmeConfig.client.mountedPath + '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + this._old);
+                        divImg.find('img').attr('src', CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER + this._old);
                         btnEdit.disable(true);
                     }
                 }
