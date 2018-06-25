@@ -27,7 +27,7 @@
     "q": "1.5.1",
     "require-uncached": "1.0.3",
     "requirejs": "2.3.5",
-    "webgme-engine": "https://github.com/webgme/webgme-engine.git#master",
+    "webgme-engine": "2.20.1",
     "webgme-user-management-page": "0.4.1"
   },
   "devDependencies": {
