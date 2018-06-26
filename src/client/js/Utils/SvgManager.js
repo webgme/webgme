@@ -13,7 +13,7 @@ define([
     'use strict';
 
     var SVG_CACHE = {},
-        BASEDIR = '/' + CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER;
+        BASEDIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER;
 
     //TODO we try our best to remove the ejs portions without actual rendering, but that might not help...
     /**

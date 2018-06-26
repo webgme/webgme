@@ -40,16 +40,16 @@ define([
             widget.append($('<span class="user-name-field"/>').text(userName));
         } else {
             widget.append(
-                $('<a href="/profile/" target="_self" class="navbar-link user-name-field" title="View profile"/>')
+                $('<a href="profile/" target="_self" class="navbar-link user-name-field" title="View profile"/>')
                     .text(userName)
             );
 
             referrer = window.sessionStorage.getItem('originalReferrer');
 
             if (referrer) {
-                logoutUrl = '/logout?redirectUrl=' + referrer;
+                logoutUrl = 'logout?redirectUrl=' + referrer;
             } else {
-                logoutUrl = '/logout';
+                logoutUrl = 'logout';
             }
 
             logoutEl = $('<a target="_blank" class="navbar-link logout-btn">' +
@@ -61,9 +61,9 @@ define([
                 tempAnchor.target = '_self';
 
                 if (referrer) {
-                    tempAnchor.href = '/logout?redirectUrl=' + referrer;
+                    tempAnchor.href = 'logout?redirectUrl=' + referrer;
                 } else {
-                    tempAnchor.href = '/logout';
+                    tempAnchor.href = 'logout';
                 }
 
 

@@ -385,7 +385,8 @@ define([
             return;
         }
 
-        address = window.location.origin + '/?project=' + encodeURIComponent(info.projectId);
+        address = window.location.origin + WebGMEGlobal.gmeConfig.client.mountedPath +
+            '/?project=' + encodeURIComponent(info.projectId);
 
         if (info.branchName && followBranch) {
             address += '&branch=' + encodeURIComponent(info.branchName);

@@ -7,12 +7,14 @@
 define([
     'js/Loader/ProgressNotification',
     'clipboard',
-    'js/Utils/SaveToDisk'
-], function (ProgressNotification, Clipboard, saveToDisk) {
+    'js/Utils/SaveToDisk',
+    'blob/BlobClient'
+], function (ProgressNotification, Clipboard, saveToDisk, BlobClient) {
     'use strict';
 
     function exportProject(client, logger, projectParams, withAssets, callback) {
-        var progress = ProgressNotification.start('<strong>Exporting </strong> project ...');
+        var progress = ProgressNotification.start('<strong>Exporting </strong> project ...'),
+            bc = new BlobClient({logger: logger.fork('BlobClient')});
 
         client.exportProjectToFile(
             projectParams ? projectParams.projectId : client.getActiveProjectId(),
@@ -29,10 +31,10 @@ define([
                         progress: 100
                     });
                 } else {
-                    saveToDisk.saveUrlToDisk(result.downloadUrl);
+                    saveToDisk.saveUrlToDisk(bc.getDownloadURL(result.hash));
                     progress.note.update({
                         message: '<strong>Exported </strong> project <a href="' +
-                        result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
+                        bc.getDownloadURL(result.hash) + '" target="_blank">' + result.fileName + '</a>',
                         progress: 100,
                         type: 'success'
                     });
@@ -47,9 +49,10 @@ define([
 
     function exportModels(client, logger, selectedIds, withAssets, callback) {
         var progress = ProgressNotification.start({
-            message: '<strong>Exporting </strong> models ...',
-            useClipboard: true
-        });
+                message: '<strong>Exporting </strong> models ...',
+                useClipboard: true
+            }),
+            bc = new BlobClient({logger: logger.fork('BlobClient')});
 
         withAssets = withAssets === false ? false : true;
 
@@ -68,10 +71,9 @@ define([
                         progress: 100
                     });
                 } else {
-
                     progress.note.update({
                         message: '<strong>Exported </strong> models <a href="' +
-                        result.downloadUrl + '" target="_blank">' + result.fileName + '</a>',
+                        bc.getDownloadURL(result.hash) + '" target="_blank">' + result.fileName + '</a>',
                         progress: 100,
                         type: 'success',
                         clipboardValue: result.hash

@@ -2,11 +2,12 @@
 <head>
     <title><%=pageTitle%></title>
     <!-- Load main.js with RequireJS and launch the app from there -->
-    <script data-main="js/main" src="common/lib/requirejs/require.js"></script>
+    <script data-main="main" src="common/lib/requirejs/require.js"></script>
     <!-- favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="<%=favicon%>">
     <meta property="webgme-version" content="<%=webgmeVersion%>">
     <meta property="app-version" content="<%=appVersion%>">
+    <meta property="mounted-path" content="<%=mountedPath%>">
     <meta property="og:type" content="website"/>
     <meta property="og:site_name" content="WebGME"/>
     <meta property="og:description" content="Web-based Generic Modeling Environment"/>

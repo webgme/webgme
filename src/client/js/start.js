@@ -12,8 +12,8 @@ require(
         'backbone',
         'js/WebGME',
         'js/util',
-        'text!/gmeConfig.json',
-        'text!/package.json',
+        'text!gmeConfig.json',
+        'text!package.json',
         'js/logger',
         'superagent',
         'q',
@@ -80,7 +80,7 @@ require(
             keys = Object.keys(gmeConfig.requirejsPaths);
             for (i = 0; i < keys.length; i += 1) {
                 // assume this is a relative path from the current working directory
-                gmeConfig.requirejsPaths[keys[i]] = '/extlib/' + gmeConfig.requirejsPaths[keys[i]];
+                gmeConfig.requirejsPaths[keys[i]] = 'extlib/' + gmeConfig.requirejsPaths[keys[i]];
                 log.debug('Requirejs path resolved: ', keys[i], gmeConfig.requirejsPaths[keys[i]]);
             }
 
@@ -134,7 +134,7 @@ require(
             function requestExtensionPoint(name) {
                 var deferred = Q.defer();
                 log.debug('requestExtensionPoint', name);
-                superagent.get('/api/' + name)
+                superagent.get('api/' + name)
                     .end(function (err, res) {
                         var keyName = 'all' + capitalizeFirstLetter(name);
 
@@ -155,7 +155,7 @@ require(
             function requestPluginMetadata() {
                 var deferred = Q.defer();
 
-                superagent.get('/api/plugins/metadata')
+                superagent.get('api/plugins/metadata')
                     .end(function (err, res) {
                         if (res.status === 200) {
                             WebGMEGlobal.allPlugins = Object.keys(res.body);
@@ -187,7 +187,7 @@ require(
 
             function checkIfAdminInOrg(userId, orgId) {
                 var deferred = Q.defer();
-                superagent.get('/api/orgs/' + orgId)
+                superagent.get('api/orgs/' + orgId)
                     .end(function (err, res) {
                         if (res.status === 200) {
                             if (res.body.admins.indexOf(userId) > -1) {
@@ -202,7 +202,7 @@ require(
                 return deferred.promise;
             }
 
-            superagent.get('/api/user')
+            superagent.get('api/user')
                 .end(function (err, res) {
                     if (res.status === 200) {
                         userInfo = res.body || {_id: 'N/A', orgs: []};
@@ -226,7 +226,7 @@ require(
 
         function getDefaultComponentSettings(callback) {
             var deferred = Q.defer();
-            superagent.get('/api/componentSettings')
+            superagent.get('api/componentSettings')
                 .end(function (err, res) {
                     if (res.status === 200) {
                         WebGMEGlobal.componentSettings = res.body;
@@ -260,7 +260,7 @@ require(
 
         function loadDisplayNames(callback) {
             var deferred = Q.defer();
-            superagent.get('/api/users')
+            superagent.get('api/users')
                 .query({displayName: true})
                 .end(function (err, res) {
                     if (res.status === 200) {

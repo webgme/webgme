@@ -1,44 +1,69 @@
-/*globals require*/
+/*globals require, document*/
 /*jshint browser:true, camelcase:false*/
 /**
- * Debug version of main.js - it does not use the webgme.dist nor minified versions.
- * N.B. This and main.js should only differ w.r.t. using minified versions or not and
+ * N.B. This and mainDEBUG.js should only differ w.r.t. using minified versions or not and
  * if text mapped and what files are required at start.
- * @author pmeijer / https://github.com/pmeijer
+ * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author nabana / https://github.com/nabana
  */
 
 
 var DEBUG = false,
-    WebGMEGlobal = WebGMEGlobal || {};
+    WebGMEGlobal = WebGMEGlobal || {},
+    metaElms = document.getElementsByTagName('meta'),
+    i;
 
-WebGMEGlobal.version = 'DEBUG';
+for (i = 0; i < metaElms.length; i += 1) {
+    if (metaElms[i].getAttribute('property') === 'webgme-version') {
+        WebGMEGlobal.webgmeVersion = metaElms[i].getAttribute('content');
+    } else if (metaElms[i].getAttribute('property') === 'app-version') {
+        WebGMEGlobal.version = metaElms[i].getAttribute('content');
+    }
+}
+
 WebGMEGlobal.SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPoints;
 
 
 // configure require path and modules
 require.config({
-    baseUrl: './',
+    waitSeconds: 12,
     map: {
         '*': {
             // Map old paths to webgme-engine client path
             'js/client': 'client/client',
             'js/logger': 'client/logger',
             'js/Utils/SaveToDisk': 'client/SaveToDisk',
-            'js/client/constants': 'client/constants'
+            'js/client/constants': 'client/constants',
+
+            //layout
+            'layout/DefaultLayout': 'js/Layouts',
+            //panels from default layout
+            'panel/Header': 'js/Panels/Header',
+            'panel/FooterControls': 'js/Panels/FooterControls',
+            'panel/Visualizer': 'js/Panels/Visualizer',
+            'panel/ObjectBrowser': 'js/Panels/ObjectBrowser',
+            'panel/PartBrowser': 'js/Panels/PartBrowser',
+            'panel/PropertyEditor': 'js/Panels/PropertyEditor',
+            //panels from visualizers.json
+            'panel/MetaEditor': 'js/Panels/MetaEditor',
+            'panel/ModelEditor': 'js/Panels/ModelEditor',
+            'panel/SetEditor': 'js/Panels/SetEditor',
+            'panel/Crosscut': 'js/Panels/Crosscut',
+            'panel/GraphViz': 'js/Panels/GraphViz'
         }
     },
     paths: {
-        css: 'bower_components/require-css/css',
+        css: 'bower_components/require-css/css.min',
 
-        //jQuery stuff
+        //jQuery and stuff
         jquery: 'bower_components/jquery/dist/jquery',
         'jquery-ui': 'bower_components/jquery-ui/jquery-ui',
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
-        'jquery-dataTables': 'lib/jquery/jquery.dataTables',
+        'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
         'jquery-fancytree': 'bower_components/jquery.fancytree/dist/jquery.fancytree-all',
-        'jquery-layout': 'lib/jquery/jquery.layout',
+        'jquery-layout': 'lib/jquery/jquery.layout.min',
 
         'jquery-contextMenu': 'bower_components/jQuery-contextMenu/dist/jquery.contextMenu',
         'jquery-csszoom': 'bower_components/jquery.csszoom/jquery.csszoom',
@@ -56,7 +81,7 @@ require.config({
         d3: 'bower_components/d3/d3',
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
         ravenjs: 'bower_components/raven-js/dist/raven',
-        clipboard: 'bower_components/clipboard/dist/clipboard.min',
+        clipboard: 'bower_components/clipboard/dist/clipboard',
         diff_match_patch: 'bower_components/google-diff-match-patch/diff_match_patch_uncompressed',
 
         //RaphaelJS family
@@ -67,15 +92,15 @@ require.config({
         raphael_vml: 'lib/raphael/raphael.vml',
 
         //WebGME custom modules
-        common: '/common',
-        blob: '/common/blob',
-        executor: '/common/executor',
-        plugin: '/plugin',
-        layout: '/layout',
-        panel: '/panel',
+        common: 'common',
+        blob: 'common/blob',
+        executor: 'common/executor',
+        plugin: 'plugin',
+        layout: 'layout',
+        panel: 'panel',
 
         // common libs
-        chance: 'common/lib/chance/chance',
+        chance: 'common/chance/chance',
         debug: 'common/lib/debug/debug',
         ejs: 'common/lib/ejs/ejs',
         q: 'common/lib/q/q',
@@ -89,7 +114,7 @@ require.config({
         urlparse: 'lib/purl/purl.min',
 
         // Angular and modules
-        angular: 'bower_components/angular/angular',
+        angular: 'bower_components/angular/angular.min',
         'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls',
         'isis-ui-components': 'bower_components/isis-ui-components/dist/isis-ui-components',
         'isis-ui-components-templates': 'bower_components/isis-ui-components/dist/isis-ui-components-templates',
@@ -128,13 +153,17 @@ require.config({
 });
 
 require([
-    'css!/css/main.css',
+    'css!dist/webgme.' + WebGMEGlobal.version + '.dist.main.css',
 ], function () {
     'use strict';
 
     require([
-        '/js/start.js'
+        'dist/webgme.' + WebGMEGlobal.version + '.lib.build.js'
     ], function () {
+        require([
+            'dist/webgme.' + WebGMEGlobal.version + '.dist.build.js'
+        ], function () {
 
+        });
     });
 });
