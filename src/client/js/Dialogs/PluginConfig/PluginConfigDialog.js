@@ -221,6 +221,9 @@ define([
 
             // Make sure not modify the global metadata.
             pluginConfigEntry = JSON.parse(JSON.stringify(pluginConfigEntry));
+            if (pluginConfigEntry.hidden === true) {
+                return;
+            }
 
             if (prevConfig && prevConfig.hasOwnProperty(pluginConfigEntry.name)) {
                 pluginConfigEntry.value = prevConfig[pluginConfigEntry.name];
