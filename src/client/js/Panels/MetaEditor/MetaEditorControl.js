@@ -1901,7 +1901,6 @@ define(['js/logger',
             title: 'no library',
             text: '-none-',
             clickFn: function (/**/) {
-                console.log('you selected no library');
                 self._loadMetaAspectContainerNode('');
             }
         });

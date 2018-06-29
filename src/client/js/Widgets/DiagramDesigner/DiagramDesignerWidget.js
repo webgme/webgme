@@ -832,6 +832,7 @@ define([
         connectionIDsToUpdate = this._insertedConnectionIDs.concat(this._updatedConnectionIDs,
             this._getAssociatedConnectionsForItems(affectedItems));
 
+        connectionIDsToUpdate = _.difference(connectionIDsToUpdate, this._deletedConnectionIDs);
         connectionIDsToUpdate = _.uniq(connectionIDsToUpdate).sort();
 
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' +
