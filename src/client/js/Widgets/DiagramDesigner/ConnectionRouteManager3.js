@@ -549,12 +549,13 @@ define([
         } else if (this._onItemCreateQueue[id] instanceof Array) {  // Store the operation
             this._onItemCreateQueue[id].push(fn);
         } else {
-           // Avoids exception to be thrown here..
+            // Avoids exception to be thrown here..
         }
     };
 
     ConnectionRouteManager3.prototype._updateBoxConnectionAreas = function (objId) {
-        var areas = this.diagramDesigner.items[objId].getConnectionAreas() || [],
+        var areas = this.diagramDesigner.items[objId] ?
+            this.diagramDesigner.items[objId].getConnectionAreas() || [] : [],
             newIds = {},
             connInfo = [],
             boxObject = this._autorouterBoxes[objId],

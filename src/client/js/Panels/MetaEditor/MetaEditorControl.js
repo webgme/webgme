@@ -41,7 +41,7 @@ define(['js/logger',
         META_DECORATOR = 'MetaDecorator',
         DOCUMENT_DECORATOR = 'DocumentDecorator',
         WIDGET_NAME = 'DiagramDesigner',
-        META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
+        BASIC_META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
 
     MetaEditorControl = function (options) {
         var self = this;
@@ -115,7 +115,7 @@ define(['js/logger',
 
     MetaEditorControl.prototype._getRootIdOfLibrary = function (nodeId) {
         var node = this._client.getNode(nodeId),
-            rootId = META_RULES_CONTAINER_NODE_ID;
+            rootId = BASIC_META_RULES_CONTAINER_NODE_ID;
         if (node && (node.isLibraryElement() || node.isLibraryRoot())) {
             while (!node.isLibraryRoot()) {
                 node = node.getNode(node.getParentId());
@@ -126,17 +126,46 @@ define(['js/logger',
         return rootId;
     };
 
-    MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
+    MetaEditorControl.prototype._setLibraryDropdownText = function () {
+        var node;
+
+        if (this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID ||
+            this.metaAspectContainerNodeID === null || this.metaAspectContainerNodeID === undefined) {
+            this._toolbarLibraryList.dropDownText('-none-');
+        } else {
+            this._toolbarLibraryList.dropDownText(
+                this._client.getNode(this.metaAspectContainerNodeID).getFullyQualifiedName()
+            );
+        }
+    };
+
+    MetaEditorControl.prototype._loadMetaAspectContainerNode = function (libraryName) {
         var self = this;
 
         this.currentNodeInfo.id = WebGMEGlobal.State.getActiveObject();
 
-        this.metaAspectContainerNodeID = self._getRootIdOfLibrary(this.currentNodeInfo.id);
+        if (libraryName) {
+            this.metaAspectContainerNodeID =
+                this._client.getNode(BASIC_META_RULES_CONTAINER_NODE_ID).getLibraryRootId(libraryName);
+        } else if (libraryName === '') {
+            this.metaAspectContainerNodeID = BASIC_META_RULES_CONTAINER_NODE_ID;
+        } else {
+            this.metaAspectContainerNodeID = self._getRootIdOfLibrary(this.currentNodeInfo.id);
+        }
 
         this.logger.debug('_loadMetaAspectContainerNode: "' + this.metaAspectContainerNodeID + '"');
 
         this._initializeSelectedSheet();
 
+        this._refreshLibraryList();
+
+        if (this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID) {
+            this.setReadOnly(false);
+            this.diagramDesigner.setReadOnly(false);
+        } else {
+            this.setReadOnly(true);
+            this.diagramDesigner.setReadOnly(true);
+        }
         //remove current territory patterns
         if (this._territoryId) {
             this._client.removeUI(this._territoryId);
@@ -793,9 +822,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be removed
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                    this._connectionListByID[connectionID],
-                    connType,
-                    pointerOrSetName) === true) {
+                this._connectionListByID[connectionID],
+                connType,
+                pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -838,9 +867,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be updated
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                    this._connectionListByID[connectionID],
-                    connType,
-                    pointerOrSetName) === true) {
+                this._connectionListByID[connectionID],
+                connType,
+                pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -1825,7 +1854,10 @@ define(['js/logger',
     };
 
     MetaEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
-
+        var rootIdForActiveObject = this._getRootIdOfLibrary(activeObjectId);
+        if (this.metaAspectContainerNodeID !== rootIdForActiveObject) {
+            this._loadMetaAspectContainerNode();
+        }
     };
 
     MetaEditorControl.prototype._attachClientEventListeners = function () {
@@ -1838,10 +1870,11 @@ define(['js/logger',
     MetaEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged);
-        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     MetaEditorControl.prototype.onActivate = function () {
+        this._attachClientEventListeners();
         if (this._selectedSheetID) {
             WebGMEGlobal.State.registerActiveTab(this._selectedSheetID, {invoker: this});
         }
@@ -1850,7 +1883,6 @@ define(['js/logger',
             WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id, {suppressVisualizerFromNode: true});
         }
 
-        this._attachClientEventListeners();
         this._displayToolbarItems();
     };
 
@@ -1870,7 +1902,7 @@ define(['js/logger',
             text: '-none-',
             clickFn: function (/**/) {
                 console.log('you selected no library');
-                self._toolbarLibraryList.dropDownText('yeah');
+                self._loadMetaAspectContainerNode('');
             }
         });
         libraryNames.forEach(function (libraryName) {
@@ -1878,10 +1910,12 @@ define(['js/logger',
                 title: 'Select ' + libraryName,
                 text: libraryName,
                 clickFn: function (/**/) {
-                    console.log('you selected ' + libraryName);
+                    self._loadMetaAspectContainerNode(libraryName);
                 }
             });
         });
+
+        self._setLibraryDropdownText();
     };
 
     MetaEditorControl.prototype._displayToolbarItems = function () {
@@ -1966,7 +2000,6 @@ define(['js/logger',
             text: '-none-',
             title: 'Select which library to visualize'
         });
-
         this._toolbarItems.push(this._toolbarLibraryList);
         this._refreshLibraryList();
 
