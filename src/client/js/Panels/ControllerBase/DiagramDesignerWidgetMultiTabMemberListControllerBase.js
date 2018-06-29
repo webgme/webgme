@@ -593,8 +593,8 @@ define(['js/logger',
             i,
             accept = false;
 
-        //check to see if there is a currently selected memberlist to add the dragged elements to
-        if (this._selectedMemberListID) {
+        // Ensure that there is a selected memberlist (with members initialized) to add the dragged elements to.
+        if (this._selectedMemberListID && this._memberListMembers[this._selectedMemberListID]) {
             //accept is self reposition OR
             //dragging from somewhere else and the items are not on the sheet yet
             if (params &&
@@ -619,7 +619,7 @@ define(['js/logger',
                                 //accept = false;
                                 //break;
                             } else if (this._memberListMembers[this._selectedMemberListID]
-                                    .indexOf(gmeIDList[i]) !== -1) {
+                                .indexOf(gmeIDList[i]) !== -1) {
 
                                 accept = false;
                                 break;
