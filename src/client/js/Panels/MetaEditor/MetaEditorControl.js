@@ -116,7 +116,7 @@ define(['js/logger',
     MetaEditorControl.prototype._getRootIdOfLibrary = function (nodeId) {
         var node = this._client.getNode(nodeId),
             rootId = META_RULES_CONTAINER_NODE_ID;
-        if (node && node.isLibraryElement()) {
+        if (node && (node.isLibraryElement() || node.isLibraryRoot())) {
             while (!node.isLibraryRoot()) {
                 node = node.getNode(node.getParentId());
             }
@@ -124,7 +124,8 @@ define(['js/logger',
         }
 
         return rootId;
-    }
+    };
+
     MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
         var self = this;
 
@@ -1858,6 +1859,31 @@ define(['js/logger',
         this._hideToolbarItems();
     };
 
+    MetaEditorControl.prototype._refreshLibraryList = function () {
+        var self = this,
+            libraryNames = this._client.getLibraryNames(this._client.getNode('')),
+            i;
+        this._toolbarLibraryList.clear();
+
+        this._toolbarLibraryList.addButton({
+            title: 'no library',
+            text: '-none-',
+            clickFn: function (/**/) {
+                console.log('you selected no library');
+                self._toolbarLibraryList.dropDownText('yeah');
+            }
+        });
+        libraryNames.forEach(function (libraryName) {
+            self._toolbarLibraryList.addButton({
+                title: 'Select ' + libraryName,
+                text: libraryName,
+                clickFn: function (/**/) {
+                    console.log('you selected ' + libraryName);
+                }
+            });
+        });
+    };
+
     MetaEditorControl.prototype._displayToolbarItems = function () {
         if (this._toolbarInitialized !== true) {
             this._initializeToolbar();
@@ -1934,6 +1960,15 @@ define(['js/logger',
             data: {connType: MetaRelations.META_RELATIONS.SET},
             icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.SET)
         });
+
+        this._toolbarItems.push(toolBar.addSeparator());
+        this._toolbarLibraryList = toolBar.addDropDownButton({
+            text: '-none-',
+            title: 'Select which library to visualize'
+        });
+
+        this._toolbarItems.push(this._toolbarLibraryList);
+        this._refreshLibraryList();
 
         this._toolbarItems.push(toolBar.addSeparator());
         this._toolbarItems.push(toolBar.addDragItem({
