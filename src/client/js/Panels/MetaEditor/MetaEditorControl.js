@@ -159,12 +159,14 @@ define(['js/logger',
 
         this._refreshLibraryList();
 
-        if (this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID) {
-            this.setReadOnly(false);
-            this.diagramDesigner.setReadOnly(false);
-        } else {
-            this.setReadOnly(true);
-            this.diagramDesigner.setReadOnly(true);
+        if (typeof this.currentNodeInfo.id === 'string') {
+            if (this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID) {
+                this.setReadOnly(false);
+                this.diagramDesigner.setReadOnly(false);
+            } else {
+                this.setReadOnly(true);
+                this.diagramDesigner.setReadOnly(true);
+            }
         }
         //remove current territory patterns
         if (this._territoryId) {
@@ -173,6 +175,7 @@ define(['js/logger',
 
         //put new node's info into territory rules
         this._selfPatterns = {};
+        this._selfPatterns[BASIC_META_RULES_CONTAINER_NODE_ID] = {children: 0};
         this._selfPatterns[this.metaAspectContainerNodeID] = {children: 0};
 
         //create and set territory
@@ -195,6 +198,10 @@ define(['js/logger',
 
         while (i--) {
             e = events[i];
+            if (e.eid === BASIC_META_RULES_CONTAINER_NODE_ID && e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE) {
+                this._refreshLibraryList();
+            }
+
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
                     this._onLoad(e.eid);
