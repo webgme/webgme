@@ -113,12 +113,24 @@ define(['js/logger',
         });
     };
 
+    MetaEditorControl.prototype._getRootIdOfLibrary = function (nodeId) {
+        var node = this._client.getNode(nodeId),
+            rootId = META_RULES_CONTAINER_NODE_ID;
+        if (node && node.isLibraryElement()) {
+            while (!node.isLibraryRoot()) {
+                node = node.getNode(node.getParentId());
+            }
+            rootId = node.getId();
+        }
+
+        return rootId;
+    }
     MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
         var self = this;
 
-        this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
-
         this.currentNodeInfo.id = WebGMEGlobal.State.getActiveObject();
+
+        this.metaAspectContainerNodeID = self._getRootIdOfLibrary(this.currentNodeInfo.id);
 
         this.logger.debug('_loadMetaAspectContainerNode: "' + this.metaAspectContainerNodeID + '"');
 
@@ -646,7 +658,7 @@ define(['js/logger',
             //source and destination is displayed
 
             if (this._filteredOutConnTypes.indexOf(connType) === -1) {
-                //connection type is not filtered out    
+                //connection type is not filtered out
                 connDesc = {
                     srcObjId: this._GMEID2ComponentID[gmeSrcId],
                     srcSubCompId: undefined,
@@ -780,9 +792,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be removed
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                this._connectionListByID[connectionID],
-                connType,
-                pointerOrSetName) === true) {
+                    this._connectionListByID[connectionID],
+                    connType,
+                    pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -825,9 +837,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be updated
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                this._connectionListByID[connectionID],
-                connType,
-                pointerOrSetName) === true) {
+                    this._connectionListByID[connectionID],
+                    connType,
+                    pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -1811,15 +1823,21 @@ define(['js/logger',
         }
     };
 
+    MetaEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+
+    };
+
     MetaEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
     MetaEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     MetaEditorControl.prototype.onActivate = function () {
