@@ -127,14 +127,14 @@ define(['js/logger',
     };
 
     MetaEditorControl.prototype._setLibraryDropdownText = function () {
-        var node;
+        var node = this._client.getNode(this.metaAspectContainerNodeID);
 
-        if (this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID ||
+        if (node === null || this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID ||
             this.metaAspectContainerNodeID === null || this.metaAspectContainerNodeID === undefined) {
             this._toolbarLibraryList.dropDownText('-none-');
         } else {
             this._toolbarLibraryList.dropDownText(
-                this._client.getNode(this.metaAspectContainerNodeID).getFullyQualifiedName()
+                node.getFullyQualifiedName()
             );
         }
     };
@@ -200,6 +200,12 @@ define(['js/logger',
             e = events[i];
             if (e.eid === BASIC_META_RULES_CONTAINER_NODE_ID && e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE) {
                 this._refreshLibraryList();
+            }
+
+            if (e.eid === BASIC_META_RULES_CONTAINER_NODE_ID &&
+                this.metaAspectContainerNodeID !== BASIC_META_RULES_CONTAINER_NODE_ID &&
+                e.etype !== CONSTANTS.TERRITORY_EVENT_UNLOAD) {
+                continue;
             }
 
             switch (e.etype) {
@@ -829,9 +835,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be removed
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                this._connectionListByID[connectionID],
-                connType,
-                pointerOrSetName) === true) {
+                    this._connectionListByID[connectionID],
+                    connType,
+                    pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -874,9 +880,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be updated
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                this._connectionListByID[connectionID],
-                connType,
-                pointerOrSetName) === true) {
+                    this._connectionListByID[connectionID],
+                    connType,
+                    pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
