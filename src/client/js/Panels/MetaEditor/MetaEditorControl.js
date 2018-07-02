@@ -41,7 +41,8 @@ define(['js/logger',
         META_DECORATOR = 'MetaDecorator',
         DOCUMENT_DECORATOR = 'DocumentDecorator',
         WIDGET_NAME = 'DiagramDesigner',
-        META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
+        BASIC_META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
+        NO_LIBRARY_SELECTED_TEXT = ' . ';
 
     MetaEditorControl = function (options) {
         var self = this;
@@ -84,6 +85,7 @@ define(['js/logger',
         this._metaAspectMembersCoordinatesPerSheet = {};
         this._selectedMetaAspectSheetMembers = [];
         this._selectedSheetID = null;
+        this._selectedLibrary = null;
 
         this._metaDocItemsPerSheet = {};
 
@@ -113,17 +115,63 @@ define(['js/logger',
         });
     };
 
-    MetaEditorControl.prototype._loadMetaAspectContainerNode = function () {
+    MetaEditorControl.prototype._getRootIdOfLibrary = function (nodeId) {
+        var node = this._client.getNode(nodeId),
+            rootId = BASIC_META_RULES_CONTAINER_NODE_ID;
+        if (node && (node.isLibraryElement() || node.isLibraryRoot())) {
+            while (!node.isLibraryRoot()) {
+                node = node.getNode(node.getParentId());
+            }
+            rootId = node.getId();
+        }
+
+        return rootId;
+    };
+
+    MetaEditorControl.prototype._setLibraryDropdownText = function () {
+        var node = this._client.getNode(this.metaAspectContainerNodeID);
+
+        if (node === null || this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID ||
+            this.metaAspectContainerNodeID === null || this.metaAspectContainerNodeID === undefined) {
+            this._toolbarLibraryList.dropDownText(NO_LIBRARY_SELECTED_TEXT);
+            this._selectedLibrary = '';
+        } else {
+            this._toolbarLibraryList.dropDownText(
+                node.getFullyQualifiedName()
+            );
+            this._selectedLibrary = node.getFullyQualifiedName();
+        }
+    };
+
+    MetaEditorControl.prototype._loadMetaAspectContainerNode = function (libraryName) {
         var self = this;
 
-        this.metaAspectContainerNodeID = META_RULES_CONTAINER_NODE_ID;
-
         this.currentNodeInfo.id = WebGMEGlobal.State.getActiveObject();
+
+        if (libraryName) {
+            this.metaAspectContainerNodeID =
+                this._client.getNode(BASIC_META_RULES_CONTAINER_NODE_ID).getLibraryRootId(libraryName);
+        } else if (libraryName === '') {
+            this.metaAspectContainerNodeID = BASIC_META_RULES_CONTAINER_NODE_ID;
+        } else {
+            this.metaAspectContainerNodeID = self._getRootIdOfLibrary(this.currentNodeInfo.id);
+        }
 
         this.logger.debug('_loadMetaAspectContainerNode: "' + this.metaAspectContainerNodeID + '"');
 
         this._initializeSelectedSheet();
 
+        this._refreshLibraryList();
+
+        if (typeof this.currentNodeInfo.id === 'string') {
+            if (this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID) {
+                this.setReadOnly(false);
+                this.diagramDesigner.setReadOnly(false);
+            } else {
+                this.setReadOnly(true);
+                this.diagramDesigner.setReadOnly(true);
+            }
+        }
         //remove current territory patterns
         if (this._territoryId) {
             this._client.removeUI(this._territoryId);
@@ -131,6 +179,7 @@ define(['js/logger',
 
         //put new node's info into territory rules
         this._selfPatterns = {};
+        this._selfPatterns[BASIC_META_RULES_CONTAINER_NODE_ID] = {children: 0};
         this._selfPatterns[this.metaAspectContainerNodeID] = {children: 0};
 
         //create and set territory
@@ -153,6 +202,16 @@ define(['js/logger',
 
         while (i--) {
             e = events[i];
+            if (e.eid === BASIC_META_RULES_CONTAINER_NODE_ID && e.etype === CONSTANTS.TERRITORY_EVENT_UPDATE) {
+                this._refreshLibraryList();
+            }
+
+            if (e.eid === BASIC_META_RULES_CONTAINER_NODE_ID &&
+                this.metaAspectContainerNodeID !== BASIC_META_RULES_CONTAINER_NODE_ID &&
+                e.etype !== CONSTANTS.TERRITORY_EVENT_UNLOAD) {
+                continue;
+            }
+
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
                     this._onLoad(e.eid);
@@ -179,6 +238,7 @@ define(['js/logger',
     MetaEditorControl.prototype.destroy = function () {
         this._detachClientEventListeners();
         this._removeToolbarItems();
+        this._selectedLibrary = null;
         this._client.removeUI(this._territoryId);
         this._client.removeUI(this._metaAspectMembersTerritoryId);
     };
@@ -646,7 +706,7 @@ define(['js/logger',
             //source and destination is displayed
 
             if (this._filteredOutConnTypes.indexOf(connType) === -1) {
-                //connection type is not filtered out    
+                //connection type is not filtered out
                 connDesc = {
                     srcObjId: this._GMEID2ComponentID[gmeSrcId],
                     srcSubCompId: undefined,
@@ -1811,18 +1871,28 @@ define(['js/logger',
         }
     };
 
+    MetaEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
+        var rootIdForActiveObject = this._getRootIdOfLibrary(activeObjectId);
+        if (this.metaAspectContainerNodeID !== rootIdForActiveObject && typeof this._selectedLibrary !== 'string') {
+            this._loadMetaAspectContainerNode();
+        }
+    };
+
     MetaEditorControl.prototype._attachClientEventListeners = function () {
         this._detachClientEventListeners();
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged, this);
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged, this);
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged, this);
     };
 
     MetaEditorControl.prototype._detachClientEventListeners = function () {
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_SELECTION, this._stateActiveSelectionChanged);
         WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_TAB, this._stateActiveTabChanged);
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._stateActiveObjectChanged);
     };
 
     MetaEditorControl.prototype.onActivate = function () {
+        this._attachClientEventListeners();
         if (this._selectedSheetID) {
             WebGMEGlobal.State.registerActiveTab(this._selectedSheetID, {invoker: this});
         }
@@ -1831,13 +1901,46 @@ define(['js/logger',
             WebGMEGlobal.State.registerActiveObject(this.currentNodeInfo.id, {suppressVisualizerFromNode: true});
         }
 
-        this._attachClientEventListeners();
         this._displayToolbarItems();
     };
 
     MetaEditorControl.prototype.onDeactivate = function () {
         this._detachClientEventListeners();
         this._hideToolbarItems();
+    };
+
+    MetaEditorControl.prototype._refreshLibraryList = function () {
+        var self = this,
+            libraryNames = this._client.getLibraryNames(this._client.getNode(''));
+
+        this._toolbarLibraryList.clear();
+        if (libraryNames.length === 0) {
+            this._toolbarLibraryList.hide();
+            this._toolbarLibrarySeparator.hide();
+            return;
+        } else if (this._toolbarHidden === false) {
+            this._toolbarLibraryList.show();
+            this._toolbarLibrarySeparator.show();
+        }
+
+        this._toolbarLibraryList.addButton({
+            title: 'no library',
+            text: NO_LIBRARY_SELECTED_TEXT,
+            clickFn: function (/**/) {
+                self._loadMetaAspectContainerNode('');
+            }
+        });
+        libraryNames.forEach(function (libraryName) {
+            self._toolbarLibraryList.addButton({
+                title: 'Select ' + libraryName,
+                text: libraryName,
+                clickFn: function (/**/) {
+                    self._loadMetaAspectContainerNode(libraryName);
+                }
+            });
+        });
+
+        self._setLibraryDropdownText();
     };
 
     MetaEditorControl.prototype._displayToolbarItems = function () {
@@ -1848,6 +1951,7 @@ define(['js/logger',
                 this._toolbarItems[i].show();
             }
         }
+        this._refreshLibraryList();
     };
 
     MetaEditorControl.prototype._hideToolbarItems = function () {
@@ -1856,6 +1960,7 @@ define(['js/logger',
                 this._toolbarItems[i].hide();
             }
         }
+        this._toolbarHidden = true;
     };
 
     MetaEditorControl.prototype._removeToolbarItems = function () {
@@ -1865,6 +1970,7 @@ define(['js/logger',
             }
         }
 
+        this._toolbarHidden = false;
         this._toolbarItems = [];
     };
 
@@ -1917,6 +2023,18 @@ define(['js/logger',
             icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.SET)
         });
 
+
+        this._toolbarLibrarySeparator = toolBar.addSeparator();
+        this._toolbarItems.push(this._toolbarLibrarySeparator);
+        this._toolbarLibraryList = toolBar.addDropDownButton({
+            icon: 'glyphicon glyphicon-folder-close',
+            text: NO_LIBRARY_SELECTED_TEXT,
+            title: 'Select which library to visualize',
+            left: true
+        });
+        this._toolbarItems.push(this._toolbarLibraryList);
+        this._refreshLibraryList();
+
         this._toolbarItems.push(toolBar.addSeparator());
         this._toolbarItems.push(toolBar.addDragItem({
             icon: 'fa fa-file-text-o',
@@ -1957,6 +2075,7 @@ define(['js/logger',
 
 
         this._toolbarInitialized = true;
+        this._toolbarHidden = false;
     };
 
     MetaEditorControl.prototype._getAssociatedConnections = function (objectID) {

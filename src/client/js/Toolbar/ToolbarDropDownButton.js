@@ -19,6 +19,8 @@ define(['./ButtonBase',
     var ToolbarDropDownButton,
         EL_BASE = $('<div/>', {class: 'btn-group'}),
         CARET_BASE = $('<span class="caret"></span>'),
+        SPACER_BASE = $('<span style="padding-left: 10px"></span>'),
+        TEXT_HOLDER_BASE = $('<span style="padding-right: 10px"></span>'),
         UL_BASE = $('<ul class="dropdown-menu"></ul>'),
         DIVIDER_BASE = $('<li class="divider"></li>'),
         CHK_LI_BASE = $('<li/>', {class: 'chkbox'}),
@@ -48,20 +50,28 @@ define(['./ButtonBase',
 
         this._dropDownBtn = buttonBase.createButton(params);
 
-        this.dropDownText(this._dropDownTxt);
-
-        caret = CARET_BASE.clone();
+        this._caret = CARET_BASE.clone();
 
         this._ulMenu = UL_BASE.clone();
+
 
         if (params && params.menuClass) {
             this._ulMenu.addClass(params.menuClass);
         }
 
-        this._dropDownBtn.append(' ').append(caret);
+        this._dropDownBtn.append(SPACER_BASE.clone());
+
+        if (params.left) {
+            this._textHolder = TEXT_HOLDER_BASE.clone();
+            this._dropDownBtn.append(this._textHolder);
+        }
+
+        this._dropDownBtn.append(this._caret);
 
         this._dropDownBtn.addClass('dropdown-toggle');
         this._dropDownBtn.attr('data-toggle', 'dropdown');
+
+        this.dropDownText(this._dropDownTxt);
 
         this.el.append(this._dropDownBtn).append(this._ulMenu);
         this._logger.debug('ctor');
@@ -177,8 +187,12 @@ define(['./ButtonBase',
             }
 
             //setter
-            childCache = this._dropDownBtn.children();
-            this._dropDownBtn.text(label).append(childCache);
+            if (this._textHolder) {
+                this._textHolder.text(label);
+            } else {
+                childCache = this._dropDownBtn.children();
+                this._dropDownBtn.text(label).append(childCache);
+            }
         } else {
             //getter
             return this._dropDownTxt;

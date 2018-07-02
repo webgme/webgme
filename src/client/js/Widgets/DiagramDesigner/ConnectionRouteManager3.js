@@ -480,6 +480,11 @@ define([
     };
 
     ConnectionRouteManager3.prototype._resizeItem = function (objId) {
+        if (!this.diagramDesigner.items[objId]) {
+            //FIXME why is there message for nonexisting objects???
+            return;
+        }
+
         var canvas = this.diagramDesigner,
             isEnd = true,
             connectionMetaInfo,
@@ -549,12 +554,13 @@ define([
         } else if (this._onItemCreateQueue[id] instanceof Array) {  // Store the operation
             this._onItemCreateQueue[id].push(fn);
         } else {
-           // Avoids exception to be thrown here..
+            // Avoids exception to be thrown here..
         }
     };
 
     ConnectionRouteManager3.prototype._updateBoxConnectionAreas = function (objId) {
-        var areas = this.diagramDesigner.items[objId].getConnectionAreas() || [],
+        var areas = this.diagramDesigner.items[objId] ?
+            this.diagramDesigner.items[objId].getConnectionAreas() || [] : [],
             newIds = {},
             connInfo = [],
             boxObject = this._autorouterBoxes[objId],
