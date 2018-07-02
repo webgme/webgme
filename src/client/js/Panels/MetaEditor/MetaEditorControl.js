@@ -1916,9 +1916,11 @@ define(['js/logger',
         this._toolbarLibraryList.clear();
         if (libraryNames.length === 0) {
             this._toolbarLibraryList.hide();
+            this._toolbarLibrarySeparator.hide();
             return;
         } else if (this._toolbarHidden === false) {
             this._toolbarLibraryList.show();
+            this._toolbarLibrarySeparator.show();
         }
 
         this._toolbarLibraryList.addButton({
@@ -2021,11 +2023,14 @@ define(['js/logger',
             icon: MetaRelations.createButtonIcon(MetaRelations.META_RELATIONS.SET)
         });
 
-        this._toolbarItems.push(toolBar.addSeparator());
+
+        this._toolbarLibrarySeparator = toolBar.addSeparator();
+        this._toolbarItems.push(this._toolbarLibrarySeparator);
         this._toolbarLibraryList = toolBar.addDropDownButton({
             icon: 'glyphicon glyphicon-folder-close',
             text: NO_LIBRARY_SELECTED_TEXT,
-            title: 'Select which library to visualize'
+            title: 'Select which library to visualize',
+            left: true
         });
         this._toolbarItems.push(this._toolbarLibraryList);
         this._refreshLibraryList();
