@@ -1,5 +1,25 @@
 # Change Log
 
+## [v2.28.0](https://github.com/webgme/webgme/tree/v2.28.0) (2018-07-02)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.27.0...v2.28.0)
+
+**Implemented enhancements:**
+
+- Vulnerabilities in NPM dependencies [\#1612](https://github.com/webgme/webgme/issues/1612)
+- Library meta view [\#1618](https://github.com/webgme/webgme/pull/1618) ([kecso](https://github.com/kecso))
+- Introduce hidden property in plugin-config option [\#1616](https://github.com/webgme/webgme/pull/1616) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1612 update node-modules and bower components [\#1615](https://github.com/webgme/webgme/pull/1615) ([kecso](https://github.com/kecso))
+- Allow the webgme server to be mounted at non-root path [\#1613](https://github.com/webgme/webgme/pull/1613) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- TypeError: Cannot read property 'indexOf' of undefined [\#1614](https://github.com/webgme/webgme/issues/1614)
+- Fixes \#1614 Ensure sheet is intialized in crosscut before adding new members [\#1617](https://github.com/webgme/webgme/pull/1617) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- src/bin/run\_plugin.js doesn't notify clients [\#1546](https://github.com/webgme/webgme/issues/1546)
+
 ## [v2.27.0](https://github.com/webgme/webgme/tree/v2.27.0) (2018-06-04)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.26.0...v2.27.0)
 
