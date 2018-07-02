@@ -41,7 +41,8 @@ define(['js/logger',
         META_DECORATOR = 'MetaDecorator',
         DOCUMENT_DECORATOR = 'DocumentDecorator',
         WIDGET_NAME = 'DiagramDesigner',
-        BASIC_META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
+        BASIC_META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
+        NO_LIBRARY_SELECTED_TEXT = ' . ';
 
     MetaEditorControl = function (options) {
         var self = this;
@@ -84,6 +85,7 @@ define(['js/logger',
         this._metaAspectMembersCoordinatesPerSheet = {};
         this._selectedMetaAspectSheetMembers = [];
         this._selectedSheetID = null;
+        this._selectedLibrary = null;
 
         this._metaDocItemsPerSheet = {};
 
@@ -131,11 +133,13 @@ define(['js/logger',
 
         if (node === null || this.metaAspectContainerNodeID === BASIC_META_RULES_CONTAINER_NODE_ID ||
             this.metaAspectContainerNodeID === null || this.metaAspectContainerNodeID === undefined) {
-            this._toolbarLibraryList.dropDownText('-none-');
+            this._toolbarLibraryList.dropDownText(NO_LIBRARY_SELECTED_TEXT);
+            this._selectedLibrary = '';
         } else {
             this._toolbarLibraryList.dropDownText(
                 node.getFullyQualifiedName()
             );
+            this._selectedLibrary = node.getFullyQualifiedName();
         }
     };
 
@@ -234,6 +238,7 @@ define(['js/logger',
     MetaEditorControl.prototype.destroy = function () {
         this._detachClientEventListeners();
         this._removeToolbarItems();
+        this._selectedLibrary = null;
         this._client.removeUI(this._territoryId);
         this._client.removeUI(this._metaAspectMembersTerritoryId);
     };
@@ -835,9 +840,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be removed
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                    this._connectionListByID[connectionID],
-                    connType,
-                    pointerOrSetName) === true) {
+                this._connectionListByID[connectionID],
+                connType,
+                pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -880,9 +885,9 @@ define(['js/logger',
             // If a pointer or set with a specific name should be updated
             // clear out the connectionID if this connection is not the representation of that pointer.
             if (this._isPointerOrSetAndConnDescDoesNotMatchName(
-                    this._connectionListByID[connectionID],
-                    connType,
-                    pointerOrSetName) === true) {
+                this._connectionListByID[connectionID],
+                connType,
+                pointerOrSetName) === true) {
                 connectionID = undefined;
             }
 
@@ -1868,7 +1873,7 @@ define(['js/logger',
 
     MetaEditorControl.prototype._stateActiveObjectChanged = function (model, activeObjectId) {
         var rootIdForActiveObject = this._getRootIdOfLibrary(activeObjectId);
-        if (this.metaAspectContainerNodeID !== rootIdForActiveObject) {
+        if (this.metaAspectContainerNodeID !== rootIdForActiveObject && typeof this._selectedLibrary !== 'string') {
             this._loadMetaAspectContainerNode();
         }
     };
@@ -1906,13 +1911,19 @@ define(['js/logger',
 
     MetaEditorControl.prototype._refreshLibraryList = function () {
         var self = this,
-            libraryNames = this._client.getLibraryNames(this._client.getNode('')),
-            i;
+            libraryNames = this._client.getLibraryNames(this._client.getNode(''));
+
         this._toolbarLibraryList.clear();
+        if (libraryNames.length === 0) {
+            this._toolbarLibraryList.hide();
+            return;
+        } else if (this._toolbarHidden === false) {
+            this._toolbarLibraryList.show();
+        }
 
         this._toolbarLibraryList.addButton({
             title: 'no library',
-            text: '-none-',
+            text: NO_LIBRARY_SELECTED_TEXT,
             clickFn: function (/**/) {
                 self._loadMetaAspectContainerNode('');
             }
@@ -1938,6 +1949,7 @@ define(['js/logger',
                 this._toolbarItems[i].show();
             }
         }
+        this._refreshLibraryList();
     };
 
     MetaEditorControl.prototype._hideToolbarItems = function () {
@@ -1946,6 +1958,7 @@ define(['js/logger',
                 this._toolbarItems[i].hide();
             }
         }
+        this._toolbarHidden = true;
     };
 
     MetaEditorControl.prototype._removeToolbarItems = function () {
@@ -1955,6 +1968,7 @@ define(['js/logger',
             }
         }
 
+        this._toolbarHidden = false;
         this._toolbarItems = [];
     };
 
@@ -2009,7 +2023,8 @@ define(['js/logger',
 
         this._toolbarItems.push(toolBar.addSeparator());
         this._toolbarLibraryList = toolBar.addDropDownButton({
-            text: '-none-',
+            icon: 'glyphicon glyphicon-folder-close',
+            text: NO_LIBRARY_SELECTED_TEXT,
             title: 'Select which library to visualize'
         });
         this._toolbarItems.push(this._toolbarLibraryList);
@@ -2055,6 +2070,7 @@ define(['js/logger',
 
 
         this._toolbarInitialized = true;
+        this._toolbarHidden = false;
     };
 
     MetaEditorControl.prototype._getAssociatedConnections = function (objectID) {

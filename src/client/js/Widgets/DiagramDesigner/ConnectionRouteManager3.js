@@ -480,6 +480,11 @@ define([
     };
 
     ConnectionRouteManager3.prototype._resizeItem = function (objId) {
+        if (!this.diagramDesigner.items[objId]) {
+            //FIXME why is there message for nonexisting objects???
+            return;
+        }
+
         var canvas = this.diagramDesigner,
             isEnd = true,
             connectionMetaInfo,
