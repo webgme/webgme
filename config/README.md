@@ -71,7 +71,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.authentication.salts = 10`
  - Strength of the salting of the users' passwords [bcrypt](https://github.com/dcodeIO/bcrypt.js).
 - `config.authentication.authorizer.path = 'node_modules/webgme-engine/src/server/middleware/auth/defaultauthorizer'`
- - Path (absolute) to module implementing `AuthorizerBase` (located next to `deafultauthorizer`) for getting and setting authorization regarding projects and project creation.
+ - Path (absolute) to module implementing `AuthorizerBase` (located next to `defaultauthorizer`) for getting and setting authorization regarding projects and project creation.
 - `config.authentication.authorizer.options = {}`
  - Optional options passed to authorizer module at initialization (via gmeConfig).
 - `config.authentication.jwt.cookieId = 'access_token'`
