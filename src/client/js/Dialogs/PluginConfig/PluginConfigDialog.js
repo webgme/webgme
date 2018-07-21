@@ -216,10 +216,11 @@ define([
                 el.find('summary.control-label').text(pluginConfigEntry.displayName);
 
                 if (pluginConfigEntry.configStructure && pluginConfigEntry.configStructure.length) {
-                    pluginConfigEntry.configStructure.map((c) => {
-                        console.log(c);
-                        el.find('.controls').append(self._generateControl(id, c, prevConfig));
-                    });
+                    el.find('.controls').append(
+                        pluginConfigEntry.configStructure.map((c) => {
+                            return self._generateControl(id, c, prevConfig);
+                        })
+                    );
                 }
 
                 containerEl.append(el);
