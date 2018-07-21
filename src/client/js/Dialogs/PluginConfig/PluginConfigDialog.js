@@ -215,10 +215,29 @@ define([
 
                 el.find('summary.control-label').text(pluginConfigEntry.displayName);
 
+                var location = null;
+
+                if (id === GLOBAL_OPTS_ID) {
+                    self._globalWidgets[pluginConfigEntry.name] = {};
+                    location = self._globalWidgets[pluginConfigEntry.name];
+                } else {
+                    self._pluginWidgets[id + '.' + pluginConfigEntry.name] = {};
+                    location = self._pluginWidgets[id + '.' + pluginConfigEntry.name];
+                }
+
+                location.getValue = function() {
+                    return Object.values(this).reduce((o, v) => {
+                        if (typeof v !== 'function') {
+                            o[v.propertyName] = v.getValue();
+                        }
+                        return o;
+                    }, {});
+                };
+
                 if (pluginConfigEntry.configStructure && pluginConfigEntry.configStructure.length) {
                     el.find('.controls').append(
                         pluginConfigEntry.configStructure.map((c) => {
-                            return self._generateControl(id, c, prevConfig);
+                            return self._generateControl(id, c, prevConfig, location);
                         })
                     );
                 }
@@ -230,7 +249,7 @@ define([
         });
     };
 
-    PluginConfigDialog.prototype._generateControl = function(id, pluginConfigEntry, prevConfig) {
+    PluginConfigDialog.prototype._generateControl = function(id, pluginConfigEntry, prevConfig, widgetLocation) {
         var self = this,
             widget,
             el,
@@ -246,10 +265,14 @@ define([
 
         widget = self._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
 
-        if (id === GLOBAL_OPTS_ID) {
-            self._globalWidgets[pluginConfigEntry.name] = widget;
+        if (widgetLocation === undefined) {
+            if (id === GLOBAL_OPTS_ID) {
+                self._globalWidgets[pluginConfigEntry.name] = widget;
+            } else {
+                self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
+            }
         } else {
-            self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
+            widgetLocation[pluginConfigEntry.name] = widget;
         }
 
         el = ENTRY_BASE.clone();
