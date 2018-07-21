@@ -23,6 +23,7 @@ define([
     //jscs:disable maximumLineLength
         PLUGIN_CONFIG_SECTION_BASE = $('<div><div class="dependency-title"></div><fieldset><form class="form-horizontal" role="form"></form><fieldset></div>'),
         ENTRY_BASE = $('<div class="form-group"><div class="row"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div><div class="row description"><div class="col-sm-4"></div></div></div>'),
+        HEADER_BASE = $('<details class="form-group plugin-config-details"><summary class="control-label plugin-config-summary">NAME</summary><div class="controls"></div></details>'),
     //jscs:enable maximumLineLength
         DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
 
@@ -49,7 +50,7 @@ define([
         this._initDialog();
 
         this._dialog.on('hidden.bs.modal', function () {
-            var saveInUser = self._saveConfigurationCb.is(':checked');
+            var saveInUser = self._saveConfigurationCb.find('input').is(':checked');
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -80,7 +81,7 @@ define([
 
         this._divContainer = this._dialog.find('.modal-body');
 
-        this._saveConfigurationCb = this._dialog.find('.save-configuration').find('input');
+        this._saveConfigurationCb = this._dialog.find('.save-configuration');
         this._modalHeader = this._dialog.find('.modal-header');
 
         if (this._pluginMetadata.icon) {
@@ -105,10 +106,7 @@ define([
         this._modalHeader.prepend(iconEl);
 
         this._title = this._modalHeader.find('.modal-title');
-        this._title.text(this._pluginMetadata.name);
-
-        this._modalHeader.find('.version').text('v' + this._pluginMetadata.version);
-        this._modalHeader.find('.description').text(this._pluginMetadata.description);
+        this._title.text(this._pluginMetadata.name + ' ' + 'v' + this._pluginMetadata.version);
 
         // Generate the widget in the body
         this._generateSections();
@@ -117,14 +115,6 @@ define([
             self._closeAndSave();
             event.stopPropagation();
             event.preventDefault();
-        });
-
-        this._saveConfigurationCb.change(function () {
-            if (this.checked) {
-                self._btnSave.text('Save & Run...');
-            } else {
-                self._btnSave.text('Run...');
-            }
         });
 
         //save&run on CTRL + Enter
@@ -152,8 +142,7 @@ define([
                         subPreConfig;
 
                     if (!depMetadata) {
-                        throw new Error('Plugin "' + depInfo.id +
-                            '" is a dependency but metadata for it not available!');
+                        throw new Error('Plugin "' + depInfo.id + '" is a dependency but metadata for it not available!');
                     }
 
                     if (!joinedId) {
@@ -177,7 +166,7 @@ define([
                         self._generateConfigSection(newJoinedId, depMetadata.configStructure, subPreConfig);
                         traverseDependencies(depMetadata, newJoinedId, subPreConfig);
                     }
-                });
+            });
         }
 
         tarjan.addVertex(this._pluginMetadata.id);
@@ -215,76 +204,93 @@ define([
         containerEl = pluginSectionEl.find('.form-horizontal');
 
         configStructure.forEach(function (pluginConfigEntry) {
-            var widget,
-                el,
-                descEl;
-
             // Make sure not modify the global metadata.
             pluginConfigEntry = JSON.parse(JSON.stringify(pluginConfigEntry));
-            if (pluginConfigEntry.hidden === true) {
-                return;
-            }
+            if (pluginConfigEntry.valueType === 'header') {
+                // this is a nesting structure which should be <details>
+                var el;
+                
+                el = HEADER_BASE.clone();
+                el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.displayName);
 
-            if (prevConfig && prevConfig.hasOwnProperty(pluginConfigEntry.name)) {
-                pluginConfigEntry.value = prevConfig[pluginConfigEntry.name];
-            }
+                el.find('summary.control-label').text(pluginConfigEntry.displayName);
 
-            if (self._client.getProjectAccess().write === false && pluginConfigEntry.writeAccessRequired === true) {
-                pluginConfigEntry.readOnly = true;
-            }
-
-            widget = self._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
-
-            if (id === GLOBAL_OPTS_ID) {
-                self._globalWidgets[pluginConfigEntry.name] = widget;
-            } else {
-                self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
-            }
-
-            el = ENTRY_BASE.clone();
-            el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.name);
-
-            el.find('label.control-label').text(pluginConfigEntry.displayName);
-
-            if (pluginConfigEntry.description && pluginConfigEntry.description !== '') {
-                descEl = descEl || DESCRIPTION_BASE.clone();
-                descEl.text(pluginConfigEntry.description);
-            }
-
-            if (pluginConfigEntry.minValue !== undefined &&
-                pluginConfigEntry.minValue !== null &&
-                pluginConfigEntry.minValue !== '') {
-                descEl = descEl || DESCRIPTION_BASE.clone();
-                descEl.append(' min=' + pluginConfigEntry.minValue);
-            }
-
-            if (pluginConfigEntry.maxValue !== undefined &&
-                pluginConfigEntry.maxValue !== null &&
-                pluginConfigEntry.maxValue !== '') {
-                descEl = descEl || DESCRIPTION_BASE.clone();
-                descEl.append(' max=' + pluginConfigEntry.maxValue);
-            }
-
-            if (id === GLOBAL_OPTS_ID &&
-                pluginConfigEntry.name === 'runOnServer' &&
-                pluginConfigEntry.readOnly === true) {
-                // Do not display the boolean box #676
-                descEl.css({
-                    color: 'grey',
-                    'padding-top': '7px',
-                    'padding-left': '0px',
-                    'font-style': 'italic'
-                });
-                el.find('.controls').append(descEl);
-            } else {
-                el.find('.controls').append(widget.el);
-                if (descEl) {
-                    el.find('.description').append(descEl);
+                if (pluginConfigEntry.configStructure && pluginConfigEntry.configStructure.length) {
+                    pluginConfigEntry.configStructure.map((c) => {
+                        console.log(c);
+                        el.find('.controls').append(self._generateControl(id, c, prevConfig));
+                    });
                 }
-            }
 
-            containerEl.append(el);
+                containerEl.append(el);
+            } else {
+                containerEl.append(self._generateControl(id, pluginConfigEntry, prevConfig));
+            }
         });
+    };
+
+    PluginConfigDialog.prototype._generateControl = function(id, pluginConfigEntry, prevConfig) {
+        var self = this,
+            widget,
+            el,
+            descEl;
+
+        if (prevConfig && prevConfig.hasOwnProperty(pluginConfigEntry.name)) {
+            pluginConfigEntry.value = prevConfig[pluginConfigEntry.name];
+        }
+
+        if (self._client.getProjectAccess().write === false && pluginConfigEntry.writeAccessRequired === true) {
+            pluginConfigEntry.readOnly = true;
+        }
+
+        widget = self._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
+
+        if (id === GLOBAL_OPTS_ID) {
+            self._globalWidgets[pluginConfigEntry.name] = widget;
+        } else {
+            self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
+        }
+
+        el = ENTRY_BASE.clone();
+        el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.name);
+
+        el.find('label.control-label').text(pluginConfigEntry.displayName);
+
+        if (pluginConfigEntry.description && pluginConfigEntry.description !== '') {
+            descEl = descEl || DESCRIPTION_BASE.clone();
+            descEl.text(pluginConfigEntry.description);
+        }
+
+        if (pluginConfigEntry.minValue !== undefined &&
+            pluginConfigEntry.minValue !== null &&
+            pluginConfigEntry.minValue !== '') {
+            descEl = descEl || DESCRIPTION_BASE.clone();
+            descEl.append(' The minimum value is: ' + pluginConfigEntry.minValue + '.');
+        }
+
+        if (pluginConfigEntry.maxValue !== undefined &&
+            pluginConfigEntry.maxValue !== null &&
+            pluginConfigEntry.maxValue !== '') {
+            descEl = descEl || DESCRIPTION_BASE.clone();
+            descEl.append(' The maximum value is: ' + pluginConfigEntry.maxValue + '.');
+        }
+
+        if (id === GLOBAL_OPTS_ID && pluginConfigEntry.name === 'runOnServer' && pluginConfigEntry.readOnly === true) {
+            // Do not display the boolean box #676
+            descEl.css({
+                color: 'grey',
+                'padding-top': '7px',
+                'padding-left': '0px',
+                'font-style': 'italic'
+            });
+            el.find('.controls').append(descEl);
+        } else {
+            el.find('.controls').append(widget.el);
+            if (descEl) {
+                el.find('.description').append(descEl);
+            }
+        }
+        return el;
     };
 
 
