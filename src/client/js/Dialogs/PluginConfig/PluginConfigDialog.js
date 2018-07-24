@@ -203,50 +203,13 @@ define([
 
         containerEl = pluginSectionEl.find('.form-horizontal');
 
-        configStructure.forEach(function (pluginConfigEntry) {
+        const genConfig = (pluginConfigEntry) => {
             // Make sure not modify the global metadata.
             pluginConfigEntry = JSON.parse(JSON.stringify(pluginConfigEntry));
-            if (pluginConfigEntry.valueType === 'header') {
-                // this is a nesting structure which should be <details>
-                var el;
-                
-                el = HEADER_BASE.clone();
-                el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.displayName);
+            containerEl.append(self._generateControl(id, pluginConfigEntry, prevConfig));
+        };
 
-                el.find('summary.control-label').text(pluginConfigEntry.displayName);
-
-                var location = null;
-
-                if (id === GLOBAL_OPTS_ID) {
-                    self._globalWidgets[pluginConfigEntry.name] = {};
-                    location = self._globalWidgets[pluginConfigEntry.name];
-                } else {
-                    self._pluginWidgets[id + '.' + pluginConfigEntry.name] = {};
-                    location = self._pluginWidgets[id + '.' + pluginConfigEntry.name];
-                }
-
-                location.getValue = function() {
-                    return Object.values(this).reduce((o, v) => {
-                        if (typeof v !== 'function') {
-                            o[v.propertyName] = v.getValue();
-                        }
-                        return o;
-                    }, {});
-                };
-
-                if (pluginConfigEntry.configStructure && pluginConfigEntry.configStructure.length) {
-                    el.find('.controls').append(
-                        pluginConfigEntry.configStructure.map((c) => {
-                            return self._generateControl(id, c, prevConfig, location);
-                        })
-                    );
-                }
-
-                containerEl.append(el);
-            } else {
-                containerEl.append(self._generateControl(id, pluginConfigEntry, prevConfig));
-            }
-        });
+        configStructure.forEach(genConfig);
     };
 
     PluginConfigDialog.prototype._generateControl = function(id, pluginConfigEntry, prevConfig, widgetLocation) {
@@ -255,65 +218,106 @@ define([
             el,
             descEl;
 
-        if (prevConfig && prevConfig.hasOwnProperty(pluginConfigEntry.name)) {
-            pluginConfigEntry.value = prevConfig[pluginConfigEntry.name];
-        }
+        console.log(pluginConfigEntry);
+        if (pluginConfigEntry.valueType === 'header') {
+            // this is a nesting structure which should be <details>
+            el = HEADER_BASE.clone();
+            el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.displayName);
 
-        if (self._client.getProjectAccess().write === false && pluginConfigEntry.writeAccessRequired === true) {
-            pluginConfigEntry.readOnly = true;
-        }
+            el.find('summary.control-label').text(pluginConfigEntry.displayName);
 
-        widget = self._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
-
-        if (widgetLocation === undefined) {
-            if (id === GLOBAL_OPTS_ID) {
-                self._globalWidgets[pluginConfigEntry.name] = widget;
+            var location = null;
+            if (widgetLocation === undefined) {
+                if (id === GLOBAL_OPTS_ID) {
+                    self._globalWidgets[pluginConfigEntry.name] = {};
+                    location = self._globalWidgets[pluginConfigEntry.name];
+                } else {
+                    self._pluginWidgets[id + '.' + pluginConfigEntry.name] = {};
+                    location = self._pluginWidgets[id + '.' + pluginConfigEntry.name];
+                }
             } else {
-                self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
+                widgetLocation[pluginConfigEntry.name] = {};
+                location = widgetLocation[pluginConfigEntry.name];
+            }
+
+            location.getValue = function() {
+                return Object.values(this).reduce((o, v) => {
+                    if (typeof v !== 'function') {
+                        o[v.propertyName] = v.getValue();
+                    }
+                    return o;
+                }, {});
+            };
+
+            if (pluginConfigEntry.configStructure && pluginConfigEntry.configStructure.length) {
+                el.find('.controls').append(
+                    pluginConfigEntry.configStructure.map((c) => {
+                        return self._generateControl(id, c, prevConfig, location);
+                    })
+                );
             }
         } else {
-            widgetLocation[pluginConfigEntry.name] = widget;
-        }
-
-        el = ENTRY_BASE.clone();
-        el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.name);
-
-        el.find('label.control-label').text(pluginConfigEntry.displayName);
-
-        if (pluginConfigEntry.description && pluginConfigEntry.description !== '') {
-            descEl = descEl || DESCRIPTION_BASE.clone();
-            descEl.text(pluginConfigEntry.description);
-        }
-
-        if (pluginConfigEntry.minValue !== undefined &&
-            pluginConfigEntry.minValue !== null &&
-            pluginConfigEntry.minValue !== '') {
-            descEl = descEl || DESCRIPTION_BASE.clone();
-            descEl.append(' The minimum value is: ' + pluginConfigEntry.minValue + '.');
-        }
-
-        if (pluginConfigEntry.maxValue !== undefined &&
-            pluginConfigEntry.maxValue !== null &&
-            pluginConfigEntry.maxValue !== '') {
-            descEl = descEl || DESCRIPTION_BASE.clone();
-            descEl.append(' The maximum value is: ' + pluginConfigEntry.maxValue + '.');
-        }
-
-        if (id === GLOBAL_OPTS_ID && pluginConfigEntry.name === 'runOnServer' && pluginConfigEntry.readOnly === true) {
-            // Do not display the boolean box #676
-            descEl.css({
-                color: 'grey',
-                'padding-top': '7px',
-                'padding-left': '0px',
-                'font-style': 'italic'
-            });
-            el.find('.controls').append(descEl);
-        } else {
-            el.find('.controls').append(widget.el);
-            if (descEl) {
-                el.find('.description').append(descEl);
+            if (prevConfig && prevConfig.hasOwnProperty(pluginConfigEntry.name)) {
+                pluginConfigEntry.value = prevConfig[pluginConfigEntry.name];
             }
-        }
+
+            if (self._client.getProjectAccess().write === false && pluginConfigEntry.writeAccessRequired === true) {
+                pluginConfigEntry.readOnly = true;
+            }
+
+            widget = self._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
+
+            if (widgetLocation === undefined) {
+                if (id === GLOBAL_OPTS_ID) {
+                    self._globalWidgets[pluginConfigEntry.name] = widget;
+                } else {
+                    self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
+                }
+            } else {
+                widgetLocation[pluginConfigEntry.name] = widget;
+            }
+
+            el = ENTRY_BASE.clone();
+            el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.name);
+
+            el.find('label.control-label').text(pluginConfigEntry.displayName);
+
+            if (pluginConfigEntry.description && pluginConfigEntry.description !== '') {
+                descEl = descEl || DESCRIPTION_BASE.clone();
+                descEl.text(pluginConfigEntry.description);
+            }
+
+            if (pluginConfigEntry.minValue !== undefined &&
+                pluginConfigEntry.minValue !== null &&
+                pluginConfigEntry.minValue !== '') {
+                descEl = descEl || DESCRIPTION_BASE.clone();
+                descEl.append(' The minimum value is: ' + pluginConfigEntry.minValue + '.');
+            }
+
+            if (pluginConfigEntry.maxValue !== undefined &&
+                pluginConfigEntry.maxValue !== null &&
+                pluginConfigEntry.maxValue !== '') {
+                descEl = descEl || DESCRIPTION_BASE.clone();
+                descEl.append(' The maximum value is: ' + pluginConfigEntry.maxValue + '.');
+            }
+
+            if (id === GLOBAL_OPTS_ID && pluginConfigEntry.name === 'runOnServer' && pluginConfigEntry.readOnly === true) {
+                // Do not display the boolean box #676
+                descEl.css({
+                    color: 'grey',
+                    'padding-top': '7px',
+                    'padding-left': '0px',
+                    'font-style': 'italic'
+                });
+                el.find('.controls').append(descEl);
+            } else {
+                el.find('.controls').append(widget.el);
+                if (descEl) {
+                    el.find('.description').append(descEl);
+                }
+            }
+        }        
+
         return el;
     };
 
