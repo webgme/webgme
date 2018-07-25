@@ -225,7 +225,7 @@ define([
             el = HEADER_BASE.clone();
             el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.displayName);
 
-            el.find('control-label').text(pluginConfigEntry.displayName);
+            el.find('.control-label').text(pluginConfigEntry.displayName);
 
             var location = null;
             if (widgetLocation === undefined) {
