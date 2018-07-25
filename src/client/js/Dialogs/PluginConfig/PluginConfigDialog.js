@@ -23,8 +23,7 @@ define([
     //jscs:disable maximumLineLength
         PLUGIN_CONFIG_SECTION_BASE = $('<div><div class="dependency-title"></div><fieldset><form class="form-horizontal" role="form"></form><fieldset></div>'),
         ENTRY_BASE = $('<div class="form-group"><div class="row"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div><div class="row description"><div class="col-sm-4"></div></div></div>'),
-        HEADER_BASE = $('<div class="form-group"><div class="row"><button type="button" class="col-sm-4 control-label collapsed" data-toggle="collapse" data-target=":hover + .controls" aria-expanded="false">NAME</button><div id="demo" aria-expanded="false" class="col-sm-8 collapse controls"></div></div><div class="row description"><div class="col-sm-4"></div></div></div>'),
-        //HEADER_BASE = $('<details class="form-group plugin-config-details"><summary class="control-label plugin-config-summary">NAME</summary><div class="controls"></div></details>'),
+        HEADER_BASE = $('<div class="form-group plugin-config-details"><button type="button" class="plugin-config-header-button btn btn-info control-label collapsed" data-toggle="collapse" data-target=":hover + .controls" aria-expanded="false">NAME</button><div aria-expanded="false" class="collapse controls"></div></div>'),
     //jscs:enable maximumLineLength
         DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
 
