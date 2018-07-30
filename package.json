@@ -27,14 +27,14 @@
     "q": "1.5.1",
     "require-uncached": "1.0.3",
     "requirejs": "2.3.5",
-    "webgme-engine": "2.20.2",
+    "webgme-engine": "2.20.3",
     "webgme-user-management-page": "0.4.1"
   },
   "devDependencies": {
     "chai": "^4.1.2",
     "jscs": "^3.0.7",
-    "jshint": "^2.9.4",
-    "karma": "^2.0.4",
+    "jshint": "^2.9.6",
+    "karma": "^2.0.5",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.2",
