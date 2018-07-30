@@ -23,6 +23,7 @@ define([
     //jscs:disable maximumLineLength
         PLUGIN_CONFIG_SECTION_BASE = $('<div><div class="dependency-title"></div><fieldset><form class="form-horizontal" role="form"></form><fieldset></div>'),
         ENTRY_BASE = $('<div class="form-group"><div class="row"><label class="col-sm-4 control-label">NAME</label><div class="col-sm-8 controls"></div></div><div class="row description"><div class="col-sm-4"></div></div></div>'),
+        HEADER_BASE = $('<div class="form-group plugin-config-details"><button type="button" class="plugin-config-header-button btn btn-info control-label collapsed" data-toggle="collapse" data-target=":hover + .controls" aria-expanded="false">NAME</button><div aria-expanded="false" class="collapse controls"></div></div>'),
     //jscs:enable maximumLineLength
         DESCRIPTION_BASE = $('<div class="desc muted col-sm-8"></div>');
 
@@ -49,7 +50,7 @@ define([
         this._initDialog();
 
         this._dialog.on('hidden.bs.modal', function () {
-            var saveInUser = self._saveConfigurationCb.is(':checked');
+            var saveInUser = self._saveConfigurationCb.find('input').is(':checked');
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -80,7 +81,7 @@ define([
 
         this._divContainer = this._dialog.find('.modal-body');
 
-        this._saveConfigurationCb = this._dialog.find('.save-configuration').find('input');
+        this._saveConfigurationCb = this._dialog.find('.save-configuration');
         this._modalHeader = this._dialog.find('.modal-header');
 
         if (this._pluginMetadata.icon) {
@@ -105,10 +106,7 @@ define([
         this._modalHeader.prepend(iconEl);
 
         this._title = this._modalHeader.find('.modal-title');
-        this._title.text(this._pluginMetadata.name);
-
-        this._modalHeader.find('.version').text('v' + this._pluginMetadata.version);
-        this._modalHeader.find('.description').text(this._pluginMetadata.description);
+        this._title.text(this._pluginMetadata.name + ' ' + 'v' + this._pluginMetadata.version);
 
         // Generate the widget in the body
         this._generateSections();
@@ -117,14 +115,6 @@ define([
             self._closeAndSave();
             event.stopPropagation();
             event.preventDefault();
-        });
-
-        this._saveConfigurationCb.change(function () {
-            if (this.checked) {
-                self._btnSave.text('Save & Run...');
-            } else {
-                self._btnSave.text('Run...');
-            }
         });
 
         //save&run on CTRL + Enter
@@ -152,8 +142,7 @@ define([
                         subPreConfig;
 
                     if (!depMetadata) {
-                        throw new Error('Plugin "' + depInfo.id +
-                            '" is a dependency but metadata for it not available!');
+                        throw new Error('Plugin "' + depInfo.id + '" is a dependency but metadata for it not available!');
                     }
 
                     if (!joinedId) {
@@ -177,7 +166,7 @@ define([
                         self._generateConfigSection(newJoinedId, depMetadata.configStructure, subPreConfig);
                         traverseDependencies(depMetadata, newJoinedId, subPreConfig);
                     }
-                });
+            });
         }
 
         tarjan.addVertex(this._pluginMetadata.id);
@@ -214,17 +203,60 @@ define([
 
         containerEl = pluginSectionEl.find('.form-horizontal');
 
-        configStructure.forEach(function (pluginConfigEntry) {
-            var widget,
-                el,
-                descEl;
-
+        const genConfig = (pluginConfigEntry) => {
             // Make sure not modify the global metadata.
             pluginConfigEntry = JSON.parse(JSON.stringify(pluginConfigEntry));
-            if (pluginConfigEntry.hidden === true) {
-                return;
+            containerEl.append(self._generateControl(id, pluginConfigEntry, prevConfig));
+        };
+
+        configStructure.forEach(genConfig);
+    };
+
+    PluginConfigDialog.prototype._generateControl = function(id, pluginConfigEntry, prevConfig, widgetLocation) {
+        var self = this,
+            widget,
+            el,
+            descEl;
+
+        console.log(pluginConfigEntry);
+        if (pluginConfigEntry.valueType === 'header') {
+            // this is a nesting structure which should be <details>
+            el = HEADER_BASE.clone();
+            el.data(ATTRIBUTE_DATA_KEY, pluginConfigEntry.displayName);
+
+            el.find('.control-label').text(pluginConfigEntry.displayName);
+
+            var location = null;
+            if (widgetLocation === undefined) {
+                if (id === GLOBAL_OPTS_ID) {
+                    self._globalWidgets[pluginConfigEntry.name] = {};
+                    location = self._globalWidgets[pluginConfigEntry.name];
+                } else {
+                    self._pluginWidgets[id + '.' + pluginConfigEntry.name] = {};
+                    location = self._pluginWidgets[id + '.' + pluginConfigEntry.name];
+                }
+            } else {
+                widgetLocation[pluginConfigEntry.name] = {};
+                location = widgetLocation[pluginConfigEntry.name];
             }
 
+            location.getValue = function() {
+                return Object.values(this).reduce((o, v) => {
+                    if (typeof v !== 'function') {
+                        o[v.propertyName] = v.getValue();
+                    }
+                    return o;
+                }, {});
+            };
+
+            if (pluginConfigEntry.configStructure && pluginConfigEntry.configStructure.length) {
+                el.find('.controls').append(
+                    pluginConfigEntry.configStructure.map((c) => {
+                        return self._generateControl(id, c, prevConfig, location);
+                    })
+                );
+            }
+        } else {
             if (prevConfig && prevConfig.hasOwnProperty(pluginConfigEntry.name)) {
                 pluginConfigEntry.value = prevConfig[pluginConfigEntry.name];
             }
@@ -235,10 +267,14 @@ define([
 
             widget = self._propertyGridWidgetManager.getWidgetForProperty(pluginConfigEntry);
 
-            if (id === GLOBAL_OPTS_ID) {
-                self._globalWidgets[pluginConfigEntry.name] = widget;
+            if (widgetLocation === undefined) {
+                if (id === GLOBAL_OPTS_ID) {
+                    self._globalWidgets[pluginConfigEntry.name] = widget;
+                } else {
+                    self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
+                }
             } else {
-                self._pluginWidgets[id + '.' + pluginConfigEntry.name] = widget;
+                widgetLocation[pluginConfigEntry.name] = widget;
             }
 
             el = ENTRY_BASE.clone();
@@ -255,19 +291,17 @@ define([
                 pluginConfigEntry.minValue !== null &&
                 pluginConfigEntry.minValue !== '') {
                 descEl = descEl || DESCRIPTION_BASE.clone();
-                descEl.append(' min=' + pluginConfigEntry.minValue);
+                descEl.append(' The minimum value is: ' + pluginConfigEntry.minValue + '.');
             }
 
             if (pluginConfigEntry.maxValue !== undefined &&
                 pluginConfigEntry.maxValue !== null &&
                 pluginConfigEntry.maxValue !== '') {
                 descEl = descEl || DESCRIPTION_BASE.clone();
-                descEl.append(' max=' + pluginConfigEntry.maxValue);
+                descEl.append(' The maximum value is: ' + pluginConfigEntry.maxValue + '.');
             }
 
-            if (id === GLOBAL_OPTS_ID &&
-                pluginConfigEntry.name === 'runOnServer' &&
-                pluginConfigEntry.readOnly === true) {
+            if (id === GLOBAL_OPTS_ID && pluginConfigEntry.name === 'runOnServer' && pluginConfigEntry.readOnly === true) {
                 // Do not display the boolean box #676
                 descEl.css({
                     color: 'grey',
@@ -282,9 +316,9 @@ define([
                     el.find('.description').append(descEl);
                 }
             }
+        }        
 
-            containerEl.append(el);
-        });
+        return el;
     };
 
 

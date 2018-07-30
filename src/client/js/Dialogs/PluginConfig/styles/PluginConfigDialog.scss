@@ -16,11 +16,6 @@
       display: inline-block;
       margin-right: 10px;
     }
-    .description {
-      padding-top: 6px;
-      font-style: italic;
-      max-width: 95%;
-    }
   }
 
   .modal-body {
@@ -34,6 +29,23 @@
       font-style: italic;
       position: relative;
     }
+  }
+
+  .plugin-config-details {
+      border: 1px solid #E1E1E1;
+      border-radius: 5px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+      color: #363636;
+      margin: 5px;
+      padding: 1%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .plugin-config-header-button {
+          margin: 0 5%;
+      }
+      .controls {
+      }
   }
 
   .modal-footer {
