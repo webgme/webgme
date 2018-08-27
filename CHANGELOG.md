@@ -1,15 +1,25 @@
 # Change Log
 
+## [v2.30.0](https://github.com/webgme/webgme/tree/v2.30.0) (2018-08-27)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.29.0...v2.30.0)
+
+**Implemented enhancements:**
+
+- Set webgme-engine dependency to 2.21.1 [\#1625](https://github.com/webgme/webgme/pull/1625) ([pmeijer](https://github.com/pmeijer))
+- Point to webgme-engine 2.20.4 [\#1624](https://github.com/webgme/webgme/pull/1624) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- How to debug add-ons? [\#1623](https://github.com/webgme/webgme/issues/1623)
+- Point to webgme-engine 2.20.4 [\#1624](https://github.com/webgme/webgme/pull/1624) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.29.0](https://github.com/webgme/webgme/tree/v2.29.0) (2018-07-30)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.28.0...v2.29.0)
 
 **Implemented enhancements:**
 
-- Fixed typo [\#1620](https://github.com/webgme/webgme/pull/1620) ([brollb](https://github.com/brollb))
-
-**Merged pull requests:**
-
 - Add nesting capability to Plugin Config Dialog [\#1621](https://github.com/webgme/webgme/pull/1621) ([finger563](https://github.com/finger563))
+- Fixed typo [\#1620](https://github.com/webgme/webgme/pull/1620) ([brollb](https://github.com/brollb))
 
 ## [v2.28.0](https://github.com/webgme/webgme/tree/v2.28.0) (2018-07-02)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.27.0...v2.28.0)
