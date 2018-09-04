@@ -88,7 +88,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - The algorithm used for encryption (should not be edited w/o changing keys appropriately).
 - `config.authentication.jwt.tokenGenerator = 'node_modules/webgme-engine/src/server/middleware/auth/localtokengenerator.js'`
  - Replaceable module for generating tokens in case webgme should not generated new tokens by itself.
-- `config.authentication.admin = null`
+- `config.authentication.adminAccount = null`
  - If specified, will create an admin account at the given username at server startup. By default a random password will be generated and logged in the terminal - to specify a password add a `:`, e.g. `'admin:password'`. 
 (Once the admin exists the password will not be updated at startup.)
 - `config.authentication.publicOrganizations = []`
