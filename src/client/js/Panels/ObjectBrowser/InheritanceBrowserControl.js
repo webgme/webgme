@@ -175,6 +175,8 @@ define(['js/logger',
                         STATE: STATE_LOADED,
                         INHERITANCE: childNode.getInstancePaths(),
                     });
+
+                    this._selfPatterns[currentChildId] = {children: 0};
                 } else {
                     //the node is not present on the client side, render a loading node instead
                     childrenDescriptors.push({
@@ -365,7 +367,7 @@ define(['js/logger',
 
                         //specify the icon for the treenode
                         metaTypeInfo = this.getMetaInfo(updatedObject);
-                        objType = this._getNodeClass(updatedObject, metaTypeInfo);
+                        objType = this._getNodeClass(updatedObject, metaTypeInfo.isMetaNode);
 
                         //create the node's descriptor for the treebrowser widget
                         nodeDescriptor = {
@@ -432,13 +434,14 @@ define(['js/logger',
                                 currentChildId = inheritanceAdded[j];
 
                                 childNode = client.getNode(currentChildId);
-                                metaTypeInfo = this.getMetaInfo(updatedObject);
-                                objType = this._getNodeClass(updatedObject, metaTypeInfo);
-                                //local variable for the created treenode of the child node (loading or full)
-                                childTreeNode = null;
 
                                 //check if the node could be retreived from the project
                                 if (childNode) {
+
+                                    metaTypeInfo = this.getMetaInfo(childNode);
+                                    objType = this._getNodeClass(childNode, metaTypeInfo.isMetaNode);
+                                    //local variable for the created treenode of the child node (loading or full)
+                                    childTreeNode = null;
                                     //the node was present on the client side, render ist full data
                                     childTreeNode = this._treeBrowser.createNode(this._nodes[objectId].treeNode, {
                                         id: currentChildId,
