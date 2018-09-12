@@ -37,14 +37,14 @@ define(['js/logger',
 
     'use strict';
 
-    var MetaEditorControl,
-        META_DECORATOR = 'MetaDecorator',
+    var META_DECORATOR = 'MetaDecorator',
         DOCUMENT_DECORATOR = 'DocumentDecorator',
         WIDGET_NAME = 'DiagramDesigner',
         BASIC_META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
-        NO_LIBRARY_SELECTED_TEXT = ' . ';
+        NO_LIBRARY_SELECTED_TEXT = ' . ',
+        YOUTUBE_VIDEO_URL = 'https://www.youtube.com/playlist?list=PLhvSjgKmeyjhceY4ScQ1sLgiZG-x9WNHX';
 
-    MetaEditorControl = function (options) {
+    function MetaEditorControl(options) {
         var self = this;
 
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:MetaEditor:MetaEditorControl',
@@ -113,7 +113,7 @@ define(['js/logger',
                 self._loadMetaAspectContainerNode();
             }, 10);
         });
-    };
+    }
 
     MetaEditorControl.prototype._getRootIdOfLibrary = function (nodeId) {
         var node = this._client.getNode(nodeId),
@@ -2056,6 +2056,16 @@ define(['js/logger',
                         message: 'No inconsistencies found in meta-model.'
                     });
                 }
+            }
+        }));
+
+        this._toolbarItems.push(toolBar.addSeparator());
+
+        this._toolbarItems.push(toolBar.addButton({
+            title: 'View instruction video',
+            icon: 'fa fa-question',
+            clickFn: function (/*data*/) {
+                window.open(YOUTUBE_VIDEO_URL, '_blank');
             }
         }));
 
