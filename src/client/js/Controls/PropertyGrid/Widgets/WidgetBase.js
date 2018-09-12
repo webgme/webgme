@@ -36,6 +36,10 @@ define(['jquery'], function () {
 
         // The function to be called on finishing change.
         this.__onFinishChange = undefined;
+
+        if (propertyDesc.extraCss && typeof propertyDesc.extraCss === 'object') {
+            this.el.css(propertyDesc.extraCss);
+        }
     }
 
     WidgetBase.prototype.onChange = function (fnc) {

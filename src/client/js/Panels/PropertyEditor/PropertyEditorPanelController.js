@@ -269,7 +269,10 @@ define(['js/logger',
                 valueType: 'string',
                 isCommon: true,
                 readOnly: true,
-                clipboard: true
+                clipboard: true,
+                extraCss: {
+                    fontFamily: 'monospace'
+                }
             };
 
             if (cNode) {
@@ -279,7 +282,10 @@ define(['js/logger',
                     valueType: 'string',
                     isCommon: true,
                     readOnly: true,
-                    clipboard: true
+                    clipboard: true,
+                    extraCss: {
+                        fontFamily: 'monospace'
+                    }
                 };
 
                 if (cNode.isLibraryElement()) {
@@ -289,7 +295,10 @@ define(['js/logger',
                         valueType: 'string',
                         isCommon: true,
                         readOnly: true,
-                        clipboard: true
+                        clipboard: true,
+                        extraCss: {
+                            fontFamily: 'monospace'
+                        }
                     };
                 }
 
