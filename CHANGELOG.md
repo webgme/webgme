@@ -1,5 +1,20 @@
 # Change Log
 
+## [v2.30.1](https://github.com/webgme/webgme/tree/v2.30.1) (2018-09-13)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.30.0...v2.30.1)
+
+**Implemented enhancements:**
+
+- Property Editor ID Field Hard to Read [\#1629](https://github.com/webgme/webgme/issues/1629)
+- Bump webgme-engine to v2.21.3 [\#1634](https://github.com/webgme/webgme/pull/1634) ([pmeijer](https://github.com/pmeijer))
+- Bump user-management-page to v0.4.3 [\#1633](https://github.com/webgme/webgme/pull/1633) ([pmeijer](https://github.com/pmeijer))
+- Add link to meta-concepts videos from the MetaEditor [\#1631](https://github.com/webgme/webgme/pull/1631) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1629 GUIDs and IDs in property editor displayed in monospace font [\#1630](https://github.com/webgme/webgme/pull/1630) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Fixes issue with updates in inheritance tree [\#1628](https://github.com/webgme/webgme/pull/1628) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.30.0](https://github.com/webgme/webgme/tree/v2.30.0) (2018-08-27)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.29.0...v2.30.0)
 
