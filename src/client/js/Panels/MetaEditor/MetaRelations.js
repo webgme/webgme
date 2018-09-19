@@ -117,8 +117,8 @@ define(['js/Constants',
             btnSize);
 
         path.attr({
-            'arrow-start': pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
-            'arrow-end': pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
+            // 'arrow-start': pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
+            // 'arrow-end': pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
             'stroke': pathParams[DiagramDesignerWidgetConstants.LINE_COLOR],
             'stroke-width': pathParams[DiagramDesignerWidgetConstants.LINE_WIDTH],
             'stroke-dasharray': pathParams[DiagramDesignerWidgetConstants.LINE_PATTERN]

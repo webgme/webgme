@@ -512,8 +512,8 @@ define([
         }
 
         path.attr({
-            'arrow-start': startArrow,
-            'arrow-end': endArrow,
+            // 'arrow-start': startArrow,
+            // 'arrow-end': endArrow,
             stroke: color,
             'stroke-width': width,
             'stroke-dasharray': pattern
