@@ -26,11 +26,6 @@
 .popover {
     width: auto;
     max-width: 500px;
-    khtml-user-select: all;
-    -moz-user-select: all;
-    -webkit-user-select: all;
-    -o-user-select: all;
-    user-select: all;
 }
 
 .popover .popover-content.narrow {
@@ -47,12 +42,6 @@
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
-
-    -moz-user-select: -moz-all;
-    -webkit-user-select: all;
-    -o-user-select: all;
-    user-select: all;
-    -ms-user-select: element;
 }
 
 .modal-content .row {
