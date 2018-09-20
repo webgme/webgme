@@ -1,171 +1,129 @@
 .projects-dialog .modal-content.in-background {
-  opacity: 0;
-}
-.projects-dialog .modal-content.in-background * {
-  opacity: 0;
-}
+  opacity: 0; }
+  .projects-dialog .modal-content.in-background * {
+    opacity: 0; }
+.projects-dialog .modal-content .modal-header .help-text {
+  padding-left: 10px;
+  opacity: 0.6; }
 .projects-dialog .modal-content .modal-header .header-icon {
   height: 28px;
   width: 28px;
   margin-right: 1ex;
   display: inline-block;
   vertical-align: middle;
-  background-size: 28px 28px;
-}
+  background-size: 28px 28px; }
 .projects-dialog .modal-content .modal-header span {
   font-size: 28px;
-  vertical-align: middle;
-}
+  vertical-align: middle; }
 .projects-dialog .modal-content .pre-body {
-  padding: 15px 15px 0 15px;
-}
-.projects-dialog .modal-content .pre-body .tabContainer ul.nav.nav-tabs {
-  margin-bottom: 0;
-}
-.projects-dialog .modal-content .pre-body .tabContainer ul.nav.nav-tabs li {
-  width: 86px;
-  text-align: center;
-}
+  padding: 15px 15px 0 15px; }
+  .projects-dialog .modal-content .pre-body .tabContainer ul.nav.nav-tabs {
+    margin-bottom: 0; }
+    .projects-dialog .modal-content .pre-body .tabContainer ul.nav.nav-tabs li {
+      width: 86px;
+      text-align: center; }
 .projects-dialog .modal-content .modal-body {
-  min-height: 300px;
-}
-.projects-dialog .modal-content .modal-body ul.nav-pills li a span.ro {
-  margin-left: 5px;
-  color: #999999;
-  font-size: 9px;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects .info-hidden {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects.no-children tr.with-children {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects.no-children tr.with-no-children {
-  display: inherit;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects.no-children tr.with-no-children th {
-  border-bottom: white;
-  border-top: white;
-  font-style: italic;
-  padding-left: 20px;
-  cursor: default;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th {
-  text-align: left;
-  cursor: pointer;
-  border-bottom-width: 1px;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th .btn-info-toggle {
-  color: grey;
-  padding-right: 12px;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th.reverse-order i.sorted.rev-order {
-  display: inline-block;
-  visibility: visible;
-  font-size: 90%;
-  padding-left: 1px;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th.reverse-order i.sorted.in-order {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th.in-order i.sorted.in-order {
-  display: inline-block;
-  visibility: visible;
-  font-size: 90%;
-  padding-left: 1px;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th.in-order i.sorted.rev-order {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th i.sorted {
-  visibility: hidden;
-  display: inline-block;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th i.sorted.rev-order {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead th.title-icons {
-  text-align: right;
-  padding: 0;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects thead tr.with-no-children {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row:hover td {
-  background-color: #f5f5f5;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.active td {
-  background-color: #a5afbe;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.active:hover td {
-  background-color: #a5afbe !important;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td {
-  opacity: 1;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td.name span.name-read-only {
-  display: inline-block;
-  color: grey;
-  padding-left: 0.5ex;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.filtered-out {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td {
-  text-align: left;
-  border-top: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name {
-  color: #3160ab;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.open-link {
-  cursor: pointer;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.open-link:hover {
-  text-decoration: underline;
-  color: #ff7700;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.name-read-only {
-  display: none;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons {
-  text-align: right;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project {
-  cursor: pointer;
-  color: darkred;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project:hover {
-  color: #b30404;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.modified {
-  font-style: italic;
-  color: grey;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.viewed {
-  font-style: italic;
-  color: grey;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.created {
-  font-style: italic;
-  color: grey;
-}
-.projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td .description {
-  border: none;
-  background-color: transparent;
-  width: 90%;
-}
+  min-height: 300px; }
+  .projects-dialog .modal-content .modal-body ul.nav-pills li a span.ro {
+    margin-left: 5px;
+    color: #999999;
+    font-size: 9px; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects .info-hidden {
+    display: none; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects.no-children tr.with-children {
+    display: none; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects.no-children tr.with-no-children {
+    display: inherit; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects.no-children tr.with-no-children th {
+      border-bottom: white;
+      border-top: white;
+      font-style: italic;
+      padding-left: 20px;
+      cursor: default; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects thead th {
+    text-align: left;
+    cursor: pointer;
+    border-bottom-width: 1px; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th .btn-info-toggle {
+      color: grey;
+      padding-right: 12px; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th.reverse-order i.sorted.rev-order {
+      display: inline-block;
+      visibility: visible;
+      font-size: 90%;
+      padding-left: 1px; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th.reverse-order i.sorted.in-order {
+      display: none; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th.in-order i.sorted.in-order {
+      display: inline-block;
+      visibility: visible;
+      font-size: 90%;
+      padding-left: 1px; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th.in-order i.sorted.rev-order {
+      display: none; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th i.sorted {
+      visibility: hidden;
+      display: inline-block; }
+      .projects-dialog .modal-content .modal-body table.table.table-projects thead th i.sorted.rev-order {
+        display: none; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects thead th.title-icons {
+      text-align: right;
+      padding: 0; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects thead tr.with-no-children {
+    display: none; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row:hover td {
+    background-color: #f5f5f5; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.active td {
+    background-color: #a5afbe; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.active:hover td {
+    background-color: #a5afbe !important; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td {
+    opacity: 1; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.read-only td.name span.name-read-only {
+      display: inline-block;
+      color: grey;
+      padding-left: 0.5ex; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row.filtered-out {
+    display: none; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td {
+    text-align: left;
+    border-top: none; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name {
+      color: #3160ab; }
+      .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.open-link {
+        cursor: pointer; }
+        .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.open-link:hover {
+          text-decoration: underline;
+          color: #ff7700; }
+      .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.name span.name-read-only {
+        display: none; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons {
+      text-align: right; }
+      .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project {
+        cursor: pointer;
+        color: darkred; }
+        .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.icons i.delete-project:hover {
+          color: #b30404; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.modified {
+      font-style: italic;
+      color: grey; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.viewed {
+      font-style: italic;
+      color: grey; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.created {
+      font-style: italic;
+      color: grey; }
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td .description {
+      border: none;
+      background-color: transparent;
+      width: 90%; }
 .projects-dialog .modal-content .modal-footer button.corner-button {
-  margin-top: 0.5ex;
-}
+  margin-top: 0.5ex; }
 .projects-dialog .modal-content .modal-footer ul.dropdown-menu {
   min-width: 0;
-  text-align: left;
-}
-.projects-dialog .modal-content .modal-footer ul.dropdown-menu a {
-  cursor: pointer;
-}
+  text-align: left; }
+  .projects-dialog .modal-content .modal-footer ul.dropdown-menu a {
+    cursor: pointer; }
 
 .txt-project-name {
-  width: 50%;
-}
+  width: 50%; }

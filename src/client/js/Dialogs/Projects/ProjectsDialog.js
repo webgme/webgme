@@ -57,6 +57,7 @@ define([
         this._dialog.modal('show');
 
         this._dialog.on('hidden.bs.modal', function () {
+            self._dialog.off('hide.bs.modal');
             self._tableBody.off('dblclick');
             self._tableBody.off('click');
             self._tableHead.off('click');
@@ -105,6 +106,7 @@ define([
             self._logger.debug('openProject requested, already opening?', self._openingProject);
             if (self._projectList[projectId].rights.read === true && self._openingProject === false) {
                 self._openingProject = true;
+                self._dialog.off('hide.bs.modal');
                 self._dialog.modal('hide');
                 self._client.selectProject(projectId, null, function (err) {
                     self._openingProject = false;
@@ -122,16 +124,29 @@ define([
                 d;
 
             if (val !== '' && self._projectIds.indexOf(val) === -1) {
-                self._dialog.modal('hide');
+                self._dialog.hide();
 
                 d = new CreateProjectDialog(self._client, val, self._createType,
                     self._logger.fork('CreateProjectDialog'));
 
                 d.show(function (seedType, seedName, seedBranchName, seedCommitHash, blobHash) {
                     if (seedType && seedName) {
+                        self._dialog.off('hide.bs.modal');
+                        self._dialog.modal('hide');
                         self._createProject(val, seedType, seedName, seedBranchName, seedCommitHash, blobHash);
                     } else {
                         self._logger.debug('Closed create dialog with arguments', seedType, seedName);
+                        if (self._needProject) {
+                            self._createCancelled();
+                        } else {
+                            self._dialog.modal('hide');
+                        }
+                    }
+                }, function () {
+                    if (self._needProject) {
+                        self._createCancelled();
+                    } else {
+                        self._dialog.modal('hide');
                     }
                 });
             }
@@ -196,6 +211,28 @@ define([
         this._dialog = $(projectsDialogTemplate);
 
         this._userId = WebGMEGlobal.userInfo._id;
+
+        // The user should not leave the dialog if no active project is there
+        if (!this._client.getActiveProjectId()) {
+
+            this._needProject = true;
+            this._dialog.modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+
+            // this._dialog.find("#projectsDialCloseBtn").hide();
+            this._dialog.find("#projectsDialCloseBtn").prop("disabled", true);
+            // this._dialog.find("#projectDialXBtn").prop( "disabled", true );
+            this._dialog.find("#projectDialXBtn").hide();
+
+            this._dialog.on('hide.bs.modal', function (event) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                event.stopPropagation();
+            });
+        }
+
         //get controls
         this._modalContent = this._dialog.find('.modal-content').first();
         this._el = this._dialog.find('.modal-body').first();
@@ -345,12 +382,17 @@ define([
             });
         }
 
-        this._btnNewProjectCancel.on('click', function (event) {
+        this._createCancelled = function () {
+            self._dialog.show();
             self._panelButtons.show();
             self._panelCreateNew.hide();
             self._btnNewProjectCreate.show();
             self._creatingNew = false;
             self._updateFilter();
+        };
+
+        this._btnNewProjectCancel.on('click', function (event) {
+            self._createCancelled();
 
             event.stopPropagation();
             event.preventDefault();
