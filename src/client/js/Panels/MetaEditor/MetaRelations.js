@@ -5,9 +5,11 @@
  */
 
 define(['js/Constants',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'js/Utils/SvgManager'
 ], function (CONSTANTS,
-             DiagramDesignerWidgetConstants) {
+             DiagramDesignerWidgetConstants,
+             SvgManager) {
 
     'use strict';
 
@@ -60,7 +62,8 @@ define(['js/Constants',
                 params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
                 params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = MIXIN_TYPE_LINE_END;
                 params[DiagramDesignerWidgetConstants.LINE_COLOR] = '#FF0000';
-                params[DiagramDesignerWidgetConstants.LINE_PATTERN] = DiagramDesignerWidgetConstants.LINE_PATTERNS.LONGDASH;
+                params[DiagramDesignerWidgetConstants.LINE_PATTERN] =
+                    DiagramDesignerWidgetConstants.LINE_PATTERNS.LONGDASH;
                 break;
             case metaRelations.SET:
                 params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = SET_TYPE_LINE_START;
@@ -117,14 +120,14 @@ define(['js/Constants',
             btnSize);
 
         path.attr({
-            // 'arrow-start': pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
-            // 'arrow-end': pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
-            'stroke': pathParams[DiagramDesignerWidgetConstants.LINE_COLOR],
+            'arrow-start': pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
+            'arrow-end': pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
+            stroke: pathParams[DiagramDesignerWidgetConstants.LINE_COLOR],
             'stroke-width': pathParams[DiagramDesignerWidgetConstants.LINE_WIDTH],
             'stroke-dasharray': pathParams[DiagramDesignerWidgetConstants.LINE_PATTERN]
         });
 
-        return el;
+        return SvgManager.sanitizeSvgForEdge(el);
     }
 
     return {
