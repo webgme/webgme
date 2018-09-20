@@ -261,7 +261,7 @@ define(['js/logger',
         this._el.append(this._cMessageStyle);
 
         /*table layout*/
-        this._table = $('<table/>', {class: 'table table-hover user-select-on commit-list'});
+        this._table = $('<table/>', {class: 'table table-hover commit-list'});
         this._tHead = $('<thead/>');
         this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th>' +
             '<th>Message</th><th>User</th><th>Time</th><th class="commit-badge-header">Badges</th></tr>'));
