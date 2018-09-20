@@ -49,13 +49,12 @@ define([
 
     SortableWidget.prototype.addSortable = function (sortable) {
         var self = this;
-        //self.__sortable.append(`<li class="alert alert-info ui-sortable-handle" style="margin: 0 4px 4px 4px; padding: 4px;" title="${sortable}">${sortable}</li>`);
-        self.__sortable.append('<li>', {
+        self.__sortable.append($('<li>', {
             class: "alert alert-info ui-sortable-handle",
             style: "margin: 0 4px 4px 4px; padding: 4px;",
             title: sortable,
             text: sortable
-        });
+        }));
     };
 
     SortableWidget.prototype.getResult = function () {
