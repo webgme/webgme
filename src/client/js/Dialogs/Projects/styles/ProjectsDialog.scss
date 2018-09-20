@@ -7,18 +7,22 @@
       }
     }
     .modal-header {
-        .header-icon {
-          height: 28px;
-          width: 28px;
-          margin-right: 1ex;
-          display: inline-block;
-          vertical-align: middle;
-          background-size: 28px 28px;
-        }
-        span {
-          font-size: 28px;
-          vertical-align: middle;
-        }
+      .help-text {
+        padding-left: 10px;
+        opacity: 0.6;
+      }
+      .header-icon {
+        height: 28px;
+        width: 28px;
+        margin-right: 1ex;
+        display: inline-block;
+        vertical-align: middle;
+        background-size: 28px 28px;
+      }
+      span {
+        font-size: 28px;
+        vertical-align: middle;
+      }
     }
     .pre-body {
       padding: 15px 15px 0 15px;

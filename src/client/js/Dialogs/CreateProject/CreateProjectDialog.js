@@ -47,10 +47,12 @@ define(['js/Loader/LoaderCircles',
         this._logger.debug('Create form seed ctor');
     };
 
-    CreateProjectDialog.prototype.show = function (fnCallback) {
+    CreateProjectDialog.prototype.show = function (fnCallback, fnEnded) {
         var self = this;
 
         this._fnCallback = fnCallback;
+        this._fnEnded = fnEnded;
+        this._finished = false;
 
         this._initDialog();
 
@@ -63,6 +65,9 @@ define(['js/Loader/LoaderCircles',
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
+            if (!self._finished && self._fnEnded) {
+                self._fnEnded();
+            }
         });
 
         this._dialog.modal('show');
@@ -168,6 +173,7 @@ define(['js/Loader/LoaderCircles',
             event.preventDefault();
             event.stopPropagation();
 
+            self._finished = true;
             self._dialog.modal('hide');
 
             if (self._fnCallback) {
@@ -191,6 +197,7 @@ define(['js/Loader/LoaderCircles',
         this._btnCreateBlob.on('click', function (event) {
             event.preventDefault();
             event.stopPropagation();
+            self._finished = true;
             self._dialog.modal('hide');
             if (self._fnCallback && self.assetWidget.propertyValue) {
                 self._fnCallback(self._blobIsPackage ? 'package' : 'blob', self.assetWidget.propertyValue, null, null);
@@ -227,6 +234,7 @@ define(['js/Loader/LoaderCircles',
             event.preventDefault();
             event.stopPropagation();
             self._logger.debug('Duplicating with value', self._selectDuplicate.val());
+            self._finished = true;
             self._dialog.modal('hide');
             if (self._fnCallback) {
                 self._fnCallback('duplicate', self._selectDuplicate.val(), null, null);
@@ -270,7 +278,7 @@ define(['js/Loader/LoaderCircles',
                     branchId = Object.keys(projectList[i].branches)[0];
                     self._optGroupDb.append($('<option>', {
                             text: displayedProjectName + ' (' + branchId + ' ' +
-                            projectList[i].branches[branchId].slice(0, 8) + ')',
+                                projectList[i].branches[branchId].slice(0, 8) + ')',
                             value: 'db:' + projectId + projectList[i].branches[branchId]
                         }
                     ));
@@ -289,9 +297,9 @@ define(['js/Loader/LoaderCircles',
                         if (projectList[i].branches.hasOwnProperty(branchId)) {
                             projectGroup.append($('<option>', {
                                     text: displayedProjectName + ' (' + branchId + ' ' +
-                                    projectList[i].branches[branchId].slice(0, 8) + ')',
+                                        projectList[i].branches[branchId].slice(0, 8) + ')',
                                     value: 'db:' + projectId +
-                                    projectList[i].branches[branchId]
+                                        projectList[i].branches[branchId]
                                 }
                             ));
                         }

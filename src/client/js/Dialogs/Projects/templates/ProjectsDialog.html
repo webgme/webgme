@@ -2,8 +2,9 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">×</button>
+                <button id="projectDialXBtn" type="button" class="close" data-dismiss="modal">×</button>
                 <i class="header-icon gme-icon"></i><span>Projects</span>
+                <div class="help-text">To start modeling, please select an existing project or create a new one. For more on the topic check out this <a target="_blank" href="https://youtu.be/xR0rmcVFcgY">video</a>.</div>
             </div>
             <div class="pre-body">
                 <div class="tabContainer"></div>
@@ -50,7 +51,7 @@
                     <button class="btn btn-default pull-left btn-refresh" title="Reload project list..."
                             style="position: relative;"><i class="glyphicon glyphicon-refresh"></i></button>
                     <button class="btn btn-default pull-left btn-create-new">Create new...</button>
-                    <button class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="projectsDialCloseBtn" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
                 <div class="panel-create-new control-group">
                     <div class="input-group">
