@@ -21,7 +21,7 @@ define([
         this._readOnly = false;
         this.__sortable = SORTABLE_BASE.clone();
 
-        this.valueItems.map((sortable) => {
+        this.valueItems.map(function (sortable) {
             self.addSortable(sortable);
         });
 
@@ -37,7 +37,7 @@ define([
     SortableWidget.prototype = Object.create(WidgetBase.prototype);
     SortableWidget.prototype.constructor = SortableWidget;
 
-    SortableWidget.prototype.setReadOnly = function(isReadOnly) {
+    SortableWidget.prototype.setReadOnly = function (isReadOnly) {
         WidgetBase.prototype.setReadOnly.call(this, isReadOnly);
 
         if (this._isReadOnly === true) {
@@ -47,9 +47,14 @@ define([
         }
     };
 
-    SortableWidget.prototype.addSortable = function(sortable) {
+    SortableWidget.prototype.addSortable = function (sortable) {
         var self = this;
-        self.__sortable.append(`<li class="alert alert-info ui-sortable-handle" style="margin: 0 4px 4px 4px; padding: 4px;" title="${sortable}">${sortable}</li>`);
+        self.__sortable.append($('<li>', {
+            class: "alert alert-info ui-sortable-handle",
+            style: "margin: 0 4px 4px 4px; padding: 4px;",
+            title: sortable,
+            text: sortable
+        }));
     };
 
     SortableWidget.prototype.getResult = function () {

@@ -203,11 +203,11 @@ define([
 
         containerEl = pluginSectionEl.find('.form-horizontal');
 
-        const genConfig = (pluginConfigEntry) => {
+        function genConfig(pluginConfigEntry) {
             // Make sure not modify the global metadata.
             pluginConfigEntry = JSON.parse(JSON.stringify(pluginConfigEntry));
             containerEl.append(self._generateControl(id, pluginConfigEntry, prevConfig));
-        };
+        }
 
         configStructure.forEach(genConfig);
     };
@@ -218,7 +218,6 @@ define([
             el,
             descEl;
 
-        console.log(pluginConfigEntry);
         if (pluginConfigEntry.valueType === 'header') {
             // this is a nesting structure which should be <details>
             el = HEADER_BASE.clone();
@@ -240,18 +239,19 @@ define([
                 location = widgetLocation[pluginConfigEntry.name];
             }
 
-            location.getValue = function() {
-                return Object.values(this).reduce((o, v) => {
+            location.getValue = function () {
+                return Object.values(this).reduce(function (o, v) {
                     if (typeof v !== 'function') {
                         o[v.propertyName] = v.getValue();
                     }
+
                     return o;
                 }, {});
             };
 
             if (pluginConfigEntry.configStructure && pluginConfigEntry.configStructure.length) {
                 el.find('.controls').append(
-                    pluginConfigEntry.configStructure.map((c) => {
+                    pluginConfigEntry.configStructure.map(function (c) {
                         return self._generateControl(id, c, prevConfig, location);
                     })
                 );
