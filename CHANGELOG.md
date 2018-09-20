@@ -1,5 +1,18 @@
 # Change Log
 
+## [v2.31.0](https://github.com/webgme/webgme/tree/v2.31.0) (2018-09-20)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.30.1...v2.31.0)
+
+**Implemented enhancements:**
+
+- Allow cancel/close in projects dialog only when there is an open project. [\#1640](https://github.com/webgme/webgme/pull/1640) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Fix Firefox dialog text selection issue. [\#1639](https://github.com/webgme/webgme/pull/1639) ([kecso](https://github.com/kecso))
+- Remove ES6 language constructs from the generic ui s.t. IE can load [\#1638](https://github.com/webgme/webgme/pull/1638) ([pmeijer](https://github.com/pmeijer))
+- Fixes Microsoft edge issues [\#1637](https://github.com/webgme/webgme/pull/1637) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.30.1](https://github.com/webgme/webgme/tree/v2.30.1) (2018-09-13)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.30.0...v2.30.1)
 
