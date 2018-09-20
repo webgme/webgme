@@ -221,6 +221,24 @@ define([
         return null;
     }
 
+    function sanitizeSvgForEdge($el) {
+        // FIX: For edge browser - which completely crashes if the xmlns:xlink doesn't exit
+        // FIX: when xlink:href is defined.
+        var tmpEl = $('<div>'),
+            sanitizedEl;
+
+        tmpEl.append($el);
+        sanitizedEl = $(tmpEl.html());
+        sanitizedEl.find('use').each(function () {
+            var useEl = $(this);
+            if (useEl.attr('xlink:href') && !useEl.attr('xmlns:xlink')) {
+                useEl.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
+            }
+        });
+
+        return sanitizedEl;
+    }
+
     return {
         getSvgUri: getSvgUri,
         getSvgContent: getSvgContent,
@@ -229,6 +247,7 @@ define([
         //
         getRawSvgContent: getRawSvgContent,
         isSvg: isSvg,
-        testSvgTemplate: testSvgTemplate
+        testSvgTemplate: testSvgTemplate,
+        sanitizeSvgForEdge: sanitizeSvgForEdge,
     };
 });

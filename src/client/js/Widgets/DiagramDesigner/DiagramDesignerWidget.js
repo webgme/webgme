@@ -37,6 +37,7 @@ define([
     './DiagramDesignerWidget.Tabs',
     './DiagramDesignerWidget.Print',
     'js/Utils/ComponentSettings',
+    'js/Utils/SvgManager',
     'css!./styles/DiagramDesignerWidget.css'
 ], function (Logger,
              CONSTANTS,
@@ -66,7 +67,8 @@ define([
              DiagramDesignerWidgetMouse,
              DiagramDesignerWidgetTabs,
              DiagramDesignerWidgetPrint,
-             ComponentSettings) {
+             ComponentSettings,
+             SvgManager) {
 
     'use strict';
 
@@ -418,7 +420,7 @@ define([
         this.$el.addClass(WIDGET_CLASS);
 
         this.$el.css({
-            'padding': this._tabsEnabled ? '30px 2px 4px 4px' : '4px 2px 4px 4px'
+            padding: this._tabsEnabled ? '30px 2px 4px 4px' : '4px 2px 4px 4px'
         });
 
         this._attachScrollHandler(this.$el);
@@ -443,8 +445,8 @@ define([
         //initialize Raphael paper from children container and set it to be full size of the HTML container
         this.skinParts.SVGPaper = Raphael(this.skinParts.$itemsContainer[0]);
         this.skinParts.SVGPaper.canvas.style.pointerEvents = 'visiblePainted';
-        this.skinParts.SVGPaper.canvas.className.baseVal =
-            DiagramDesignerWidgetConstants.CONNECTION_CONTAINER_SVG_CLASS;
+        this.skinParts.SVGPaper.canvas.className.baseVal = DiagramDesignerWidgetConstants.
+            CONNECTION_CONTAINER_SVG_CLASS;
 
         //finally resize the whole content according to available space
         this._containerSize.w = this.$el.width();
@@ -519,7 +521,7 @@ define([
             'stroke-dasharray': pattern
         });
 
-        return el;
+        return SvgManager.sanitizeSvgForEdge(el);
     };
 
     DiagramDesignerWidget.prototype._attachScrollHandler = function (el) {
