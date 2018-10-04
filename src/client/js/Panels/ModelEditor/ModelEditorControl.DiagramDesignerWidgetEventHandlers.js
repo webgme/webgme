@@ -179,27 +179,40 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var id,
+        var ids = Object.keys(repositionDesc),
             modelId = this.currentNodeInfo.id,
+            id,
+            i,
             newPos;
 
-        this._client.startTransaction();
-        for (id in repositionDesc) {
-            if (repositionDesc.hasOwnProperty(id)) {
-                newPos = {
-                    x: repositionDesc[id].x,
-                    y: repositionDesc[id].y
-                };
+        if (ids.length === 0) {
+            return;
+        }
 
-                if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                    this._client.setRegistry(this._ComponentID2GMEID[id], REGISTRY_KEYS.POSITION, newPos);
+        this._client.startTransaction();
+        for (i = 0; i < ids.length; i += 1) {
+            id = ids[i];
+            newPos = {
+                x: repositionDesc[id].x,
+                y: repositionDesc[id].y
+            };
+
+            if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
+                if (repositionDesc[id].registry) {
+                    // This is for the line points..
+                    this._client.setRegistry(id,
+                        repositionDesc[id].registry,
+                        repositionDesc[id].value);
                 } else {
-                    this._client.addMember(modelId, this._ComponentID2GMEID[id], this._selectedAspect);
-                    this._client.setMemberRegistry(modelId, this._ComponentID2GMEID[id], this._selectedAspect,
-                        REGISTRY_KEYS.POSITION, newPos);
+                    this._client.setRegistry(this._ComponentID2GMEID[id] || id, REGISTRY_KEYS.POSITION, newPos);
                 }
+            } else {
+                this._client.addMember(modelId, this._ComponentID2GMEID[id] || id, this._selectedAspect);
+                this._client.setMemberRegistry(modelId, this._ComponentID2GMEID[id] || id, this._selectedAspect,
+                    REGISTRY_KEYS.POSITION, newPos);
             }
         }
+
         this._client.completeTransaction();
     };
 
@@ -628,7 +641,7 @@ define(['js/logger',
                 //if so, it's not a real move, it is a reposition
                 if (dragParams && dragParams.parentID === parentID) {
                     //it is a reposition
-                    this._repositionItems(items, dragParams.positions, position);
+                    this._onDesignerItemsMove(this._getRepositions(items, dragParams.positions, position));
                 } else {
                     //it is a real hierarchical move
 
@@ -704,85 +717,144 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions,
-                                                                                                dropPosition) {
-        var i = items.length,
-            oldPos,
-            componentID,
-            gmeID,
-            selectedIDs = [],
-            len,
-            self = this;
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getRepositions = function (items, dragPositions,
+                                                                                               dropPosition) {
+        var self = this,
+            result = {}, // {<gmeId>: {x: <int>, y <int>}
+            connIds = [];
 
-        if (dragPositions && !_.isEmpty(dragPositions)) {
-            //update UI
-            this.designerCanvas.beginUpdate();
+        items.forEach(function (id) {
+            var relPos = dragPositions[id],
+                newPos = {x: dropPosition.x, y: dropPosition.y};
 
-            while (i--) {
-                gmeID = items[i];
-                oldPos = dragPositions[gmeID];
-                if (!oldPos) {
-                    oldPos = {x: 0, y: 0};
-                }
+            if (relPos) {
+                newPos.x += relPos.x;
+                newPos.y += relPos.y;
+                newPos.x = newPos.x > 0 ? Math.round(newPos.x) : 0;
+                newPos.y = newPos.y > 0 ? Math.round(newPos.y) : 0;
+            } else if (self._GMEConnections.indexOf(id) > -1 ) {
+                connIds.push(id);
+                return;
+            }
 
-                if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
-                    len = this._GMEID2ComponentID[gmeID].length;
-                    while (len--) {
-                        componentID = this._GMEID2ComponentID[gmeID][len];
-                        selectedIDs.push(componentID);
-                        this.designerCanvas.updateDesignerItem(componentID,
-                            {position: {x: dropPosition.x + oldPos.x, y: dropPosition.y + oldPos.y}});
+            result[id] = newPos;
+        });
+
+        connIds.forEach(function (id) {
+            var nodeObj = self._client.getNode(id),
+                linePoints = nodeObj && nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
+
+            if (linePoints instanceof Array && linePoints.length > 0) {
+                // There are linepoints defined - if the src and dst is part of the move
+                // compute the "delta-move" (for any of them) and apply it to those points.
+                var srcNode = nodeObj.getNode(nodeObj.getPointerId('src')),
+                    dstNode = nodeObj.getNode(nodeObj.getPointerId('dst'));
+
+                if (srcNode && result[srcNode.getId()] && dstNode && result[dstNode.getId()]) {
+                    var srcPos = srcNode.getRegistry('position'),
+                        dstPos = dstNode.getRegistry('position'),
+                        delta = {x: 0, y: 0};
+
+                    if (srcPos && dstPos) {
+                        delta.x = ( result[srcNode.getId()].x - srcPos.x + result[dstNode.getId()].x - dstPos.x ) / 2;
+                        delta.y = ( result[srcNode.getId()].y - srcPos.y + result[dstNode.getId()].y - dstPos.y ) / 2;
+
+                        console.log('delta[', delta.x, ',', delta.y, ']');
+
+                        linePoints.forEach(function (point) {
+                            point[0] += delta.x;
+                            point[1] += delta.y;
+
+                            point[0] = point[0] > 0 ? Math.round(point[0]) : 0;
+                            point[1] = point[1] > 0 ? Math.round(point[1]) : 0;
+                        });
+
+                        result[id] = {registry: REGISTRY_KEYS.LINE_CUSTOM_POINTS, value: linePoints};
                     }
                 }
             }
+        });
 
-            this.designerCanvas.endUpdate();
-            this.designerCanvas.select(selectedIDs);
+        return result;
 
-            //update object internals
-            setTimeout(function () {
-                self._saveReposition(items, dragPositions, dropPosition);
-            }, 10);
-        }
+        // pmeijer: No need to redraw explicitly, the client will emit the new positions..
+        // var i = items.length,
+        //     oldPos,
+        //     componentID,
+        //     gmeID,
+        //     selectedIDs = [],
+        //     len,
+        //     self = this;
+        //
+        // if (dragPositions && !_.isEmpty(dragPositions)) {
+        //     //update UI
+        //     this.designerCanvas.beginUpdate();
+        //
+        //     while (i--) {
+        //         gmeID = items[i];
+        //         oldPos = dragPositions[gmeID];
+        //         if (!oldPos) {
+        //             oldPos = {x: 0, y: 0};
+        //         }
+        //
+        //         if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
+        //             len = this._GMEID2ComponentID[gmeID].length;
+        //             while (len--) {
+        //                 componentID = this._GMEID2ComponentID[gmeID][len];
+        //                 selectedIDs.push(componentID);
+        //                 this.designerCanvas.updateDesignerItem(componentID,
+        //                     {position: {x: dropPosition.x + oldPos.x, y: dropPosition.y + oldPos.y}});
+        //             }
+        //         }
+        //     }
+        //
+        //     this.designerCanvas.endUpdate();
+        //     this.designerCanvas.select(selectedIDs);
+        //
+        //     //update object internals
+        //     setTimeout(function () {
+        //         self._saveReposition(items, dragPositions, dropPosition);
+        //     }, 10);
+        // }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions,
-                                                                                               dropPosition) {
-        var modelID = this.currentNodeInfo.id,
-            selectedAspect = this._selectedAspect,
-            client = this._client,
-            gmeID,
-            oldPos,
-            x,
-            y,
-            i;
-
-
-        client.startTransaction();
-        i = items.length;
-        while (i--) {
-            gmeID = items[i];
-            oldPos = dragPositions[gmeID];
-            if (!oldPos) {
-                oldPos = {x: 0, y: 0};
-            }
-            x = Math.round(dropPosition.x + oldPos.x);
-            y = Math.round(dropPosition.y + oldPos.y);
-
-            x = x > 0 ? x : 0;
-            y = y > 0 ? y : 0;
-
-            //aspect specific coordinate
-            if (selectedAspect === CONSTANTS.ASPECT_ALL) {
-                client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {x: x, y: y});
-            } else {
-                client.addMember(modelID, gmeID, selectedAspect);
-                client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {x: x, y: y});
-            }
-        }
-
-        client.completeTransaction();
-    };
+    // ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions,
+    //                                                                                            dropPosition) {
+    //     var modelID = this.currentNodeInfo.id,
+    //         selectedAspect = this._selectedAspect,
+    //         client = this._client,
+    //         gmeID,
+    //         oldPos,
+    //         x,
+    //         y,
+    //         i;
+    //
+    //
+    //     client.startTransaction();
+    //     i = items.length;
+    //     while (i--) {
+    //         gmeID = items[i];
+    //         oldPos = dragPositions[gmeID];
+    //         if (!oldPos) {
+    //             oldPos = {x: 0, y: 0};
+    //         }
+    //         x = Math.round(dropPosition.x + oldPos.x);
+    //         y = Math.round(dropPosition.y + oldPos.y);
+    //
+    //         x = x > 0 ? x : 0;
+    //         y = y > 0 ? y : 0;
+    //
+    //         //aspect specific coordinate
+    //         if (selectedAspect === CONSTANTS.ASPECT_ALL) {
+    //             client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {x: x, y: y});
+    //         } else {
+    //             client.addMember(modelID, gmeID, selectedAspect);
+    //             client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {x: x, y: y});
+    //         }
+    //     }
+    //
+    //     client.completeTransaction();
+    // };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
         var gmeIDs = [],
@@ -1451,9 +1523,7 @@ define(['js/logger',
         allModels = self.designerCanvas.itemIds.map(getItemData);
 
         result = this._alignMenu.getNewPositions(allModels, selectedModels, type);
-        if (Object.keys(result).length > 0) {
-            self._onDesignerItemsMove(result);
-        }
+        self._onDesignerItemsMove(result);
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
