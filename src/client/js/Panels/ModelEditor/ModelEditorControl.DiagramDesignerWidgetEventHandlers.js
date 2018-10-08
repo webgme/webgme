@@ -223,7 +223,8 @@ define(['js/logger',
         // This adds connection segments points that should be updated based on activeSelection.
         var self = this,
             connIds = WebGMEGlobal.State.getActiveSelection().filter(function (gmeId) {
-                return self._GMEConnections.indexOf(gmeId) > -1;
+                var nodeObj = self._client.getNode(gmeId);
+                return nodeObj && nodeObj.isConnection() && !posInfo[gmeId];
             });
 
         connIds.forEach(function (id) {
@@ -673,7 +674,8 @@ define(['js/logger',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._handleDropAction = function (dropAction, dragInfo,
                                                                                                  position) {
-        var dragEffect = dropAction.dragEffect,
+        var self = this,
+            dragEffect = dropAction.dragEffect,
             items = DragHelper.getDragItems(dragInfo),
             dragParams = DragHelper.getDragParams(dragInfo),
             parentID = this.currentNodeInfo.id,
@@ -690,49 +692,52 @@ define(['js/logger',
         this.logger.debug('dragInfo: ' + JSON.stringify(dragInfo));
         this.logger.debug('position: ' + JSON.stringify(position));
 
-        switch (dragEffect) {
-            case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                params = {parentId: parentID};
-                i = items.length;
+        function getParams() {
+            var result = {parentId: parentID};
+            i = items.length;
 
-                positionInfo = this._getNewPositionFromDrag(items, dragParams && dragParams.positions, position);
+            positionInfo = self._getNewPositionFromDrag(items, dragParams && dragParams.positions, position);
 
-                Object.keys(positionInfo).forEach(function (gmeId) {
-                    params[gmeId] = {};
-                    params[gmeId][REGISTRY_STRING] = {};
-                    if (positionInfo[gmeId][REGISTRY_STRING]) {
-                        Object.keys(positionInfo[gmeId][REGISTRY_STRING])
-                            .forEach(function (regKey) {
-                                params[gmeId][REGISTRY_STRING][regKey] =
-                                    positionInfo[gmeId][REGISTRY_STRING][regKey];
-                            });
-                    } else {
-                        params[gmeId][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = positionInfo[gmeId];
-                    }
-                });
+            Object.keys(positionInfo).forEach(function (gmeId) {
+                result[gmeId] = {};
+                result[gmeId][REGISTRY_STRING] = {};
+                if (positionInfo[gmeId][REGISTRY_STRING]) {
+                    Object.keys(positionInfo[gmeId][REGISTRY_STRING])
+                        .forEach(function (regKey) {
+                            result[gmeId][REGISTRY_STRING][regKey] =
+                                positionInfo[gmeId][REGISTRY_STRING][regKey];
+                        });
+                } else {
+                    result[gmeId][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = positionInfo[gmeId];
+                }
+            });
 
 
-                while (i--) {
-                    // Finally make sure we copy any selected conn where the src and dst weren't there
-                    // and add the position of these too..
-                    gmeID = items[i];
-                    oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
-                    if (!params[gmeID]) {
-                        params[gmeID] = {};
-                        params[gmeID][REGISTRY_STRING] = {};
-                    }
-
-                    if (!params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION]) {
-                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
-                            x: position.x + oldPos.x,
-                            y: position.y + oldPos.y
-                        };
-                    }
+            while (i--) {
+                // Finally make sure we copy any selected conn where the src and dst weren't there
+                // and add the position of these too..
+                gmeID = items[i];
+                oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
+                if (!result[gmeID]) {
+                    result[gmeID] = {};
+                    result[gmeID][REGISTRY_STRING] = {};
                 }
 
-                this._client.startTransaction();
+                if (!result[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION]) {
+                    result[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
+                        x: position.x + oldPos.x,
+                        y: position.y + oldPos.y
+                    };
+                }
+            }
+
+            return result;
+        }
+
+        switch (dragEffect) {
+            case DragHelper.DRAG_EFFECTS.DRAG_COPY:
+                params = getParams();
                 this._client.copyMoreNodes(params);
-                this._client.completeTransaction();
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                 //check to see if dragParams.parentID and this.parentID are the same
@@ -743,37 +748,12 @@ define(['js/logger',
                         this._getNewPositionFromDrag(items, dragParams && dragParams.positions, position));
                 } else {
                     //it is a real hierarchical move
-
-                    params = {parentId: parentID};
-                    i = items.length;
-                    while (i--) {
-                        gmeID = items[i];
-
-                        params[gmeID] = {};
-
-                        oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
-                        params[gmeID][REGISTRY_STRING] = {};
-                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
-                            x: position.x + oldPos.x,
-                            y: position.y + oldPos.y
-                        };
-                    }
-
+                    params = getParams();
                     this._client.moveMoreNodes(params);
                 }
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
-                params = {parentId: parentID};
-                i = items.length;
-                while (i--) {
-                    oldPos = dragParams && dragParams.positions[items[i]] || {x: 0, y: 0};
-                    params[items[i]] = {registry: {position: {x: position.x + oldPos.x, y: position.y + oldPos.y}}};
-                    //old position is not in drag-params
-                    if (!(dragParams && dragParams.positions[items[i]])) {
-                        position.x += POS_INC;
-                        position.y += POS_INC;
-                    }
-                }
+                params = getParams();
                 this._client.createChildren(params);
                 break;
 
@@ -830,9 +810,9 @@ define(['js/logger',
                 newPos.y += relPos.y;
                 newPos.x = newPos.x > 0 ? Math.round(newPos.x) : 0;
                 newPos.y = newPos.y > 0 ? Math.round(newPos.y) : 0;
-            }
 
-            result[id] = newPos;
+                result[id] = newPos;
+            }
         });
 
         this._addConnSegmentPoints(result);
