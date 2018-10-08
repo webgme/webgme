@@ -350,8 +350,9 @@ define(['js/logger'], function (Logger) {
             }
         }
 
-        //when no segment points are defined route with horizontal and vertical lines
-        if (segmentPoints.length === 0) {
+        // if (segmentPoints.length === 0) { when no segment points are defined route with horizontal and vertical lines
+        // # Not true anymore - still apply square routing when seg points are there.
+        if (true) {
             //no segment points
             if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
                 //self connection

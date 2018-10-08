@@ -750,6 +750,15 @@ define(['js/logger',
                 var srcNode = nodeObj.getNode(nodeObj.getPointerId('src')),
                     dstNode = nodeObj.getNode(nodeObj.getPointerId('dst'));
 
+                // Maybe src/dst are ports - check if their parents where selected..
+                if (srcNode && !result[srcNode.getId()]) {
+                    srcNode = nodeObj.getNode(srcNode.getParentId());
+                }
+
+                if (dstNode && !result[dstNode.getId()]) {
+                    dstNode = nodeObj.getNode(dstNode.getParentId());
+                }
+
                 if (srcNode && result[srcNode.getId()] && dstNode && result[dstNode.getId()]) {
                     var srcPos = srcNode.getRegistry('position'),
                         dstPos = dstNode.getRegistry('position'),
@@ -758,8 +767,6 @@ define(['js/logger',
                     if (srcPos && dstPos) {
                         delta.x = ( result[srcNode.getId()].x - srcPos.x + result[dstNode.getId()].x - dstPos.x ) / 2;
                         delta.y = ( result[srcNode.getId()].y - srcPos.y + result[dstNode.getId()].y - dstPos.y ) / 2;
-
-                        console.log('delta[', delta.x, ',', delta.y, ']');
 
                         linePoints.forEach(function (point) {
                             point[0] += delta.x;
