@@ -25,7 +25,7 @@ When you have followed the instructions below make sure that the command below w
 
 Windows
   Go `to nodejs.org <https://nodejs.org/>`_ and make sure to download and install the LTS! At the time of writing this that would be version v8.12.0.
-  Alternatively install `nvm (node version manager) https://github.com/coreybutler/nvm-windows`_ which enables you to have multiple version of node installed.
+  Alternatively install `nvm (node version manager) <https://github.com/coreybutler/nvm-windows>`_ which enables you to have multiple version of node installed.
 
 Linux based operating systems (and macOS)
   On linux based systems it is recommended to install node using nvm (node version manager). It allows you to have multiple versions installed.
