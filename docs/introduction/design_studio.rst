@@ -28,6 +28,8 @@ The output of the tools is then collected and sent back to the model editors (st
 .. figure:: DesignWorkFlow.png
     :align: center
     :scale: 80 %
+    :width: 1280 px
+    :height: 589 px
 
     Overview of a Design Studio
 
