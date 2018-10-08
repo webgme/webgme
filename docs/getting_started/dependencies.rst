@@ -24,8 +24,8 @@ When you have followed the instructions below make sure that the command below w
     node --version
 
 Windows
-  Simply click on the link above and make sure to install the LTS! At the time of writing this that would be version v8.12.0.
-  Alternatively install nvm (node version manager) which enables you to have multiple version of node installed.
+  Go `to nodejs.org <https://nodejs.org/>`_ and make sure to download and install the LTS! At the time of writing this that would be version v8.12.0.
+  Alternatively install `nvm (node version manager) https://github.com/coreybutler/nvm-windows`_ which enables you to have multiple version of node installed.
 
 Linux based operating systems (and macOS)
   On linux based systems it is recommended to install node using nvm (node version manager). It allows you to have multiple versions installed.
@@ -90,22 +90,22 @@ If not installed following the instruction at `git's webpage <https://git-scm.co
 
 Python
 -----------
-This is only needed if you intend on writing plugins using the python API available via `webgme-binding <https://pypi.org/project/webgme-bindings/>`_.
+This is only needed if you intend on writing plugins using the python API available via `webgme-bindings <https://pypi.org/project/webgme-bindings/>`_.
 
-As noted in the documentation for webgme-bindings, both v2.7.x and v3.x are supported, however we recommend install the latest
-python 3 version as it comes packaged with `pip <https://pip.pypa.io/en/stable/>`_ which will be needed in order to install `webgme-binding <https://pypi.org/project/webgme-bindings/>`_.
+Using webgme-bindings works with both v2.7.x and v3.x, however we recommend to install the latest
+python 3 version as it already comes packaged with `pip <https://pip.pypa.io/en/stable/>`_ which will be needed in order to install `webgme-bindings <https://pypi.org/project/webgme-bindings/>`_.
 
 Note that here we do not require any Virtual Environment setup for any anaconda. If you're familiar with any of those and
 would like to use such approach - it should work perfectly fine as long as the correct `python` is available in $PATH when you
-execute your python plugin.
+execute your plugin.
 
 
-
-For Windows and MacOS simply download and install the appropriate `latest release at python.org <https://www.python.org/downloads/release/python-370/>`_.
-
-For linux `these instructions can be used <https://docs.python-guide.org/starting/install3/linux/>`_. Note that
-the python (and pip) executable(s) will be available as `python3` and `pip3`, so for any commands referring to `python` and `pip` replace these accordingly.
-(In this case you need to update the generated plugin code as well, more about that later...)
+Windows and MacOS
+    For Windows and MacOS simply download and install the appropriate `latest release at python.org <https://www.python.org/downloads/release/python-370/>`_.
+Linux
+    For linux `these instructions can be used <https://docs.python-guide.org/starting/install3/linux/>`_. Note that
+    the `python` and `pip` executables will be available as `python3` and `pip3`, so for any commands referring to `python` and `pip` replace these accordingly.
+    (In this case you need to update the generated plugin code as well, more about that later...)
 
 
 When you've installed python and pip, make sure both of these commands prints out a version number.
