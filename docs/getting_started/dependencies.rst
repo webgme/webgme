@@ -13,18 +13,18 @@ to install some dependencies in addition to having access to a browser.
 * `Node.js <https://nodejs.org/>`_ (version >= 6, CI tests are currently performed on versions 6.x, 8.x and LTS is recommended).
 * `MongoDB <https://www.mongodb.com/>`_ (version >= 3.0).
 * `Git <https://git-scm.com>`_ (must be available in PATH).
-* (Optional) `Redis <https://redis.io/>`_ Note that this is only needed if you intend on running `multiple webgme nodes <https://github.com/webgme/webgme/wiki/Multiple-Nodes>`_.
+* `Python <https://www.python.org/>`_ (This is only needed if you intend to write plugins in python - both v2.7.x and v3.x are supported).
 
 Installing Node.js
 ---------------
-When you have followed the instructions below make sure that the command below works and prints v8.9.4 or similar.
+When you have followed the instructions below make sure that the command below works and prints v8.12.0 or similar.
 
 .. code-block:: bash
 
     node --version
 
 Windows
-  Simply click on the link above and make sure to install the LTS! At the time of writing this that would be version v6.11.4.
+  Simply click on the link above and make sure to install the LTS! At the time of writing this that would be version v8.12.0.
   Alternatively install nvm (node version manager) which enables you to have multiple version of node installed.
 
 Linux based operating systems (and macOS)
@@ -55,7 +55,7 @@ or
 
 .. code-block:: bash
 
-  nvm install v8.9.4
+  nvm install v8.12.0
 
 
 Installing MongoDB
@@ -88,6 +88,33 @@ For this tutorial you will need to have git installed. On linux/macOS this is ty
 If not installed following the instruction at `git's webpage <https://git-scm.com/downloads>`_.
 
 
-Redis
+Python
 -----------
-This is optional and we won't be needing it for the tutorial.
+This is only needed if you intend on writing plugins using the python API available via `webgme-binding <https://pypi.org/project/webgme-bindings/>`_.
+
+As noted in the documentation for webgme-bindings, both v2.7.x and v3.x are supported, however we recommend install the latest
+python 3 version as it comes packaged with `pip <https://pip.pypa.io/en/stable/>`_ which will be needed in order to install `webgme-binding <https://pypi.org/project/webgme-bindings/>`_.
+
+Note that here we do not require any Virtual Environment setup for any anaconda. If you're familiar with any of those and
+would like to use such approach - it should work perfectly fine as long as the correct `python` is available in $PATH when you
+execute your python plugin.
+
+
+
+For Windows and MacOS simply download and install the appropriate `latest release at python.org <https://www.python.org/downloads/release/python-370/>`_.
+
+For linux `these instructions can be used <https://docs.python-guide.org/starting/install3/linux/>`_. Note that
+the python (and pip) executable(s) will be available as `python3` and `pip3`, so for any commands referring to `python` and `pip` replace these accordingly.
+(In this case you need to update the generated plugin code as well, more about that later...)
+
+
+When you've installed python and pip, make sure both of these commands prints out a version number.
+
+.. code-block:: bash
+
+    python --version
+
+
+.. code-block:: bash
+
+    pip --version
