@@ -31,13 +31,19 @@ We will start with the *ModelicaCodeGenerator* here and continue with the *Simul
 Generating a Plugin Template
 -----------------------
 To get a quick start we use the webgme-cli tool in order to create a new plugin. Navigate to the root of the repository
-created at the beginning of this tutorial and invoke the command below.
+created at the beginning of this tutorial and invoke either:
 
 .. code-block:: bash
 
     webgme new plugin ModelicaCodeGenerator
 
-This should generate a range of new files..
+or for a Python plugin:
+
+.. code-block:: bash
+
+    webgme new plugin ModelicaCodeGenerator --language Python
+
+This should generate a range of new files. In both cases these files will be added:
 
 :code:`src/plugins/ModelicaCodeGenerator/metadata.json`
     This json-structure contains information about the plugin and is used by the GUI and plugin-framework. Details
@@ -47,7 +53,8 @@ This should generate a range of new files..
     This is the code of the plugin itself. The very first lines show the dependencies needed for this code
     to run and is using `requirejs <http://requirejs.org/>`_ hence the syntax
     :code:`define(['path'], function (Module){ ... return ModelicaCodeGenerator;});`. The last return statement is the
-    module that this file defines when required by another module (the plugin framework must be able to load our plugin).
+    module that this file defines when required by another module for instance the webgme framework must be able to load our plugin.
+    (If you generated a Python plugin - this will still be entry point for the webgme framework.)
 
 :code:`test/plugins/ModelicaCodeGenerator/ModelicaCodeGenerator.spec.js`
     This is the outline of a `mocha <https://mochajs.org/>`_ test suite for the plugin and shows how to build up a test
@@ -56,6 +63,32 @@ This should generate a range of new files..
 You might also have noticed that the :code:`config/config.webgme.js` was modified... In order for the webgme plugin framework
 to find our plugin the path to it is added to the configuration file. Note that both :code:`config.default.js` and
 :code:`config.test.js` load and reuse the added configuration parameters from this file.
+
+**Python Plugin**
+If you generated a python plugin, in addition to files above, three python files are generated:
+
+:code:`src/plugins/ModelicaCodeGenerator/run_plugin.py`
+    This script is called by the plugin-wrapper, `ModelicaCodeGenerator.js`, which passes down the plugin context via
+    arguments.
+
+:code:`src/plugins/ModelicaCodeGenerator/run_debug.py`
+    This file can be used as the entry point when debugging the python portion of the plugin.
+
+:code:`src/plugins/ModelicaCodeGenerator/ModelicaCodeGenerator/__init__.py`
+    This is where the implementation of the plugin logic goes. The ModelicaCodeGenerator-class is imported and used
+    from both `run_plugin.py` and `run_debug.py`.
+
+
+It's important to note that a Python plugin can only run on the server (and not inside the client's browsers).
+In your `./config/config.default.js` add the following line (right before the `module.exports = config;` statement:
+
+.. code-block:: bash
+
+    config.plugin.allowServerExecution = true;
+
+For an overview of how the python bindings is connected, `go to the webgme-bindings repository <https://github.com/webgme/bindings>`_.
+
+**The very basics**
 
 The video below shows how to generate the new plugin and modify it so we have a map of all the nodes in the subtree of the ``activeNode``.
 The ``activeNode`` is the invocation point of a plugin and in the next sub-section we will register our plugin so it's invokable at ``Circuits``.

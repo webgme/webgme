@@ -117,7 +117,7 @@ Setting up Python Bindings
 WebGME provides `Python Bindings for writing plugin code on the server <https://github.com/webgme/bindings>`_.
 This is a two part setup, one for Node.js and one for Python.
 
-** Node.js **
+**Node.js**
 
 First install and store `webgme-bindings <https://www.npmjs.com/package/webgme-bindings>`_ as a node-module to your repository:
 
@@ -133,7 +133,8 @@ To add a router to your deployment that serves the documentation invoke:
 
 Once your webgme-server is up and running the documentation will be available at <host>/bindings-docs/python, e.g. `localhost:8888/bindings-docs/python/ <http://localhost:8888/bindings-docs/python/>`_.
 
-** Python **
+**Python**
+
 Make sure that you've installed Python and pip as described `in the Dependencies section <../getting_started/dependencies.rst>`_.
 Then install `webgme-bindings <https://pypi.org/project/webgme-bindings/>`_ with pip, using the following command:
 
