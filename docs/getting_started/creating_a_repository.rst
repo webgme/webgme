@@ -1,4 +1,4 @@
-The App Repository
+Creating a repository with webgme-cli
 =====================
 All of the code, configurations, images etc. for the web-app will be contained in a single repository. In order for webgme
 to pick up the correct configurations and locate the code there is an imposed structure on our repository. Fortunately,
@@ -108,6 +108,37 @@ and enter :code:`localhost:8888` in the address bar. The webgme GUI should be lo
 
 .. figure:: editor.png
     :align: center
-    :scale: 100 %
+    :scale: 80 %
 
     The WebGME GUI
+
+Setting up Python Bindings
+-------------------
+WebGME provides `Python Bindings for writing plugin code on the server <https://github.com/webgme/bindings>`_.
+This is a two part setup, one for Node.js and one for Python.
+
+**Node.js**
+
+First install and store `webgme-bindings <https://www.npmjs.com/package/webgme-bindings>`_ as a node-module to your repository:
+
+.. code-block:: bash
+
+    npm install webgme-bindings --save
+
+To add a router to your deployment that serves the documentation invoke:
+
+.. code-block:: bash
+
+    webgme import router BindingsDocs webgme-bindings
+
+Once your webgme-server is up and running the documentation will be available at <host>/bindings-docs/python, e.g. `localhost:8888/bindings-docs/python/ <http://localhost:8888/bindings-docs/python/>`_.
+
+**Python**
+
+Make sure that you've installed Python and pip as described `in the Dependencies section <../getting_started/dependencies.html>`_.
+Then install `webgme-bindings <https://pypi.org/project/webgme-bindings/>`_ with pip, using the following command:
+
+.. code-block:: bash
+
+    pip install webgme-bindings
+

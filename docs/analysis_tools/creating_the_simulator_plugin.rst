@@ -105,6 +105,7 @@ the same link documentation about the other built-in modules of nodejs can be fo
 The first video shows how to generate the files and the second one shows how to simulate and store the result in the model.
 
 `Click here to open the first video in a browser. <https://www.youtube.com/embed/q9AS35VhAYg>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
@@ -114,6 +115,7 @@ The first video shows how to generate the files and the second one shows how to 
 |
 
 `Click here to open the second video in a browser. <https://www.youtube.com/embed/Ol8YqcNnSNs>`_.
+
 .. raw:: html
 
     <div style="position: relative; height: 0; overflow: hidden; max-width: 100%; height: auto; text-align: center;">
