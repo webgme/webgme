@@ -178,42 +178,110 @@ define(['js/logger',
         this.logger.debug('attachDiagramDesignerWidgetEventHandlers finished');
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
-        var ids = Object.keys(repositionDesc),
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveNewPositions = function (repositionDesc) {
+        var gmeIds = Object.keys(repositionDesc),
             modelId = this.currentNodeInfo.id,
-            id,
+            gmeId,
             i,
             newPos;
 
-        if (ids.length === 0) {
+        if (gmeIds.length === 0) {
             return;
         }
 
         this._client.startTransaction();
-        for (i = 0; i < ids.length; i += 1) {
-            id = ids[i];
+        for (i = 0; i < gmeIds.length; i += 1) {
+            gmeId = gmeIds[i];
             newPos = {
-                x: repositionDesc[id].x,
-                y: repositionDesc[id].y
+                x: repositionDesc[gmeId].x,
+                y: repositionDesc[gmeId].y
             };
 
             if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                if (repositionDesc[id].registry) {
+                if (repositionDesc[gmeId].registry) {
                     // This is for the line points..
-                    this._client.setRegistry(id,
-                        repositionDesc[id].registry,
-                        repositionDesc[id].value);
+                    this._client.setRegistry(gmeId,
+                        repositionDesc[gmeId].registry,
+                        repositionDesc[gmeId].value);
                 } else {
-                    this._client.setRegistry(this._ComponentID2GMEID[id] || id, REGISTRY_KEYS.POSITION, newPos);
+                    this._client.setRegistry(gmeId, REGISTRY_KEYS.POSITION, newPos);
                 }
             } else {
-                this._client.addMember(modelId, this._ComponentID2GMEID[id] || id, this._selectedAspect);
-                this._client.setMemberRegistry(modelId, this._ComponentID2GMEID[id] || id, this._selectedAspect,
+                this._client.addMember(modelId, gmeId, this._selectedAspect);
+                this._client.setMemberRegistry(modelId, gmeId, this._selectedAspect,
                     REGISTRY_KEYS.POSITION, newPos);
             }
         }
 
         this._client.completeTransaction();
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._addConnSegmentPoints = function (posInfo) {
+        // This adds connection segments points that should be updated based on activeSelection.
+        var self = this,
+            connIds = WebGMEGlobal.State.getActiveSelection().filter(function (gmeId) {
+                return self._GMEConnections.indexOf(gmeId) > -1;
+            });
+
+        connIds.forEach(function (id) {
+            var nodeObj = self._client.getNode(id),
+                linePoints = nodeObj && nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
+
+            if (linePoints instanceof Array && linePoints.length > 0) {
+                // There are linepoints defined - if the src and dst is part of the move
+                // compute the "delta-move" (for any of them) and apply it to those points.
+                var srcNode = nodeObj.getNode(nodeObj.getPointerId('src')),
+                    dstNode = nodeObj.getNode(nodeObj.getPointerId('dst'));
+
+                // Maybe src/dst are ports - check if their parents where selected..
+                if (srcNode && !posInfo[srcNode.getId()]) {
+                    srcNode = nodeObj.getNode(srcNode.getParentId());
+                }
+
+                if (dstNode && !posInfo[dstNode.getId()]) {
+                    dstNode = nodeObj.getNode(dstNode.getParentId());
+                }
+
+                if (srcNode && posInfo[srcNode.getId()] && dstNode && posInfo[dstNode.getId()]) {
+                    var srcPos = srcNode.getRegistry('position'),
+                        dstPos = dstNode.getRegistry('position'),
+                        delta = {x: 0, y: 0};
+
+                    if (srcPos && dstPos) {
+                        delta.x = ( posInfo[srcNode.getId()].x - srcPos.x + posInfo[dstNode.getId()].x - dstPos.x ) / 2;
+                        delta.y = ( posInfo[srcNode.getId()].y - srcPos.y + posInfo[dstNode.getId()].y - dstPos.y ) / 2;
+
+                        linePoints.forEach(function (point) {
+                            point[0] += delta.x;
+                            point[1] += delta.y;
+
+                            point[0] = point[0] > 0 ? Math.round(point[0]) : 0;
+                            point[1] = point[1] > 0 ? Math.round(point[1]) : 0;
+                        });
+
+                        posInfo[id] = {registry: REGISTRY_KEYS.LINE_CUSTOM_POINTS, value: linePoints};
+                    }
+                }
+            }
+        });
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsMove = function (repositionDesc) {
+        var self = this,
+            result = {};
+
+        // Start by converting moved items to object indexed by gmeIds..
+        Object.keys(repositionDesc)
+            .forEach(function (itemId) {
+                if (typeof self._ComponentID2GMEID[itemId] === 'string') {
+                    result[self._ComponentID2GMEID[itemId]] = repositionDesc[itemId];
+                }
+            });
+
+        // Add info about gme-connections that should have their segment points updated.
+        this._addConnSegmentPoints(result);
+        // Finally save the new positions.
+        this._saveNewPositions(result);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDesignerItemsCopy = function (copyDesc) {
@@ -641,7 +709,7 @@ define(['js/logger',
                 //if so, it's not a real move, it is a reposition
                 if (dragParams && dragParams.parentID === parentID) {
                     //it is a reposition
-                    this._onDesignerItemsMove(this._getRepositions(items, dragParams.positions, position));
+                    this._saveNewPositions(this._getNewPositionFromDrag(items, dragParams.positions, position));
                 } else {
                     //it is a real hierarchical move
 
@@ -717,11 +785,10 @@ define(['js/logger',
         }
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getRepositions = function (items, dragPositions,
-                                                                                               dropPosition) {
-        var self = this,
-            result = {}, // {<gmeId>: {x: <int>, y <int>}
-            connIds = [];
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getNewPositionFromDrag = function (items,
+                                                                                                       dragPositions,
+                                                                                                       dropPosition) {
+        var result = {}; // {<gmeId>: {x: <int>, y <int>}
 
         items.forEach(function (id) {
             var relPos = dragPositions[id],
@@ -732,136 +799,15 @@ define(['js/logger',
                 newPos.y += relPos.y;
                 newPos.x = newPos.x > 0 ? Math.round(newPos.x) : 0;
                 newPos.y = newPos.y > 0 ? Math.round(newPos.y) : 0;
-            } else if (self._GMEConnections.indexOf(id) > -1 ) {
-                connIds.push(id);
-                return;
             }
 
             result[id] = newPos;
         });
 
-        connIds.forEach(function (id) {
-            var nodeObj = self._client.getNode(id),
-                linePoints = nodeObj && nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
-
-            if (linePoints instanceof Array && linePoints.length > 0) {
-                // There are linepoints defined - if the src and dst is part of the move
-                // compute the "delta-move" (for any of them) and apply it to those points.
-                var srcNode = nodeObj.getNode(nodeObj.getPointerId('src')),
-                    dstNode = nodeObj.getNode(nodeObj.getPointerId('dst'));
-
-                // Maybe src/dst are ports - check if their parents where selected..
-                if (srcNode && !result[srcNode.getId()]) {
-                    srcNode = nodeObj.getNode(srcNode.getParentId());
-                }
-
-                if (dstNode && !result[dstNode.getId()]) {
-                    dstNode = nodeObj.getNode(dstNode.getParentId());
-                }
-
-                if (srcNode && result[srcNode.getId()] && dstNode && result[dstNode.getId()]) {
-                    var srcPos = srcNode.getRegistry('position'),
-                        dstPos = dstNode.getRegistry('position'),
-                        delta = {x: 0, y: 0};
-
-                    if (srcPos && dstPos) {
-                        delta.x = ( result[srcNode.getId()].x - srcPos.x + result[dstNode.getId()].x - dstPos.x ) / 2;
-                        delta.y = ( result[srcNode.getId()].y - srcPos.y + result[dstNode.getId()].y - dstPos.y ) / 2;
-
-                        linePoints.forEach(function (point) {
-                            point[0] += delta.x;
-                            point[1] += delta.y;
-
-                            point[0] = point[0] > 0 ? Math.round(point[0]) : 0;
-                            point[1] = point[1] > 0 ? Math.round(point[1]) : 0;
-                        });
-
-                        result[id] = {registry: REGISTRY_KEYS.LINE_CUSTOM_POINTS, value: linePoints};
-                    }
-                }
-            }
-        });
+        this._addConnSegmentPoints(result);
 
         return result;
-
-        // pmeijer: No need to redraw explicitly, the client will emit the new positions..
-        // var i = items.length,
-        //     oldPos,
-        //     componentID,
-        //     gmeID,
-        //     selectedIDs = [],
-        //     len,
-        //     self = this;
-        //
-        // if (dragPositions && !_.isEmpty(dragPositions)) {
-        //     //update UI
-        //     this.designerCanvas.beginUpdate();
-        //
-        //     while (i--) {
-        //         gmeID = items[i];
-        //         oldPos = dragPositions[gmeID];
-        //         if (!oldPos) {
-        //             oldPos = {x: 0, y: 0};
-        //         }
-        //
-        //         if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
-        //             len = this._GMEID2ComponentID[gmeID].length;
-        //             while (len--) {
-        //                 componentID = this._GMEID2ComponentID[gmeID][len];
-        //                 selectedIDs.push(componentID);
-        //                 this.designerCanvas.updateDesignerItem(componentID,
-        //                     {position: {x: dropPosition.x + oldPos.x, y: dropPosition.y + oldPos.y}});
-        //             }
-        //         }
-        //     }
-        //
-        //     this.designerCanvas.endUpdate();
-        //     this.designerCanvas.select(selectedIDs);
-        //
-        //     //update object internals
-        //     setTimeout(function () {
-        //         self._saveReposition(items, dragPositions, dropPosition);
-        //     }, 10);
-        // }
     };
-
-    // ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveReposition = function (items, dragPositions,
-    //                                                                                            dropPosition) {
-    //     var modelID = this.currentNodeInfo.id,
-    //         selectedAspect = this._selectedAspect,
-    //         client = this._client,
-    //         gmeID,
-    //         oldPos,
-    //         x,
-    //         y,
-    //         i;
-    //
-    //
-    //     client.startTransaction();
-    //     i = items.length;
-    //     while (i--) {
-    //         gmeID = items[i];
-    //         oldPos = dragPositions[gmeID];
-    //         if (!oldPos) {
-    //             oldPos = {x: 0, y: 0};
-    //         }
-    //         x = Math.round(dropPosition.x + oldPos.x);
-    //         y = Math.round(dropPosition.y + oldPos.y);
-    //
-    //         x = x > 0 ? x : 0;
-    //         y = y > 0 ? y : 0;
-    //
-    //         //aspect specific coordinate
-    //         if (selectedAspect === CONSTANTS.ASPECT_ALL) {
-    //             client.setRegistry(gmeID, REGISTRY_KEYS.POSITION, {x: x, y: y});
-    //         } else {
-    //             client.addMember(modelID, gmeID, selectedAspect);
-    //             client.setMemberRegistry(modelID, gmeID, selectedAspect, REGISTRY_KEYS.POSITION, {x: x, y: y});
-    //         }
-    //     }
-    //
-    //     client.completeTransaction();
-    // };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
         var gmeIDs = [],
