@@ -135,7 +135,7 @@ Once your webgme-server is up and running the documentation will be available at
 
 **Python**
 
-Make sure that you've installed Python and pip as described `in the Dependencies section <../getting_started/dependencies.rst>`_.
+Make sure that you've installed Python and pip as described `in the Dependencies section <../getting_started/dependencies.html>`_.
 Then install `webgme-bindings <https://pypi.org/project/webgme-bindings/>`_ with pip, using the following command:
 
 .. code-block:: bash

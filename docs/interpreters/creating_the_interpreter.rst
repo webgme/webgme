@@ -65,10 +65,11 @@ to find our plugin the path to it is added to the configuration file. Note that 
 :code:`config.test.js` load and reuse the added configuration parameters from this file.
 
 **Python Plugin**
-If you generated a python plugin, in addition to files above, three python files are generated:
+
+If you generated a python plugin, three python files are generated in addition to the files above:
 
 :code:`src/plugins/ModelicaCodeGenerator/run_plugin.py`
-    This script is called by the plugin-wrapper, `ModelicaCodeGenerator.js`, which passes down the plugin context via
+    This script is called by the plugin-wrapper, :code:`ModelicaCodeGenerator.js`, which passes down the plugin context via
     arguments.
 
 :code:`src/plugins/ModelicaCodeGenerator/run_debug.py`
@@ -76,7 +77,7 @@ If you generated a python plugin, in addition to files above, three python files
 
 :code:`src/plugins/ModelicaCodeGenerator/ModelicaCodeGenerator/__init__.py`
     This is where the implementation of the plugin logic goes. The ModelicaCodeGenerator-class is imported and used
-    from both `run_plugin.py` and `run_debug.py`.
+    from both :code:`run_plugin.py` and :code:`run_debug.py`.
 
 
 It's important to note that a Python plugin can only run on the server (and not inside the client's browsers).
@@ -88,12 +89,17 @@ In your `./config/config.default.js` add the following line (right before the `m
 
 For an overview of how the python bindings is connected, `go to the webgme-bindings repository <https://github.com/webgme/bindings>`_.
 
-**The very basics**
+The Python API is generated in :code:`snake_case` rather than :code:`camelCase` and is completely synchronous so there's
+no need to deal with callbacks or promises. When following this tutorial keep this in mind and more importantly use the
+``load*`` equivalents to ``get*path``, e.g. ``loadChildren``-vs-``getChildrenPaths`` and ``loadPointer``-vs-``getPointerPath``.
+
+**First cut on Plugin**
 
 The video below shows how to generate the new plugin and modify it so we have a map of all the nodes in the subtree of the ``activeNode``.
 The ``activeNode`` is the invocation point of a plugin and in the next sub-section we will register our plugin so it's invokable at ``Circuits``.
-(With the node map it is possible to retrieve nodes without any asynchronous function call - this makes the writing, and
-especially demonstration of the code easier. The asynchronous API functions in webgme do use promises which makes this a bit easier to deal with.)
+(With the node map it is possible to retrieve nodes without any asynchronous function calls. The asynchronous API functions in
+webgme do return promises which typically makes the asynchronous functions a bit easier to deal with.)
+
 
 `Click here to open the video in a browser. <https://www.youtube.com/embed/agHG2DkM35k>`_.
 

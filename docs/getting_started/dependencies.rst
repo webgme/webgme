@@ -104,7 +104,8 @@ Windows and MacOS
     For Windows and MacOS simply download and install the appropriate `latest release at python.org <https://www.python.org/downloads/release/python-370/>`_.
 Linux
     For linux `these instructions can be used <https://docs.python-guide.org/starting/install3/linux/>`_. Note that
-    the `python` and `pip` executables will be available as `python3` and `pip3`, so for any commands referring to `python` and `pip` replace these accordingly.
+    the :code:`python` and :code:`pip` executables will be available as :code:`python3` and :code:`pip3`, so for any
+    command referring to :code:`python` and :code:`pip` replace these accordingly.
     (In this case you need to update the generated plugin code as well, more about that later...)
 
 
