@@ -179,7 +179,8 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._saveNewPositions = function (repositionDesc) {
-        var gmeIds = Object.keys(repositionDesc),
+        var self = this,
+            gmeIds = Object.keys(repositionDesc),
             modelId = this.currentNodeInfo.id,
             gmeId,
             i,
@@ -198,11 +199,13 @@ define(['js/logger',
             };
 
             if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                if (repositionDesc[gmeId].registry) {
+                if (repositionDesc[gmeId][REGISTRY_STRING]) {
                     // This is for the line points..
-                    this._client.setRegistry(gmeId,
-                        repositionDesc[gmeId].registry,
-                        repositionDesc[gmeId].value);
+                    Object.keys(repositionDesc[gmeId][REGISTRY_STRING]).forEach(function (regKey) {
+                        self._client.setRegistry(gmeId,
+                            regKey,
+                            repositionDesc[gmeId][REGISTRY_STRING][regKey]);
+                    });
                 } else {
                     this._client.setRegistry(gmeId, REGISTRY_KEYS.POSITION, newPos);
                 }
@@ -259,7 +262,9 @@ define(['js/logger',
                             point[1] = point[1] > 0 ? Math.round(point[1]) : 0;
                         });
 
-                        posInfo[id] = {registry: REGISTRY_KEYS.LINE_CUSTOM_POINTS, value: linePoints};
+                        posInfo[id] = {};
+                        posInfo[id][REGISTRY_STRING] = {};
+                        posInfo[id][REGISTRY_STRING][REGISTRY_KEYS.LINE_CUSTOM_POINTS] = linePoints;
                     }
                 }
             }
@@ -672,6 +677,7 @@ define(['js/logger',
             items = DragHelper.getDragItems(dragInfo),
             dragParams = DragHelper.getDragParams(dragInfo),
             parentID = this.currentNodeInfo.id,
+            positionInfo,
             i,
             gmeID,
             params,
@@ -688,18 +694,42 @@ define(['js/logger',
             case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                 params = {parentId: parentID};
                 i = items.length;
+
+                positionInfo = this._getNewPositionFromDrag(items, dragParams && dragParams.positions, position);
+
+                Object.keys(positionInfo).forEach(function (gmeId) {
+                    params[gmeId] = {};
+                    params[gmeId][REGISTRY_STRING] = {};
+                    if (positionInfo[gmeId][REGISTRY_STRING]) {
+                        Object.keys(positionInfo[gmeId][REGISTRY_STRING])
+                            .forEach(function (regKey) {
+                                params[gmeId][REGISTRY_STRING][regKey] =
+                                    positionInfo[gmeId][REGISTRY_STRING][regKey];
+                            });
+                    } else {
+                        params[gmeId][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = positionInfo[gmeId];
+                    }
+                });
+
+
                 while (i--) {
+                    // Finally make sure we copy any selected conn where the src and dst weren't there
+                    // and add the position of these too..
                     gmeID = items[i];
-
-                    params[gmeID] = {};
-
                     oldPos = dragParams && dragParams.positions[gmeID] || {x: 0, y: 0};
-                    params[gmeID][REGISTRY_STRING] = {};
-                    params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
-                        x: position.x + oldPos.x,
-                        y: position.y + oldPos.y
-                    };
+                    if (!params[gmeID]) {
+                        params[gmeID] = {};
+                        params[gmeID][REGISTRY_STRING] = {};
+                    }
+
+                    if (!params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION]) {
+                        params[gmeID][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = {
+                            x: position.x + oldPos.x,
+                            y: position.y + oldPos.y
+                        };
+                    }
                 }
+
                 this._client.startTransaction();
                 this._client.copyMoreNodes(params);
                 this._client.completeTransaction();
@@ -709,7 +739,8 @@ define(['js/logger',
                 //if so, it's not a real move, it is a reposition
                 if (dragParams && dragParams.parentID === parentID) {
                     //it is a reposition
-                    this._saveNewPositions(this._getNewPositionFromDrag(items, dragParams.positions, position));
+                    this._saveNewPositions(
+                        this._getNewPositionFromDrag(items, dragParams && dragParams.positions, position));
                 } else {
                     //it is a real hierarchical move
 
@@ -791,7 +822,7 @@ define(['js/logger',
         var result = {}; // {<gmeId>: {x: <int>, y <int>}
 
         items.forEach(function (id) {
-            var relPos = dragPositions[id],
+            var relPos = dragPositions && dragPositions[id],
                 newPos = {x: dropPosition.x, y: dropPosition.y};
 
             if (relPos) {
