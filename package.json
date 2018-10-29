@@ -27,11 +27,11 @@
     "q": "1.5.1",
     "require-uncached": "1.0.3",
     "requirejs": "2.3.5",
-    "webgme-engine": "2.21.3",
+    "webgme-engine": "2.22.0",
     "webgme-user-management-page": "0.4.3"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "jscs": "^3.0.7",
     "jshint": "^2.9.6",
     "karma": "^2.0.5",
