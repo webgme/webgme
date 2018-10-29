@@ -1,5 +1,15 @@
 # Change Log
 
+## [v2.32.0](https://github.com/webgme/webgme/tree/v2.32.0) (2018-10-29)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.31.0...v2.32.0)
+
+**Implemented enhancements:**
+
+- Bumping webgme-engine version [\#1651](https://github.com/webgme/webgme/issues/1651)
+- Add instructions on how to write Python plugins in tutorial [\#1645](https://github.com/webgme/webgme/pull/1645) ([pmeijer](https://github.com/pmeijer))
+- Apply square routing regardless even though segment-points are defined [\#1644](https://github.com/webgme/webgme/pull/1644) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1642 Handle connection-segment-points during move/copy/create instance [\#1643](https://github.com/webgme/webgme/pull/1643) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.31.0](https://github.com/webgme/webgme/tree/v2.31.0) (2018-09-20)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.30.1...v2.31.0)
 
