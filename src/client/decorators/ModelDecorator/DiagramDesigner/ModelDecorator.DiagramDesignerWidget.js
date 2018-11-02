@@ -154,23 +154,12 @@ define([
                 len: LEN
             });
 
-            //South side
-            result.push({
-                id: 'S',
-                x1: edge,
-                y1: this.hostDesignerItem.getHeight(),
-                x2: this.hostDesignerItem.getWidth() - edge,
-                y2: this.hostDesignerItem.getHeight(),
-                angle1: 90,
-                angle2: 90,
-                len: LEN
-            });
-
-            //check east and west
+            //check east and west and south
             //if there is port on the side, it's disabled for drawing connections
             //otherwise enabled
             var eastEnabled = true;
             var westEnabled = true;
+            var southEnabled = true;
             for (var pId in this.ports) {
                 if (this.ports.hasOwnProperty(pId)) {
                     if (this.ports[pId].orientation === 'E') {
@@ -179,10 +168,30 @@ define([
                     if (this.ports[pId].orientation === 'W') {
                         westEnabled = false;
                     }
+                    if (this.ports[pId].orientation === 'S') {
+                        southEnabled = false;
+                    }
                 }
-                if (!eastEnabled && !westEnabled) {
+                if (!eastEnabled && !westEnabled && !southEnabled) {
                     break;
                 }
+            }
+
+            //South side
+            if (southEnabled) {
+                result.push({
+                    id: 'S',
+                    x1: edge,
+                    y1: this.hostDesignerItem.getHeight(),
+                    x2: this.hostDesignerItem.getWidth() - edge,
+                    y2: this.hostDesignerItem.getHeight(),
+                    angle1: 90,
+                    angle2: 90,
+                    len: LEN
+                });
+                this.$el.find('.connector.bottom').removeClass('has-bottom-ports');
+            } else {
+                this.$el.find('.connector.bottom').addClass('has-bottom-ports');
             }
 
             if (eastEnabled) {

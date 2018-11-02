@@ -246,6 +246,8 @@
     top: -10px; }
   .model-decorator .connector.bottom {
     bottom: -9px; }
+    .model-decorator .connector.bottom.has-bottom-ports {
+      visibility: hidden; }
 .model-decorator .ports .port div.connector {
   top: 0.5px; }
   .model-decorator .ports .port div.connector:hover {
@@ -259,6 +261,8 @@
   left: 60px; }
   .model-decorator .ports .right .port .connector:hover {
     left: 62px; }
+.model-decorator .bottom-ports div.connector {
+  top: 4px; }
 .model-decorator.accept-droppable {
   background-color: #00FF00 !important;
   cursor: alias; }

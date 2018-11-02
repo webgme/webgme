@@ -38,6 +38,9 @@
 
     &.bottom {
       bottom: -9px;
+      &.has-bottom-ports {
+        visibility: hidden;
+      }
     }
   }
 
@@ -75,6 +78,11 @@
     }
   }
 
+  .bottom-ports {
+    div.connector {
+      top: 4px;
+    }
+  }
   &.accept-droppable {
     background-color: $accept-droppable-background-color;
     cursor: alias;
