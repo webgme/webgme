@@ -38,9 +38,10 @@
 
     &.bottom {
       bottom: -9px;
-      &.has-bottom-ports {
-        visibility: hidden;
-      }
+    }
+
+    &.has-ports {
+      visibility: hidden;
     }
   }
 
@@ -80,7 +81,13 @@
 
   .bottom-ports {
     div.connector {
-      top: 4px;
+      top: 6px;
+    }
+  }
+
+  .top-ports {
+    div.connector {
+      top: -9px;
     }
   }
   &.accept-droppable {

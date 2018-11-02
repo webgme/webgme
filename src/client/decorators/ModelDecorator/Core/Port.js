@@ -61,7 +61,7 @@ define([
         .append(Port.prototype._DOMTitleWrapper.clone()).append(Port.prototype._DOMSVGIcon.clone())
         .append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone());
 
-    Port.prototype._DOMBaseBottomTemplate = Port.prototype._DOMPortBase.clone()
+    Port.prototype._DOMBaseTopBottomTemplate = Port.prototype._DOMPortBase.clone()
         .append(Port.prototype._DOMSVGIcon.clone())
         .append(Port.prototype._DOMDot.clone())
         .append(Port.prototype._DOMConnector.clone());
@@ -74,7 +74,8 @@ define([
                 concretePortTemplate = this._DOMBaseLeftTemplate;
                 break;
             case 'S':
-                concretePortTemplate = this._DOMBaseBottomTemplate;
+            case 'N':
+                concretePortTemplate = this._DOMBaseTopBottomTemplate;
                 break;
             default:
                 concretePortTemplate = this._DOMBaseRightTemplate;
@@ -199,7 +200,20 @@ define([
     Port.prototype.getConnectorArea = function () {
         var allPorts = this.$el.parent().children(),
             len = allPorts.length,
+            xShift,
             i;
+
+        if (this.orientation === 'N' || this.orientation === 'S') {
+            // Ports are centered in the middle so we need to determine the "shift" depending on how many
+            // ports there are.
+            // HEIGHT is width for N/S ports..
+            xShift = Math.floor(this.decorator.hostDesignerItem.getWidth() / 2);
+            if (len % 2 === 0) {
+                xShift -= (((len / 2) - 1) * PORT_DOM_HEIGHT + Math.floor(PORT_DOM_HEIGHT / 2));
+            } else {
+                xShift -= ((len - 1) / 2) * PORT_DOM_HEIGHT;
+            }
+        }
 
         for (i = 0; i < len; i += 1) {
             if (allPorts[i] === this.$el[0]) {
@@ -207,18 +221,48 @@ define([
             }
         }
 
-        this.connectionArea.x1 = this.orientation === 'W' ? 0 : this.decorator.hostDesignerItem.getWidth();
-        //fix the x coordinate for the dot/svg icon's width
-        if (this.icon) {
-            this.connectionArea.x1 += (this.orientation === 'W' ? -1 : 1) * (PORT_ICON_WIDTH - 1);
-        } else {
-            this.connectionArea.x1 += (this.orientation === 'W' ? -1 : 1) * (PORT_DOT_WIDTH - 1);
+        switch (this.orientation) {
+            case 'N':
+
+                this.connectionArea.y1 = this.connectionArea.y2 = - PORT_DOM_HEIGHT - 6;
+                this.connectionArea.x1 = this.connectionArea.x2 = xShift + i * PORT_DOM_HEIGHT;
+                this.connectionArea.angle1 = this.connectionArea.angle2 = 270;
+                break;
+            case 'S':
+                this.connectionArea.y1 = this.decorator.hostDesignerItem.getHeight() - PORT_DOM_HEIGHT;
+                this.connectionArea.y2 = this.connectionArea.y1;
+                this.connectionArea.x1 = this.connectionArea.x2 = xShift + i * PORT_DOM_HEIGHT;
+                this.connectionArea.angle1 = this.connectionArea.angle2 = 90;
+                break;
+            case 'W':
+                if (this.icon) {
+                    this.connectionArea.x1 = 1 - PORT_ICON_WIDTH;
+                } else {
+                    this.connectionArea.x1 = 1 - PORT_DOT_WIDTH;
+                }
+
+                this.connectionArea.y1 = i * PORT_DOM_HEIGHT + 9;
+
+                this.connectionArea.x2 = this.connectionArea.x1;
+                this.connectionArea.y2 = this.connectionArea.y1;
+
+                this.connectionArea.angle1 = this.connectionArea.angle2 = 180;
+                break;
+            default: // case E
+                if (this.icon) {
+                    this.connectionArea.x1 = this.decorator.hostDesignerItem.getWidth() + PORT_ICON_WIDTH  - 1;
+                } else {
+                    this.connectionArea.x1 = this.decorator.hostDesignerItem.getWidth() + PORT_DOT_WIDTH  - 1;
+                }
+
+                this.connectionArea.y1 = i * PORT_DOM_HEIGHT + 9;
+
+                this.connectionArea.x2 = this.connectionArea.x1;
+                this.connectionArea.y2 = this.connectionArea.y1;
+
+                this.connectionArea.angle1 = this.connectionArea.angle2 = 0;
+                break;
         }
-        this.connectionArea.x2 = this.connectionArea.x1;
-        this.connectionArea.y1 = i * PORT_DOM_HEIGHT + 9;
-        this.connectionArea.y2 = this.connectionArea.y1;
-        this.connectionArea.angle1 = this.orientation === 'W' ? 180 : 0;
-        this.connectionArea.angle2 = this.orientation === 'W' ? 180 : 0;
 
         return this.connectionArea;
     };

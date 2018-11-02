@@ -12,13 +12,13 @@ $icon-padding: 2px;
 $svg-icon-height: 11px;
 $svg-icon-width: 5px;
 
-@mixin port($ports-width, $padding, $isBottom) {
+@mixin port($ports-width, $padding, $orientation) {
   .port {
     white-space: nowrap;
     position: relative;
     height: $port-height;
     line-height: $port-height;
-    @if($isBottom) {
+    @if($orientation == 'N' or $orientation == 'S') {
       display: inline;
       height: $svg-icon-height;
     }
@@ -37,18 +37,22 @@ $svg-icon-width: 5px;
     img.svg-icon {
       display: inline-block;
 
-      @if($isBottom) {
+      @if($orientation == 'N' or $orientation == 'S') {
         position: relative;
-        top: 1px;
         margin-left: 2px;
         margin-right: 2px;
         width: $svg-icon-height;
         height: $svg-icon-width;
+        @if($orientation == 'S') {
+          top: 3px;
+        } @else {
+          top: -8px;
+        }
       } @else {
         position: absolute;
+        top: 2px;
         height: $svg-icon-height;
         width: $svg-icon-width;
-        top: 2px;
       }
     }
 
@@ -57,15 +61,21 @@ $svg-icon-width: 5px;
       background: $dot-color;
       border: $dot-border-width solid $dot-color;
 
-      @if($isBottom) {
+      @if($orientation == 'N' or $orientation == 'S') {
         position: relative;
-        top: 0;
         margin-left: 4px;
         margin-right: 4px;
         width: $dot-height;
         height: $dot-width + 1;
-        border-bottom-left-radius: $dot-radius;
-        border-bottom-right-radius: $dot-radius;
+        @if($orientation == 'S') {
+          top: 1px;
+          border-bottom-left-radius: $dot-radius;
+          border-bottom-right-radius: $dot-radius;
+        } @else {
+          top: -9px;
+          border-top-left-radius: $dot-radius;
+          border-top-right-radius: $dot-radius;
+        }
       } @else {
         position: absolute;
         width: $dot-width;

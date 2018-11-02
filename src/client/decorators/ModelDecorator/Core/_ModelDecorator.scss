@@ -84,22 +84,29 @@ $abstract-class-name-color: #AAAAAA;
         min-height: 1px;
       }
 
-      @include port($ports-width, $padding, false);
+      @include port($ports-width, $padding, 'WE');
+    }
+
+    .top-ports {
+      width: 100%;
+      left: 0;
+      height: 0;
+      position: absolute;
+      align-items: center;
+      justify-content: center;
+      display: flex;
+      @include port(10px, $padding, 'N');
     }
 
     .bottom-ports {
       width: 100%;
       left: 0;
-      height: 5px;
+      height: 0;
       position: absolute;
       align-items: center;
       justify-content: center;
       display: flex;
-      //background-color: #0D3349;
-      //opacity: 0.1;
-
-
-      @include port(10px, $padding, true);
+      @include port(10px, $padding, 'S');
     }
 
     .progress-bar {

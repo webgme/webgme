@@ -142,42 +142,30 @@ define([
         //by default return the bounding box edges midpoints
 
         if (id === undefined || id === this.hostDesignerItem.id) {
-            //North side
-            result.push({
-                id: 'N',
-                x1: edge,
-                y1: 0,
-                x2: this.hostDesignerItem.getWidth() - edge,
-                y2: 0,
-                angle1: 270,
-                angle2: 270,
-                len: LEN
-            });
-
-            //check east and west and south
             //if there is port on the side, it's disabled for drawing connections
             //otherwise enabled
             var eastEnabled = true;
             var westEnabled = true;
             var southEnabled = true;
+            var northEnabled = true;
             for (var pId in this.ports) {
                 if (this.ports.hasOwnProperty(pId)) {
                     if (this.ports[pId].orientation === 'E') {
                         eastEnabled = false;
-                    }
-                    if (this.ports[pId].orientation === 'W') {
+                    } else if (this.ports[pId].orientation === 'W') {
                         westEnabled = false;
-                    }
-                    if (this.ports[pId].orientation === 'S') {
+                    } else if (this.ports[pId].orientation === 'S') {
                         southEnabled = false;
+                    } else if (this.ports[pId].orientation === 'N') {
+                        northEnabled = false;
                     }
                 }
-                if (!eastEnabled && !westEnabled && !southEnabled) {
+
+                if (!eastEnabled && !westEnabled && !southEnabled && !northEnabled) {
                     break;
                 }
             }
 
-            //South side
             if (southEnabled) {
                 result.push({
                     id: 'S',
@@ -189,9 +177,25 @@ define([
                     angle2: 90,
                     len: LEN
                 });
-                this.$el.find('.connector.bottom').removeClass('has-bottom-ports');
+                this.$el.find('.connector.bottom').removeClass('has-ports');
             } else {
-                this.$el.find('.connector.bottom').addClass('has-bottom-ports');
+                this.$el.find('.connector.bottom').addClass('has-ports');
+            }
+
+            if (northEnabled) {
+                result.push({
+                    id: 'N',
+                    x1: edge,
+                    y1: 0,
+                    x2: this.hostDesignerItem.getWidth() - edge,
+                    y2: 0,
+                    angle1: 270,
+                    angle2: 270,
+                    len: LEN
+                });
+                this.$el.find('.connector.top').removeClass('has-ports');
+            } else {
+                this.$el.find('.connector.top').addClass('has-ports');
             }
 
             if (eastEnabled) {

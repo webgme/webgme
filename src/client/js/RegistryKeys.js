@@ -42,6 +42,7 @@ define([], function () {
         DISPLAY_FORMAT: 'DisplayFormat',
         SVG_ICON: 'SVGIcon',
         PORT_SVG_ICON: 'PortSVGIcon',
+        PORT_ORIENTATION: 'PortOrientation',
         TREE_ITEM_COLLAPSED_ICON: 'TreeItemCollapsedIcon',
         TREE_ITEM_EXPANDED_ICON: 'TreeItemExpandedIcon',
 

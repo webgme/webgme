@@ -55,6 +55,7 @@ define([
             $portsContainerLeft: undefined,
             $portsContainerRight: undefined,
             $portsContainerBottom: undefined,
+            $portsContainerTop: undefined,
             $portsContainerCenter: undefined,
             $ptr: undefined,
             $imgSVG: undefined,
@@ -97,6 +98,7 @@ define([
         this.skinParts.$portsContainerLeft = this.skinParts.$portsContainer.find('.left');
         this.skinParts.$portsContainerRight = this.skinParts.$portsContainer.find('.right');
         this.skinParts.$portsContainerBottom = this.$el.find('.bottom-ports');
+        this.skinParts.$portsContainerTop = this.$el.find('.top-ports');
         this.skinParts.$imgContainer = this.$el.find('.img-container');
         this.skinParts.$portsContainerCenter = this.skinParts.$portsContainer.find('.center');
 
@@ -213,21 +215,48 @@ define([
 
     ModelDecoratorCore.prototype._addPortToContainer = function (portNode, portInstance) {
         var portId = portNode.getId(),
-            portOrientation = 'W',
             portContainer = this.skinParts.$portsContainerLeft,
             portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0},
+            portOrientation = portNode.getRegistry(REGISTRY_KEYS.PORT_ORIENTATION),
             portToAppendBefore = null,
+            orderAxis = 'y',
             i,
             changed;
 
         //check if the port should be on the left or right-side
         // FIXME: This should come from registry
+
         if (portNode.getAttribute('name') === 'BottomInnerPort') {
             portOrientation = 'S';
-            portContainer = this.skinParts.$portsContainerBottom;
-        } else if (portPosition.x > 300) {
-            portOrientation = 'E';
-            portContainer = this.skinParts.$portsContainerRight;
+        } else if (portNode.getAttribute('name') === 'TopPort') {
+            portOrientation = 'N';
+        }
+
+        switch (portOrientation) {
+            case 'W':
+                portContainer = this.skinParts.$portsContainerLeft;
+                break;
+            case 'E':
+                portContainer = this.skinParts.$portsContainerRight;
+                break;
+            case 'N':
+                portContainer = this.skinParts.$portsContainerTop;
+                orderAxis = 'x';
+                break;
+            case 'S':
+                portContainer = this.skinParts.$portsContainerBottom;
+                orderAxis = 'x';
+                break;
+            default:
+                // Fall back to the position of the port.
+                if (portPosition.x > 300) {
+                    portOrientation = 'E';
+                    portContainer = this.skinParts.$portsContainerRight;
+                } else {
+                    portOrientation = 'W';
+                    portContainer = this.skinParts.$portsContainerLeft;
+                }
+                break;
         }
 
         changed = portInstance.updateOrPos(portOrientation, portPosition);
@@ -237,19 +266,19 @@ define([
             if (this.ports.hasOwnProperty(i)) {
                 if (i !== portId) {
                     if (this.ports[i].orientation === portInstance.orientation) {
-                        if ((portInstance.position.y < this.ports[i].position.y) ||
-                            ((portInstance.position.y === this.ports[i].position.y) &&
-                            (portInstance.title < this.ports[i].title))) {
+
+                        if ((portInstance.position[orderAxis] < this.ports[i].position[orderAxis]) ||
+                            ((portInstance.position[orderAxis] === this.ports[i].position[orderAxis]) &&
+                                (portInstance.title < this.ports[i].title))) {
 
                             if (portToAppendBefore === null) {
                                 portToAppendBefore = i;
-                            } else {
-                                if ((this.ports[i].position.y < this.ports[portToAppendBefore].position.y) ||
-                                    ((this.ports[i].position.y === this.ports[portToAppendBefore].position.y) &&
+                            } else if ((this.ports[i].position[orderAxis] <
+                                this.ports[portToAppendBefore].position[orderAxis]) ||
+                                ((this.ports[i].position[orderAxis] ===
+                                    this.ports[portToAppendBefore].position[orderAxis]) &&
                                     (this.ports[i].title < this.ports[portToAppendBefore].title))) {
-
-                                    portToAppendBefore = i;
-                                }
+                                portToAppendBefore = i;
                             }
                         }
                     }
