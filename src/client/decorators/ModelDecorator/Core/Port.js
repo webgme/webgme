@@ -61,8 +61,25 @@ define([
         .append(Port.prototype._DOMTitleWrapper.clone()).append(Port.prototype._DOMSVGIcon.clone())
         .append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone());
 
+    Port.prototype._DOMBaseBottomTemplate = Port.prototype._DOMPortBase.clone()
+        .append(Port.prototype._DOMSVGIcon.clone())
+        .append(Port.prototype._DOMDot.clone())
+        .append(Port.prototype._DOMConnector.clone());
+
     Port.prototype._initialize = function () {
-        var concretePortTemplate = this.orientation === 'W' ? this._DOMBaseLeftTemplate : this._DOMBaseRightTemplate;
+        var concretePortTemplate;
+
+        switch (this.orientation) {
+            case 'W':
+                concretePortTemplate = this._DOMBaseLeftTemplate;
+                break;
+            case 'S':
+                concretePortTemplate = this._DOMBaseBottomTemplate;
+                break;
+            default:
+                concretePortTemplate = this._DOMBaseRightTemplate;
+                break;
+        }
 
         this.$el = concretePortTemplate.clone();
         this.$el.attr({

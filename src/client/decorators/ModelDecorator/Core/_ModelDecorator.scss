@@ -84,7 +84,22 @@ $abstract-class-name-color: #AAAAAA;
         min-height: 1px;
       }
 
-      @include port($ports-width, $padding);
+      @include port($ports-width, $padding, false);
+    }
+
+    .bottom-ports {
+      width: 100%;
+      left: 0;
+      height: 5px;
+      position: absolute;
+      align-items: center;
+      justify-content: center;
+      display: flex;
+      //background-color: #0D3349;
+      //opacity: 0.1;
+
+
+      @include port(10px, $padding, true);
     }
 
     .progress-bar {

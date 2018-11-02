@@ -54,9 +54,11 @@ define([
             $portsContainer: undefined,
             $portsContainerLeft: undefined,
             $portsContainerRight: undefined,
+            $portsContainerBottom: undefined,
             $portsContainerCenter: undefined,
             $ptr: undefined,
             $imgSVG: undefined,
+            $imgContainer: undefined,
             $replaceable: undefined
         };
 
@@ -94,6 +96,8 @@ define([
         this.skinParts.$portsContainer = this.$el.find('.ports');
         this.skinParts.$portsContainerLeft = this.skinParts.$portsContainer.find('.left');
         this.skinParts.$portsContainerRight = this.skinParts.$portsContainer.find('.right');
+        this.skinParts.$portsContainerBottom = this.$el.find('.bottom-ports');
+        this.skinParts.$imgContainer = this.$el.find('.img-container');
         this.skinParts.$portsContainerCenter = this.skinParts.$portsContainer.find('.center');
 
         this._update();
@@ -217,7 +221,11 @@ define([
             changed;
 
         //check if the port should be on the left or right-side
-        if (portPosition.x > 300) {
+        // FIXME: This should come from registry
+        if (portNode.getAttribute('name') === 'BottomInnerPort') {
+            portOrientation = 'S';
+            portContainer = this.skinParts.$portsContainerBottom;
+        } else if (portPosition.x > 300) {
             portOrientation = 'E';
             portContainer = this.skinParts.$portsContainerRight;
         }
@@ -439,7 +447,7 @@ define([
         if (svgURL) {
             if (!this.skinParts.$imgSVG) {
                 this.skinParts.$imgSVG = EMBEDDED_SVG_IMG_BASE.clone();
-                this.$el.append(this.skinParts.$imgSVG);
+                this.skinParts.$imgContainer.append(this.skinParts.$imgSVG);
             }
             if (this.skinParts.$imgSVG.attr('src') !== svgURL) {
                 this.skinParts.$imgSVG.on('load', function (/*event*/) {

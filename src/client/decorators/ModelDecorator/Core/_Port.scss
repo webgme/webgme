@@ -12,12 +12,16 @@ $icon-padding: 2px;
 $svg-icon-height: 11px;
 $svg-icon-width: 5px;
 
-@mixin port($ports-width, $padding) {
+@mixin port($ports-width, $padding, $isBottom) {
   .port {
     white-space: nowrap;
     position: relative;
     height: $port-height;
     line-height: $port-height;
+    @if($isBottom) {
+      display: inline;
+      height: $svg-icon-height;
+    }
 
     &:hover {
       cursor: pointer;
@@ -31,21 +35,43 @@ $svg-icon-width: 5px;
     }
 
     img.svg-icon {
-      height: $svg-icon-height;
-      width: $svg-icon-width;
-      position: absolute;
       display: inline-block;
-      top: 2px;
+
+      @if($isBottom) {
+        position: relative;
+        top: 1px;
+        margin-left: 2px;
+        margin-right: 2px;
+        width: $svg-icon-height;
+        height: $svg-icon-width;
+      } @else {
+        position: absolute;
+        height: $svg-icon-height;
+        width: $svg-icon-width;
+        top: 2px;
+      }
     }
 
     span.dot {
-      position: absolute;
       display: inline-block;
       background: $dot-color;
       border: $dot-border-width solid $dot-color;
-      width: $dot-width;
-      height: $dot-height;
-      top: ($port-height - $dot-height)/2;
+
+      @if($isBottom) {
+        position: relative;
+        top: 0;
+        margin-left: 4px;
+        margin-right: 4px;
+        width: $dot-height;
+        height: $dot-width + 1;
+        border-bottom-left-radius: $dot-radius;
+        border-bottom-right-radius: $dot-radius;
+      } @else {
+        position: absolute;
+        width: $dot-width;
+        height: $dot-height;
+        top: ($port-height - $dot-height)/2;
+      }
     }
 
     &.w-icon {
