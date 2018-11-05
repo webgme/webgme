@@ -198,6 +198,26 @@ define([
                 this.$el.find('.connector.top').addClass('has-ports');
             }
 
+            // If both north and south are disabled we need a spare connector in the top left corner.
+            if (northEnabled === false && southEnabled === false) {
+                this.$el.find('.connector.top-left').removeClass('has-ports');
+                // If east and west are also disabled we need a connection area in the same corner.
+                if (eastEnabled === false && westEnabled === false) {
+                    result.push({
+                        id: 'NW',
+                        x1: 0,
+                        y1: edge,
+                        x2: 0,
+                        y2: edge,
+                        angle1: 180,
+                        angle2: 180,
+                        len: LEN
+                    });
+                }
+            } else {
+                this.$el.find('.connector.top-left').addClass('has-ports');
+            }
+
             if (eastEnabled) {
                 result.push({
                     id: 'E',

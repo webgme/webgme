@@ -102,7 +102,7 @@ $svg-icon-width: 5px;
       }
 
       span.dot {
-        left: - $padding - $dot-width;
+        left: - $padding - $dot-width - 1;
         border-top-left-radius: $dot-radius;
         border-bottom-left-radius: $dot-radius;
       }

@@ -84,7 +84,7 @@
     .model-decorator .ports .left .port img.svg-icon {
       left: -8px; }
     .model-decorator .ports .left .port span.dot {
-      left: -6px;
+      left: -7px;
       border-top-left-radius: 5px;
       border-bottom-left-radius: 5px; }
     .model-decorator .ports .right .port .title-wrapper {
@@ -149,7 +149,7 @@
     .model-decorator .top-ports .left .port img.svg-icon {
       left: -8px; }
     .model-decorator .top-ports .left .port span.dot {
-      left: -6px;
+      left: -7px;
       border-top-left-radius: 5px;
       border-bottom-left-radius: 5px; }
     .model-decorator .top-ports .right .port .title-wrapper {
@@ -214,7 +214,7 @@
     .model-decorator .bottom-ports .left .port img.svg-icon {
       left: -8px; }
     .model-decorator .bottom-ports .left .port span.dot {
-      left: -6px;
+      left: -7px;
       border-top-left-radius: 5px;
       border-bottom-left-radius: 5px; }
     .model-decorator .bottom-ports .right .port .title-wrapper {
@@ -326,6 +326,9 @@
       top: -16px; }
     .model-decorator .connector:hover.bottom {
       bottom: -16px; }
+  .model-decorator .connector.top-left {
+    top: 2px;
+    left: 9px; }
   .model-decorator .connector.top {
     top: -10px; }
   .model-decorator .connector.bottom {
