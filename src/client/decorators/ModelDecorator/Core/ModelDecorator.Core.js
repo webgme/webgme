@@ -32,7 +32,8 @@ define([
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
         CONNECTION_TYPE_CLASS = 'conn-type',
         CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS}),
-        EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS});
+        EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS}),
+        PORT_DOM_HEIGHT = 15; // same as PORT_DOM_HEIGHT in Port.js
 
     ModelDecoratorCore = function (params) {
         DecoratorWithPortsAndPointerHelpers.apply(this, []);
@@ -67,6 +68,8 @@ define([
         if (params && params.connectors) {
             this._displayConnectors = params.connectors;
         }
+
+        this._svgMargin = -10;
     };
 
     /**** Override from *.WidgetDecoratorBase ****/
@@ -114,6 +117,7 @@ define([
         this._updateSVG();
         this._updateConnectionType();
         this._updateIsReplaceable();
+        this._updateSvgMargin();
     };
 
     ModelDecoratorCore.prototype._updateColors = function () {
@@ -213,6 +217,24 @@ define([
         return portInstance;
     };
 
+    ModelDecoratorCore.prototype._updateSvgMargin = function () {
+        var nbrOfLHSPorts = this.skinParts.$portsContainerLeft.children().size(),
+        nbrOfRHSPorts = this.skinParts.$portsContainerRight.children().size();
+
+        if (nbrOfLHSPorts + nbrOfRHSPorts > 0) {
+            if (nbrOfLHSPorts > nbrOfRHSPorts) {
+                this._svgMargin = 5 - nbrOfLHSPorts * PORT_DOM_HEIGHT;
+            } else {
+                this._svgMargin = 5 - nbrOfRHSPorts * PORT_DOM_HEIGHT;
+            }
+        } else {
+            this._svgMargin = -10;
+        }
+
+        this.skinParts.$imgContainer.css('marginTop', this._svgMargin);
+        this.skinParts.$imgContainer.css('minHeight', -this._svgMargin);
+    };
+
     ModelDecoratorCore.prototype._addPortToContainer = function (portNode, portInstance) {
         var portId = portNode.getId(),
             portContainer = this.skinParts.$portsContainerLeft,
@@ -287,6 +309,8 @@ define([
         if (changed === true) {
             this._portPositionChanged(portId);
         }
+
+        this._updateSvgMargin();
     };
 
     ModelDecoratorCore.prototype._portPositionChanged = function (/*portId*/) {
@@ -315,6 +339,11 @@ define([
         } else {
             this.addPort(portId);
         }
+    };
+
+    ModelDecoratorCore.prototype.removePort = function (portId) {
+        DecoratorWithPortsAndPointerHelpers.prototype.removePort.call(this, portId);
+        this._updateSvgMargin();
     };
 
     ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
@@ -498,12 +527,6 @@ define([
     };
 
     ModelDecoratorCore.prototype._svgReady = function () {
-        var portsHeight = this.skinParts.$portsContainer.outerHeight(),
-            TOP_OFFSET = 5,
-            marginTop = -portsHeight + TOP_OFFSET;
-
-        this.skinParts.$imgSVG.css('margin-top', marginTop);
-
         this.skinParts.$imgSVG.off('load');
         this.skinParts.$imgSVG.off('error');
 
