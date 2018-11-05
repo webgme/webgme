@@ -223,15 +223,7 @@ define([
             i,
             changed;
 
-        //check if the port should be on the left or right-side
-        // FIXME: This should come from registry
-
-        if (portNode.getAttribute('name') === 'BottomInnerPort') {
-            portOrientation = 'S';
-        } else if (portNode.getAttribute('name') === 'TopPort') {
-            portOrientation = 'N';
-        }
-
+        //check where along the border the port should be.
         switch (portOrientation) {
             case 'W':
                 portContainer = this.skinParts.$portsContainerLeft;
@@ -326,18 +318,28 @@ define([
     };
 
     ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
-        var portNode = this._control._client.getNode(portId),
-            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0};
+        var self = this,
+            portNode = this._control._client.getNode(portId),
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0},
+            portOrientation = portNode.getRegistry(REGISTRY_KEYS.PORT_ORIENTATION);
 
-        //check if is has changed at all
-        if ((this.ports[portId].position.x !== portPosition.x) ||
-            (this.ports[portId].position.y !== portPosition.y)) {
+        function reattachPort() {
 
             //detach from DOM
-            this.ports[portId].$el.detach();
+            self.ports[portId].$el.detach();
 
             //reattach
-            this._addPortToContainer(portNode, this.ports[portId]);
+            self._addPortToContainer(portNode, self.ports[portId]);
+        }
+
+        if (portOrientation) {
+            if (this.ports[portId].orientation !== portOrientation) {
+                reattachPort();
+            }
+        } else if ((this.ports[portId].position.x !== portPosition.x) ||
+            (this.ports[portId].position.y !== portPosition.y)) {
+            // Position changed and it didn't have a set orientation.
+            reattachPort();
         }
     };
 

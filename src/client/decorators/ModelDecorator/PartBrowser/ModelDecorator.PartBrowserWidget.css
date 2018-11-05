@@ -33,7 +33,7 @@
     color: #AAAAAA; }
   .model-decorator .ports {
     font-size: 10px;
-    min-height: 1px;
+    min-height: 16px;
     width: 121px;
     position: relative; }
     .model-decorator .ports .left {
