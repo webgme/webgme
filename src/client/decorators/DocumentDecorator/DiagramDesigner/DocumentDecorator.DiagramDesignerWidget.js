@@ -30,6 +30,8 @@ define([
     'use strict';
 
     var DocumentDecorator,
+        INNER_MAX_WIDTH = 373,
+        PADDING_AND_MARGINS = 27,
         DECORATOR_ID = 'DocumentDecorator',
         TEXT_META_EDIT_BTN_BASE = $('<i class="glyphicon glyphicon-cog text-meta no-print" ' +
             'title="Edit documentation" />');
@@ -48,6 +50,7 @@ define([
         this._skinParts = {};
 
         this.$doc = this.$el.find('.doc').first();
+        this._docString = '';
 
         // Use default marked options
         marked.setOptions(this._config.parserOptions);
@@ -134,6 +137,28 @@ define([
         self.update();
     };
 
+    DocumentDecorator.prototype.onRenderGetLayoutInfo = function () {
+        // At this point all elements are inserted in the DOM - adjust the max-width
+        // based on the widest contained child (if using a bunch of custom css style this
+        // approach probably wont work).
+        var maxWidth = 0;
+
+        this.$doc.find('*')
+            .each(function () {
+                var elWidth = $(this).outerWidth(true);
+                maxWidth = elWidth > maxWidth ? elWidth : maxWidth;
+            });
+
+        if (maxWidth > INNER_MAX_WIDTH) {
+            this.$el.css('maxWidth', maxWidth + PADDING_AND_MARGINS);
+        } else {
+            // Remove and fall back to css defined (400px)
+            this.$el.css('maxWidth', undefined);
+        }
+
+        DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this);
+    };
+
     DocumentDecorator.prototype._renderName = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
@@ -162,10 +187,9 @@ define([
 
         if (nodeObj) {
             newDoc = nodeObj.getAttribute('documentation');
-            // Update docs on node when attribute "documentation" changes
-            this.$doc.empty();
             // Show error message if documentation attribute is not defined
             if (newDoc === undefined) {
+                this.$doc.empty();
                 this.$doc.append('Editor is disabled because attribute "documentation" is not found in Meta-Model');
                 this._skinParts.$EditorBtn.addClass('not-activated');
             } else {
@@ -175,14 +199,18 @@ define([
                     this._skinParts.$EditorBtn.addClass('not-activated');
                 }
 
-                try {
-                    renderedEl = $(marked(newDoc));
-                    this.$doc.append(renderedEl);
-                } catch (e) {
-                    this.logger.error('Markdown parsing failed html', e);
-                    this.logger.error('Stored text:', newDoc);
+                if (this._docString !== newDoc) {
                     this.$doc.empty();
-                    this.$doc.append('Stored markdown is invalid!');
+                    this._docString = newDoc;
+                    try {
+                        renderedEl = $(marked(newDoc));
+                        this.$doc.append(renderedEl);
+                    } catch (e) {
+                        this.logger.error('Markdown parsing failed html', e);
+                        this.logger.error('Stored text:', newDoc);
+                        this.$doc.empty();
+                        this.$doc.append('Stored markdown is invalid!');
+                    }
                 }
             }
 
