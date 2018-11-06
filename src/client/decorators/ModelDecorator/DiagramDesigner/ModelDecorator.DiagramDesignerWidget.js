@@ -142,47 +142,80 @@ define([
         //by default return the bounding box edges midpoints
 
         if (id === undefined || id === this.hostDesignerItem.id) {
-            //North side
-            result.push({
-                id: 'N',
-                x1: edge,
-                y1: 0,
-                x2: this.hostDesignerItem.getWidth() - edge,
-                y2: 0,
-                angle1: 270,
-                angle2: 270,
-                len: LEN
-            });
-
-            //South side
-            result.push({
-                id: 'S',
-                x1: edge,
-                y1: this.hostDesignerItem.getHeight(),
-                x2: this.hostDesignerItem.getWidth() - edge,
-                y2: this.hostDesignerItem.getHeight(),
-                angle1: 90,
-                angle2: 90,
-                len: LEN
-            });
-
-            //check east and west
             //if there is port on the side, it's disabled for drawing connections
             //otherwise enabled
             var eastEnabled = true;
             var westEnabled = true;
+            var southEnabled = true;
+            var northEnabled = true;
             for (var pId in this.ports) {
                 if (this.ports.hasOwnProperty(pId)) {
                     if (this.ports[pId].orientation === 'E') {
                         eastEnabled = false;
-                    }
-                    if (this.ports[pId].orientation === 'W') {
+                    } else if (this.ports[pId].orientation === 'W') {
                         westEnabled = false;
+                    } else if (this.ports[pId].orientation === 'S') {
+                        southEnabled = false;
+                    } else if (this.ports[pId].orientation === 'N') {
+                        northEnabled = false;
                     }
                 }
-                if (!eastEnabled && !westEnabled) {
+
+                if (!eastEnabled && !westEnabled && !southEnabled && !northEnabled) {
                     break;
                 }
+            }
+
+            if (southEnabled) {
+                result.push({
+                    id: 'S',
+                    x1: edge,
+                    y1: this.hostDesignerItem.getHeight(),
+                    x2: this.hostDesignerItem.getWidth() - edge,
+                    y2: this.hostDesignerItem.getHeight(),
+                    angle1: 90,
+                    angle2: 90,
+                    len: LEN
+                });
+                this.$el.find('.connector.bottom').removeClass('has-ports');
+            } else {
+                this.$el.find('.connector.bottom').addClass('has-ports');
+            }
+
+            if (northEnabled) {
+                result.push({
+                    id: 'N',
+                    x1: edge,
+                    y1: 0,
+                    x2: this.hostDesignerItem.getWidth() - edge,
+                    y2: 0,
+                    angle1: 270,
+                    angle2: 270,
+                    len: LEN
+                });
+                this.$el.find('.connector.top').removeClass('has-ports');
+            } else {
+                this.$el.find('.connector.top').addClass('has-ports');
+            }
+
+            // If both north and south are disabled we need a spare connector in the top left corner.
+            if (northEnabled === false && southEnabled === false) {
+                this.$el.find('.connector.top-left').removeClass('has-ports');
+                // If east and west are also disabled we need a connection area in the same corner.
+                if (eastEnabled === false && westEnabled === false) {
+                    result.push({
+                        id: 'NW',
+                        x1: 0,
+                        y1: edge,
+                        x2: 0,
+                        y2: edge,
+                        angle1: 180,
+                        angle2: 180,
+                        len: LEN
+                    });
+                }
+            } else {
+                this.$el.find('.connector.top-left').addClass('has-ports');
             }
 
             if (eastEnabled) {

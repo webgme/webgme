@@ -32,12 +32,21 @@
       }
     }
 
+    &.top-left {
+      top: 2px;
+      left: 9px;
+    }
+
     &.top {
       top: -10px;
     }
 
     &.bottom {
       bottom: -9px;
+    }
+
+    &.has-ports {
+      visibility: hidden;
     }
   }
 
@@ -75,6 +84,17 @@
     }
   }
 
+  .bottom-ports {
+    div.connector {
+      top: 6px;
+    }
+  }
+
+  .top-ports {
+    div.connector {
+      top: -9px;
+    }
+  }
   &.accept-droppable {
     background-color: $accept-droppable-background-color;
     cursor: alias;

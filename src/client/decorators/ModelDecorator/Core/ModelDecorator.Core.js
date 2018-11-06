@@ -32,7 +32,8 @@ define([
         EMBEDDED_SVG_CLASS = 'embeddedsvg',
         CONNECTION_TYPE_CLASS = 'conn-type',
         CONN_TYPE_BASE = $('<div/>', {class: CONNECTION_TYPE_CLASS}),
-        EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS});
+        EMBEDDED_SVG_IMG_BASE = $('<img>', {class: EMBEDDED_SVG_CLASS}),
+        PORT_DOM_HEIGHT = 15; // same as PORT_DOM_HEIGHT in Port.js
 
     ModelDecoratorCore = function (params) {
         DecoratorWithPortsAndPointerHelpers.apply(this, []);
@@ -54,9 +55,12 @@ define([
             $portsContainer: undefined,
             $portsContainerLeft: undefined,
             $portsContainerRight: undefined,
+            $portsContainerBottom: undefined,
+            $portsContainerTop: undefined,
             $portsContainerCenter: undefined,
             $ptr: undefined,
             $imgSVG: undefined,
+            $imgContainer: undefined,
             $replaceable: undefined
         };
 
@@ -64,6 +68,8 @@ define([
         if (params && params.connectors) {
             this._displayConnectors = params.connectors;
         }
+
+        this._svgMargin = -10;
     };
 
     /**** Override from *.WidgetDecoratorBase ****/
@@ -94,6 +100,9 @@ define([
         this.skinParts.$portsContainer = this.$el.find('.ports');
         this.skinParts.$portsContainerLeft = this.skinParts.$portsContainer.find('.left');
         this.skinParts.$portsContainerRight = this.skinParts.$portsContainer.find('.right');
+        this.skinParts.$portsContainerBottom = this.$el.find('.bottom-ports');
+        this.skinParts.$portsContainerTop = this.$el.find('.top-ports');
+        this.skinParts.$imgContainer = this.$el.find('.img-container');
         this.skinParts.$portsContainerCenter = this.skinParts.$portsContainer.find('.center');
 
         this._update();
@@ -108,6 +117,7 @@ define([
         this._updateSVG();
         this._updateConnectionType();
         this._updateIsReplaceable();
+        this._updateSvgMargin();
     };
 
     ModelDecoratorCore.prototype._updateColors = function () {
@@ -207,19 +217,60 @@ define([
         return portInstance;
     };
 
+    ModelDecoratorCore.prototype._updateSvgMargin = function () {
+        var nbrOfLHSPorts = this.skinParts.$portsContainerLeft.children().size(),
+        nbrOfRHSPorts = this.skinParts.$portsContainerRight.children().size();
+
+        if (nbrOfLHSPorts + nbrOfRHSPorts > 0) {
+            if (nbrOfLHSPorts > nbrOfRHSPorts) {
+                this._svgMargin = 5 - nbrOfLHSPorts * PORT_DOM_HEIGHT;
+            } else {
+                this._svgMargin = 5 - nbrOfRHSPorts * PORT_DOM_HEIGHT;
+            }
+        } else {
+            this._svgMargin = -10;
+        }
+
+        this.skinParts.$imgContainer.css('marginTop', this._svgMargin);
+        this.skinParts.$imgContainer.css('minHeight', -this._svgMargin);
+    };
+
     ModelDecoratorCore.prototype._addPortToContainer = function (portNode, portInstance) {
         var portId = portNode.getId(),
-            portOrientation = 'W',
             portContainer = this.skinParts.$portsContainerLeft,
             portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0},
+            portOrientation = portNode.getRegistry(REGISTRY_KEYS.PORT_ORIENTATION),
             portToAppendBefore = null,
+            orderAxis = 'y',
             i,
             changed;
 
-        //check if the port should be on the left or right-side
-        if (portPosition.x > 300) {
-            portOrientation = 'E';
-            portContainer = this.skinParts.$portsContainerRight;
+        //check where along the border the port should be.
+        switch (portOrientation) {
+            case 'W':
+                portContainer = this.skinParts.$portsContainerLeft;
+                break;
+            case 'E':
+                portContainer = this.skinParts.$portsContainerRight;
+                break;
+            case 'N':
+                portContainer = this.skinParts.$portsContainerTop;
+                orderAxis = 'x';
+                break;
+            case 'S':
+                portContainer = this.skinParts.$portsContainerBottom;
+                orderAxis = 'x';
+                break;
+            default:
+                // Fall back to the position of the port.
+                if (portPosition.x > 300) {
+                    portOrientation = 'E';
+                    portContainer = this.skinParts.$portsContainerRight;
+                } else {
+                    portOrientation = 'W';
+                    portContainer = this.skinParts.$portsContainerLeft;
+                }
+                break;
         }
 
         changed = portInstance.updateOrPos(portOrientation, portPosition);
@@ -229,19 +280,19 @@ define([
             if (this.ports.hasOwnProperty(i)) {
                 if (i !== portId) {
                     if (this.ports[i].orientation === portInstance.orientation) {
-                        if ((portInstance.position.y < this.ports[i].position.y) ||
-                            ((portInstance.position.y === this.ports[i].position.y) &&
-                            (portInstance.title < this.ports[i].title))) {
+
+                        if ((portInstance.position[orderAxis] < this.ports[i].position[orderAxis]) ||
+                            ((portInstance.position[orderAxis] === this.ports[i].position[orderAxis]) &&
+                                (portInstance.title < this.ports[i].title))) {
 
                             if (portToAppendBefore === null) {
                                 portToAppendBefore = i;
-                            } else {
-                                if ((this.ports[i].position.y < this.ports[portToAppendBefore].position.y) ||
-                                    ((this.ports[i].position.y === this.ports[portToAppendBefore].position.y) &&
+                            } else if ((this.ports[i].position[orderAxis] <
+                                this.ports[portToAppendBefore].position[orderAxis]) ||
+                                ((this.ports[i].position[orderAxis] ===
+                                    this.ports[portToAppendBefore].position[orderAxis]) &&
                                     (this.ports[i].title < this.ports[portToAppendBefore].title))) {
-
-                                    portToAppendBefore = i;
-                                }
+                                portToAppendBefore = i;
                             }
                         }
                     }
@@ -258,6 +309,8 @@ define([
         if (changed === true) {
             this._portPositionChanged(portId);
         }
+
+        this._updateSvgMargin();
     };
 
     ModelDecoratorCore.prototype._portPositionChanged = function (/*portId*/) {
@@ -288,19 +341,34 @@ define([
         }
     };
 
-    ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
-        var portNode = this._control._client.getNode(portId),
-            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0};
+    ModelDecoratorCore.prototype.removePort = function (portId) {
+        DecoratorWithPortsAndPointerHelpers.prototype.removePort.call(this, portId);
+        this._updateSvgMargin();
+    };
 
-        //check if is has changed at all
-        if ((this.ports[portId].position.x !== portPosition.x) ||
-            (this.ports[portId].position.y !== portPosition.y)) {
+    ModelDecoratorCore.prototype._updatePortPosition = function (portId) {
+        var self = this,
+            portNode = this._control._client.getNode(portId),
+            portPosition = portNode.getRegistry(REGISTRY_KEYS.POSITION) || {x: 0, y: 0},
+            portOrientation = portNode.getRegistry(REGISTRY_KEYS.PORT_ORIENTATION);
+
+        function reattachPort() {
 
             //detach from DOM
-            this.ports[portId].$el.detach();
+            self.ports[portId].$el.detach();
 
             //reattach
-            this._addPortToContainer(portNode, this.ports[portId]);
+            self._addPortToContainer(portNode, self.ports[portId]);
+        }
+
+        if (portOrientation) {
+            if (this.ports[portId].orientation !== portOrientation) {
+                reattachPort();
+            }
+        } else if ((this.ports[portId].position.x !== portPosition.x) ||
+            (this.ports[portId].position.y !== portPosition.y)) {
+            // Position changed and it didn't have a set orientation.
+            reattachPort();
         }
     };
 
@@ -439,7 +507,7 @@ define([
         if (svgURL) {
             if (!this.skinParts.$imgSVG) {
                 this.skinParts.$imgSVG = EMBEDDED_SVG_IMG_BASE.clone();
-                this.$el.append(this.skinParts.$imgSVG);
+                this.skinParts.$imgContainer.append(this.skinParts.$imgSVG);
             }
             if (this.skinParts.$imgSVG.attr('src') !== svgURL) {
                 this.skinParts.$imgSVG.on('load', function (/*event*/) {
@@ -459,12 +527,6 @@ define([
     };
 
     ModelDecoratorCore.prototype._svgReady = function () {
-        var portsHeight = this.skinParts.$portsContainer.outerHeight(),
-            TOP_OFFSET = 5,
-            marginTop = -portsHeight + TOP_OFFSET;
-
-        this.skinParts.$imgSVG.css('margin-top', marginTop);
-
         this.skinParts.$imgSVG.off('load');
         this.skinParts.$imgSVG.off('error');
 

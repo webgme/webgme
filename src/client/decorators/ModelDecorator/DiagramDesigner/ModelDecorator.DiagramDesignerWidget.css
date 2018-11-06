@@ -33,7 +33,7 @@
     color: #AAAAAA; }
   .model-decorator .ports {
     font-size: 10px;
-    min-height: 1px;
+    min-height: 16px;
     width: 121px;
     position: relative; }
     .model-decorator .ports .left {
@@ -64,16 +64,16 @@
         overflow: hidden;
         text-overflow: ellipsis; }
       .model-decorator .ports .port img.svg-icon {
-        height: 11px;
-        width: 5px;
-        position: absolute;
         display: inline-block;
-        top: 2px; }
-      .model-decorator .ports .port span.dot {
         position: absolute;
+        top: 2px;
+        height: 11px;
+        width: 5px; }
+      .model-decorator .ports .port span.dot {
         display: inline-block;
         background: #666666;
         border: 1px solid #666666;
+        position: absolute;
         width: 3px;
         height: 7px;
         top: 4px; }
@@ -84,7 +84,7 @@
     .model-decorator .ports .left .port img.svg-icon {
       left: -8px; }
     .model-decorator .ports .left .port span.dot {
-      left: -6px;
+      left: -7px;
       border-top-left-radius: 5px;
       border-bottom-left-radius: 5px; }
     .model-decorator .ports .right .port .title-wrapper {
@@ -98,6 +98,136 @@
       transform: scaleX(-1); }
     .model-decorator .ports .right .port span.dot {
       left: 54px;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px; }
+  .model-decorator .top-ports {
+    width: 100%;
+    left: 0;
+    height: 0;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    display: flex; }
+    .model-decorator .top-ports .port {
+      white-space: nowrap;
+      position: relative;
+      height: 15px;
+      line-height: 15px;
+      display: inline;
+      height: 11px; }
+      .model-decorator .top-ports .port:hover {
+        cursor: pointer; }
+      .model-decorator .top-ports .port .title-wrapper {
+        display: inline-block;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+      .model-decorator .top-ports .port img.svg-icon {
+        display: inline-block;
+        position: relative;
+        margin-left: 2px;
+        margin-right: 2px;
+        width: 11px;
+        height: 5px;
+        top: -8px; }
+      .model-decorator .top-ports .port span.dot {
+        display: inline-block;
+        background: #666666;
+        border: 1px solid #666666;
+        position: relative;
+        margin-left: 4px;
+        margin-right: 4px;
+        width: 7px;
+        height: 4px;
+        top: -9px;
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px; }
+      .model-decorator .top-ports .port.w-icon span.dot {
+        display: none; }
+    .model-decorator .top-ports .left .port .title-wrapper {
+      text-align: left; }
+    .model-decorator .top-ports .left .port img.svg-icon {
+      left: -8px; }
+    .model-decorator .top-ports .left .port span.dot {
+      left: -7px;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px; }
+    .model-decorator .top-ports .right .port .title-wrapper {
+      text-align: right; }
+    .model-decorator .top-ports .right .port img.svg-icon {
+      right: -8px;
+      -webkit-transform: scaleX(-1);
+      -moz-transform: scaleX(-1);
+      -ms-transform: scaleX(-1);
+      -o-transform: scaleX(-1);
+      transform: scaleX(-1); }
+    .model-decorator .top-ports .right .port span.dot {
+      left: 14px;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px; }
+  .model-decorator .bottom-ports {
+    width: 100%;
+    left: 0;
+    height: 0;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    display: flex; }
+    .model-decorator .bottom-ports .port {
+      white-space: nowrap;
+      position: relative;
+      height: 15px;
+      line-height: 15px;
+      display: inline;
+      height: 11px; }
+      .model-decorator .bottom-ports .port:hover {
+        cursor: pointer; }
+      .model-decorator .bottom-ports .port .title-wrapper {
+        display: inline-block;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+      .model-decorator .bottom-ports .port img.svg-icon {
+        display: inline-block;
+        position: relative;
+        margin-left: 2px;
+        margin-right: 2px;
+        width: 11px;
+        height: 5px;
+        top: 3px; }
+      .model-decorator .bottom-ports .port span.dot {
+        display: inline-block;
+        background: #666666;
+        border: 1px solid #666666;
+        position: relative;
+        margin-left: 4px;
+        margin-right: 4px;
+        width: 7px;
+        height: 4px;
+        top: 1px;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px; }
+      .model-decorator .bottom-ports .port.w-icon span.dot {
+        display: none; }
+    .model-decorator .bottom-ports .left .port .title-wrapper {
+      text-align: left; }
+    .model-decorator .bottom-ports .left .port img.svg-icon {
+      left: -8px; }
+    .model-decorator .bottom-ports .left .port span.dot {
+      left: -7px;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px; }
+    .model-decorator .bottom-ports .right .port .title-wrapper {
+      text-align: right; }
+    .model-decorator .bottom-ports .right .port img.svg-icon {
+      right: -8px;
+      -webkit-transform: scaleX(-1);
+      -moz-transform: scaleX(-1);
+      -ms-transform: scaleX(-1);
+      -o-transform: scaleX(-1);
+      transform: scaleX(-1); }
+    .model-decorator .bottom-ports .right .port span.dot {
+      left: 14px;
       border-top-right-radius: 5px;
       border-bottom-right-radius: 5px; }
   .model-decorator .progress-bar .loader-progressbar {
@@ -132,17 +262,36 @@
     height: 15px;
     width: 15px;
     margin-bottom: 2px;
-    border-radius: 5px; }
-    .model-decorator .set.inverse-on-hover:hover {
+    border-radius: 2px; }
+    .model-decorator .set:hover {
       background-color: rgba(82, 168, 236, 0.8);
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
-      .model-decorator .set.inverse-on-hover:hover [class^="icon-"]:not(.icon-white),
-      .model-decorator .set.inverse-on-hover:hover [class*=" icon-"]:not(.icon-white) {
+      .model-decorator .set:hover [class^="icon-"]:not(.icon-white),
+      .model-decorator .set:hover [class*=" icon-"]:not(.icon-white) {
         background-image: url("../../../img/glyphicons-halflings-white.png"); }
     .model-decorator .set [class^="icon-"],
     .model-decorator .set [class*=" icon-"] {
+      margin-top: -2px; }
+  .model-decorator .replaceable {
+    position: absolute;
+    bottom: 0;
+    left: 2px;
+    height: 15px;
+    width: 15px;
+    margin-bottom: 2px;
+    border-radius: 2px; }
+    .model-decorator .replaceable:hover {
+      background-color: rgba(82, 168, 236, 0.8);
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+      .model-decorator .replaceable:hover [class^="icon-"]:not(.icon-white),
+      .model-decorator .replaceable:hover [class*=" icon-"]:not(.icon-white) {
+        background-image: url("../../../img/glyphicons-halflings-white.png"); }
+    .model-decorator .replaceable [class^="icon-"],
+    .model-decorator .replaceable [class*=" icon-"] {
       margin-top: -2px; }
   .model-decorator.abstract .name {
     font-style: italic;
@@ -177,10 +326,15 @@
       top: -16px; }
     .model-decorator .connector:hover.bottom {
       bottom: -16px; }
+  .model-decorator .connector.top-left {
+    top: 2px;
+    left: 9px; }
   .model-decorator .connector.top {
     top: -10px; }
   .model-decorator .connector.bottom {
     bottom: -9px; }
+  .model-decorator .connector.has-ports {
+    visibility: hidden; }
 .model-decorator .ports .port div.connector {
   top: 0.5px; }
   .model-decorator .ports .port div.connector:hover {
@@ -194,6 +348,10 @@
   left: 60px; }
   .model-decorator .ports .right .port .connector:hover {
     left: 62px; }
+.model-decorator .bottom-ports div.connector {
+  top: 6px; }
+.model-decorator .top-ports div.connector {
+  top: -9px; }
 .model-decorator.accept-droppable {
   background-color: #00FF00 !important;
   cursor: alias; }

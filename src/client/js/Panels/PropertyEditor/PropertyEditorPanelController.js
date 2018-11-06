@@ -54,6 +54,7 @@ define(['js/logger',
             REGISTRY_KEYS.TREE_ITEM_EXPANDED_ICON,
             REGISTRY_KEYS.SVG_ICON,
             REGISTRY_KEYS.PORT_SVG_ICON,
+            REGISTRY_KEYS.PORT_ORIENTATION,
             REGISTRY_KEYS.COLOR,
             REGISTRY_KEYS.TEXT_COLOR,
             REGISTRY_KEYS.BORDER_COLOR,
@@ -540,6 +541,18 @@ define(['js/logger',
                             dst[repKey].useDisplayedValue = WebGMEGlobal.SvgManager.isSvg;
                         }
                         dst[repKey].clipboard = true;
+                    } else if (key === REGISTRY_KEYS.PORT_ORIENTATION) {
+                        dst[ICON_SUB_GROUP] = {
+                            name: ICON_SUB_GROUP,
+                            text: ICON_SUB_GROUP,
+                            value: undefined,
+                            isFolder: true
+                        };
+                        repKey = ICON_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        delete dst[extKey];
+                        dst[repKey].value = typeof dst[repKey].value !== 'string' ? '' : dst[repKey].value;
+                        dst[repKey].valueItems = ['E', 'W', 'S', 'N'];
                     } else if (key === REGISTRY_KEYS.COLOR || key === REGISTRY_KEYS.BORDER_COLOR ||
                         key === REGISTRY_KEYS.TEXT_COLOR) {
                         dst[COLOR_SUB_GROUP] = {

@@ -12,12 +12,16 @@ $icon-padding: 2px;
 $svg-icon-height: 11px;
 $svg-icon-width: 5px;
 
-@mixin port($ports-width, $padding) {
+@mixin port($ports-width, $padding, $orientation) {
   .port {
     white-space: nowrap;
     position: relative;
     height: $port-height;
     line-height: $port-height;
+    @if($orientation == 'N' or $orientation == 'S') {
+      display: inline;
+      height: $svg-icon-height;
+    }
 
     &:hover {
       cursor: pointer;
@@ -31,21 +35,53 @@ $svg-icon-width: 5px;
     }
 
     img.svg-icon {
-      height: $svg-icon-height;
-      width: $svg-icon-width;
-      position: absolute;
       display: inline-block;
-      top: 2px;
+
+      @if($orientation == 'N' or $orientation == 'S') {
+        position: relative;
+        margin-left: 2px;
+        margin-right: 2px;
+        width: $svg-icon-height;
+        height: $svg-icon-width;
+        @if($orientation == 'S') {
+          top: 3px;
+        } @else {
+          top: -8px;
+        }
+      } @else {
+        position: absolute;
+        top: 2px;
+        height: $svg-icon-height;
+        width: $svg-icon-width;
+      }
     }
 
     span.dot {
-      position: absolute;
       display: inline-block;
       background: $dot-color;
       border: $dot-border-width solid $dot-color;
-      width: $dot-width;
-      height: $dot-height;
-      top: ($port-height - $dot-height)/2;
+
+      @if($orientation == 'N' or $orientation == 'S') {
+        position: relative;
+        margin-left: 4px;
+        margin-right: 4px;
+        width: $dot-height;
+        height: $dot-width + 1;
+        @if($orientation == 'S') {
+          top: 1px;
+          border-bottom-left-radius: $dot-radius;
+          border-bottom-right-radius: $dot-radius;
+        } @else {
+          top: -9px;
+          border-top-left-radius: $dot-radius;
+          border-top-right-radius: $dot-radius;
+        }
+      } @else {
+        position: absolute;
+        width: $dot-width;
+        height: $dot-height;
+        top: ($port-height - $dot-height)/2;
+      }
     }
 
     &.w-icon {
@@ -66,7 +102,7 @@ $svg-icon-width: 5px;
       }
 
       span.dot {
-        left: - $padding - $dot-width;
+        left: - $padding - $dot-width - 1;
         border-top-left-radius: $dot-radius;
         border-bottom-left-radius: $dot-radius;
       }
