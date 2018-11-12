@@ -74,10 +74,12 @@ define(['js/logger',
             WebGMEGlobal.gmeConfig.client.log);
         this._logger.debug('Created');
 
-        function stateChangeUpdate() {
+        function stateChangeUpdate(stateChangeType) {
+            console.log('stateChangeUpdate triggered by', stateChangeType);
             clearTimeout(self._stateChangeTimeoutId);
             self._partBrowserView.showProgressbar();
-            self._stateChangeTimeoutId = setTimeout(function () {
+            self._stateChangeTimeoutId = setTimeout(function delayedStateChangeUpdate() {
+                console.log('delayedStateChangeUpdate triggered by', stateChangeType, Math.random());
                 self._updateDescriptor(self._getPartDescriptorCollection());
                 self._partBrowserView.hideProgressbar();
             });
@@ -98,7 +100,7 @@ define(['js/logger',
                 self.setReadOnly(container.isLibraryElement() || container.isLibraryRoot());
             }
 
-            stateChangeUpdate();
+            stateChangeUpdate(CONSTANTS.STATE_ACTIVE_OBJECT);
         });
 
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_TAB, function (/*model, activeTabId*/) {
@@ -107,7 +109,7 @@ define(['js/logger',
             if (self._aspect !== activeAspect) {
                 self._aspect = activeAspect;
 
-                stateChangeUpdate();
+                stateChangeUpdate(CONSTANTS.STATE_ACTIVE_TAB);
             }
         });
 
@@ -115,7 +117,7 @@ define(['js/logger',
             if (self._visualizer !== activeVisualizer) {
                 self._visualizer = activeVisualizer;
 
-                stateChangeUpdate();
+                stateChangeUpdate(CONSTANTS.STATE_ACTIVE_VISUALIZER);
             }
         });
 
@@ -133,6 +135,12 @@ define(['js/logger',
 
             if ((JSON.stringify(self._shortMetaDescriptor) !== JSON.stringify(newShortMetaDescriptor)) ||
                 containerChanged) {
+                if (!containerChanged) {
+                    console.log(JSON.stringify(self._shortMetaDescriptor, null, 2), '!==',
+                        JSON.stringify(newShortMetaDescriptor, null, 2));
+                } else {
+                    console.log('container-changed...');
+                }
                 self._shortMetaDescriptor = newShortMetaDescriptor;
                 self._updateLibrarySelector();
                 self._updateDescriptor(self._getPartDescriptorCollection(), true);
@@ -238,11 +246,14 @@ define(['js/logger',
         newTerritoryRules = this._getTerritoryPatterns();
         if (JSON.stringify(this._territoryRules) !== JSON.stringify(newTerritoryRules)) {
             this._territoryRules = newTerritoryRules;
+            var newTerrStr = JSON.stringify(newTerritoryRules);
             if (delay) {
-                setTimeout(function () {
+                setTimeout(function delayedUpdateDescriptor() {
+                    console.log('delayedUpdateDescriptor', newTerrStr);
                     self._client.updateTerritory(self._guid, self._territoryRules);
                 });
             } else {
+                console.log('updateDescriptor', newTerrStr);
                 self._client.updateTerritory(self._guid, self._territoryRules);
             }
 
@@ -274,6 +285,8 @@ define(['js/logger',
             },
             i;
 
+        console.log('_getPartDescriptorCollection');
+
         //getSetName = function () {
         //    var setNamesOrdered = (containerNode.getSetNames() || []).sort(),
         //        tabId = WebGMEGlobal.State.getActiveTab();
@@ -300,7 +313,10 @@ define(['js/logger',
                 validInfo = activePanel.getValidTypesInfo(containerNode.getId(), this._aspect);
             } else {
                 // default is the containment based elements.
+                console.time();
                 validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
+                console.count('getValidChildrenTypesDetailed');
+                console.timeEnd();
             }
 
             keys = Object.keys(validInfo);
