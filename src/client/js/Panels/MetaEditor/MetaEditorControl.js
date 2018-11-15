@@ -92,7 +92,6 @@ define(['js/logger',
 
         this._metaAspectMembersAll = [];
         this._metaAspectMembersPerSheet = {};
-        this._metaAspectMembersCoordinatesGlobal = {};
         this._metaAspectMembersCoordinatesPerSheet = {};
         this._selectedMetaAspectSheetMembers = [];
         this._selectedSheetID = null;
@@ -308,7 +307,6 @@ define(['js/logger',
     MetaEditorControl.prototype._processMetaAspectContainerNode = function () {
         var aspectNodeID = this.metaAspectContainerNodeID,
             aspectNode = this._client.getNode(aspectNodeID),
-            metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
             territoryChanged = false,
             metaInconsistencies,
             i,
@@ -320,20 +318,8 @@ define(['js/logger',
             selectedSheetMembers,
             positionsUpdated;
 
-        console.count('_processMetaAspectContainerNode');
-
         //this._metaAspectMembersAll contains all the currently known members of the meta aspect
-        //update current member list
-        this._metaAspectMembersAll = metaAspectSetMembers.slice(0);
-        len = this._metaAspectMembersAll.length;
-        this._metaAspectMembersCoordinatesGlobal = {};
-        while (len--) {
-            gmeID = this._metaAspectMembersAll[len];
-            this._metaAspectMembersCoordinatesGlobal[gmeID] = aspectNode.getMemberRegistry(
-                MetaEditorConstants.META_ASPECT_SET_NAME,
-                gmeID,
-                REGISTRY_KEYS.POSITION);
-        }
+        this._metaAspectMembersAll = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME);
 
         //setSelected sheet
         //this._selectedMetaAspectSet

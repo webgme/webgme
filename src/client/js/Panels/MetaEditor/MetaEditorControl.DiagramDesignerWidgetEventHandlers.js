@@ -804,10 +804,7 @@ define(['js/logger',
             aspectNode = this._client.getNode(aspectNodeID),
             metaAspectSheetsRegistry = aspectNode.getRegistry(REGISTRY_KEYS.META_SHEETS) || [],
             i,
-            len,
             newSetID,
-            componentID,
-            pos,
             newSheetDesc;
 
         metaAspectSheetsRegistry.sort(function (a, b) {
@@ -818,8 +815,7 @@ define(['js/logger',
             }
         });
 
-        len = metaAspectSheetsRegistry.length;
-        for (i = 0; i < len; i += 1) {
+        for (i = 0; i < metaAspectSheetsRegistry.length; i += 1) {
             metaAspectSheetsRegistry[i].order = i;
         }
 
@@ -837,41 +833,6 @@ define(['js/logger',
         };
 
         metaAspectSheetsRegistry.push(newSheetDesc);
-
-        //migrating projects that already have META aspect members but did not have sheets before
-        //TODO: not needed in the future,
-        //  TODO: but before version 0.4.3 users were able to create META definitions without meta sheets
-        //TODO: that needed to be carried over
-        //TODO: can be removed sometimes in the future
-        if (metaAspectSheetsRegistry.length === 1) {
-            len = this._metaAspectMembersAll.length;
-            pos = 100;
-            while (len--) {
-                componentID = this._metaAspectMembersAll[len];
-                this._client.addMember(aspectNodeID, componentID, newSetID);
-                if (this._metaAspectMembersCoordinatesGlobal[componentID]) {
-                    this._client.setMemberRegistry(aspectNodeID,
-                        componentID,
-                        newSetID,
-                        REGISTRY_KEYS.POSITION,
-                        {
-                            x: this._metaAspectMembersCoordinatesGlobal[componentID].x,
-                            y: this._metaAspectMembersCoordinatesGlobal[componentID].y
-                        });
-                } else {
-                    this._client.setMemberRegistry(aspectNodeID,
-                        componentID,
-                        newSetID,
-                        REGISTRY_KEYS.POSITION,
-                        {
-                            x: pos,
-                            y: pos
-                        });
-                    pos += 30;
-                }
-            }
-        }
-
         this._client.setRegistry(aspectNodeID, REGISTRY_KEYS.META_SHEETS, metaAspectSheetsRegistry);
 
         //force switching to the new sheet
