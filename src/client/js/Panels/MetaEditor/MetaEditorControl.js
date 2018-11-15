@@ -2279,7 +2279,7 @@ define(['js/logger',
 
     MetaEditorControl.getDefaultConfig = function () {
         return {
-            autoCheckMetaConsistency: true
+            autoCheckMetaConsistency: false
         };
     };
 
