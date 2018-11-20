@@ -290,10 +290,7 @@ define(['js/logger',
                 validInfo = activePanel.getValidTypesInfo(containerNode.getId(), this._aspect);
             } else {
                 // default is the containment based elements.
-                console.time();
                 validInfo = containerNode.getValidChildrenTypesDetailed(this._aspect);
-                console.count('getValidChildrenTypesDetailed');
-                console.timeEnd();
             }
 
             keys = Object.keys(validInfo);
