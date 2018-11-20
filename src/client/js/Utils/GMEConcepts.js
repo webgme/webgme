@@ -302,24 +302,9 @@ define(['jquery',
     }
 
     function getMETAAspectMergedValidChildrenTypes(objID) {
-        var metaNodes = client.getAllMetaNodes() || [],
-            nodeObj = client.getNode(objID),
-            validChildrenTypes = nodeObj ? nodeObj.getValidChildrenIds() : [],
-            len = metaNodes.length,
-            id,
-            metaNode;
+        var nodeObj = client.getNode(objID);
 
-        while (len--) {
-            metaNode = metaNodes[len];
-            id = metaNode.getId();
-            if (validChildrenTypes.indexOf(id) === -1) {
-                if (metaNode.isValidChildOf(objID)) {
-                    validChildrenTypes.push(id);
-                }
-            }
-        }
-
-        return validChildrenTypes;
+        return nodeObj ? nodeObj.getValidChildrenMetaIds({}) : [];
     }
 
     function canAddToSet(objID, setName, itemIDList) {
