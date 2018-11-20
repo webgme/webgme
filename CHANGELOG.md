@@ -1,11 +1,30 @@
 # Change Log
 
+## [v2.33.0](https://github.com/webgme/webgme/tree/v2.33.0) (2018-11-20)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.32.0...v2.33.0)
+
+**Implemented enhancements:**
+
+- Bump webgme-engine to v2.22.1 [\#1654](https://github.com/webgme/webgme/issues/1654)
+- DocumentDecorator has more flexible width to avoid overflows [\#1653](https://github.com/webgme/webgme/pull/1653) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- Meta Editor should allow navigation to any sheet where meta-node is present [\#1647](https://github.com/webgme/webgme/issues/1647)
+
+**Merged pull requests:**
+
+- Fixes \#1647 add sheet navigation for items in meta-editor [\#1656](https://github.com/webgme/webgme/pull/1656) ([pmeijer](https://github.com/pmeijer))
+- Major performance improvements in part browser and meta-editor [\#1655](https://github.com/webgme/webgme/pull/1655) ([pmeijer](https://github.com/pmeijer))
+- Model Decorator supports set orientation of ports \(S,N,W,E\) [\#1652](https://github.com/webgme/webgme/pull/1652) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.32.0](https://github.com/webgme/webgme/tree/v2.32.0) (2018-10-29)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.31.0...v2.32.0)
 
 **Implemented enhancements:**
 
 - Bumping webgme-engine version [\#1651](https://github.com/webgme/webgme/issues/1651)
+- Curve control points not moving with both ends of connection  [\#1642](https://github.com/webgme/webgme/issues/1642)
 - Add instructions on how to write Python plugins in tutorial [\#1645](https://github.com/webgme/webgme/pull/1645) ([pmeijer](https://github.com/pmeijer))
 - Apply square routing regardless even though segment-points are defined [\#1644](https://github.com/webgme/webgme/pull/1644) ([pmeijer](https://github.com/pmeijer))
 - Fixes \#1642 Handle connection-segment-points during move/copy/create instance [\#1643](https://github.com/webgme/webgme/pull/1643) ([pmeijer](https://github.com/pmeijer))
@@ -19,6 +38,7 @@
 
 **Fixed bugs:**
 
+- webgme fails to render on microsoft edge [\#1459](https://github.com/webgme/webgme/issues/1459)
 - Fix Firefox dialog text selection issue. [\#1639](https://github.com/webgme/webgme/pull/1639) ([kecso](https://github.com/kecso))
 - Remove ES6 language constructs from the generic ui s.t. IE can load [\#1638](https://github.com/webgme/webgme/pull/1638) ([pmeijer](https://github.com/pmeijer))
 - Fixes Microsoft edge issues [\#1637](https://github.com/webgme/webgme/pull/1637) ([pmeijer](https://github.com/pmeijer))
