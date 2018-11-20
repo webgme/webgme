@@ -2068,6 +2068,7 @@ define(['js/logger',
         var oldMetaAspectMembersCoordinatesPerSheet = this._metaAspectMembersCoordinatesPerSheet;
 
         this._sheets = {};
+        this._tabIdxToTitle = {};
         this._metaAspectMembersPerSheet = {};
         this._metaAspectMembersCoordinatesPerSheet = {};
         this.diagramDesigner.clearTabs();
@@ -2093,6 +2094,7 @@ define(['js/logger',
             sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true, true);
 
             this._sheets[sheetID] = setName;
+            this._tabIdxToTitle[sheetID] = metaAspectSheetsRegistry[i].title;
 
             //get the most up-to-date member list for each set
             this._metaAspectMembersPerSheet[setName] = aspectNode.getMemberIds(setName);
