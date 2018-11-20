@@ -89,7 +89,7 @@ define(['js/logger',
                                 confirmDialog.show({
                                     title: 'Invalid base modification',
                                     question: 'Currently, modification from or to a base ' +
-                                    'which has children is not allowed!',
+                                        'which has children is not allowed!',
                                     noCancelButton: true,
                                     iconClass: 'glyphicon glyphicon-exclamation-sign'
                                 }, function () {
@@ -114,7 +114,7 @@ define(['js/logger',
                             confirmDialog.show({
                                 title: 'Confirm base change',
                                 question: 'Changing a base can cause invalid data ' +
-                                'in the target node and its descendants!',
+                                    'in the target node and its descendants!',
                                 iconClass: 'glyphicon glyphicon-exclamation-sign'
                             }, function () {
                                 self._onCreateNewConnection(params);
@@ -1209,6 +1209,8 @@ define(['js/logger',
                                                                                                       mousePos) {
         var menuItems = {},
             self = this,
+            sheetIdToIdx,
+            gmeID,
             srcPath,
             dstPath,
             oldName,
@@ -1225,7 +1227,7 @@ define(['js/logger',
                     self._client.notifyUser({
                         severity: 'success',
                         message: 'Successfully propagated name change from [' +
-                        prevName + '] to [' + newName + '].'
+                            prevName + '] to [' + newName + '].'
                     });
                 }
 
@@ -1282,11 +1284,38 @@ define(['js/logger',
                         }
 
                     },
-                    this.diagramDesigner.posToPageXY(mousePos.mX,
-                        mousePos.mY));
+                    this.diagramDesigner.posToPageXY(mousePos.mX, mousePos.mY));
+            } else if (this._ComponentID2GMEID.hasOwnProperty(selectedIds[0])) {
+                // check to see if this gmeID is present on any other sheet and if so provide links to the tab.
+                gmeID = this._ComponentID2GMEID[selectedIds[0]];
+                if (this._metaAspectSheetsPerMember[gmeID].length > 1) {
+                    sheetIdToIdx = {};
+
+                    Object.keys(this._sheets).forEach(function (tabIdx) {
+                        sheetIdToIdx[self._sheets[tabIdx]] = tabIdx;
+                    });
+
+                    this._metaAspectSheetsPerMember[gmeID].forEach(function (sheetId) {
+                        var tabIdx = sheetIdToIdx[sheetId];
+
+                        if (self._selectedMetaAspectSet !== sheetId) {
+                            menuItems[tabIdx] = {
+                                name: 'View in "' + self._tabIdxToTitle[tabIdx] + '" sheet ..',
+                                icon: 'glyphicon glyphicon-share'
+                            };
+                        }
+                    });
+
+                    this.diagramDesigner.createMenu(menuItems, function (key) {
+                            self._onSelectedTabChanged(key);
+                            setTimeout(function () {
+                                WebGMEGlobal.State.registerActiveSelection([gmeID], {invoker: this});
+                            });
+                        },
+                        this.diagramDesigner.posToPageXY(mousePos.mX, mousePos.mY));
+                }
             }
         }
-
     };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
