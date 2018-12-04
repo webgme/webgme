@@ -36,7 +36,7 @@ require.config({
         'jquery-dataTables': 'lib/jquery/jquery.dataTables',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
-        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/modules/',
+        'jquery-fancytree': 'bower_components/jquery.fancytree/dist/modules',
         'jquery-layout': 'lib/jquery/jquery.layout',
 
         'jquery-contextMenu': 'bower_components/jQuery-contextMenu/dist/jquery.contextMenu',

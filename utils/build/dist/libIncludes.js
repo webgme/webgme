@@ -10,6 +10,10 @@ define([
     'jquery-contextMenu',
     'jquery-spectrum',
 
+    'jquery-fancytree/jquery.fancytree',
+    'jquery-fancytree/jquery.fancytree.edit',
+    'jquery-fancytree/jquery.fancytree.filter',
+
     'bootstrap',
     'bootstrap-multiselect',
     'bootstrap-notify',

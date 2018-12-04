@@ -152,7 +152,7 @@ var requirejs = require('requirejs'),
             'jquery-ui-iPad': 'empty:',
             'jquery-spectrum': 'client/bower_components/spectrum/spectrum',
             'jquery-csszoom': 'empty:',
-            'jquery-fancytree': 'empty:',
+            'jquery-fancytree': 'client/bower_components/jquery.fancytree/dist/modules',
             'jquery-layout': 'empty:',
             'jquery-contextMenu': 'client/bower_components/jQuery-contextMenu/dist/jquery.contextMenu',
 
