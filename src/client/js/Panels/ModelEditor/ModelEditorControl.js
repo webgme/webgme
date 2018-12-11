@@ -487,7 +487,7 @@ define(['js/logger',
                     territoryChanged = this._onLoad(e.eid, e.desc) || territoryChanged;
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
-                    this._onUpdate(e.eid, e.desc);
+                    territoryChanged = this._onUpdate(e.eid, e.desc) || territoryChanged;
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     territoryChanged = this._onUnload(e.eid) || territoryChanged;
@@ -578,22 +578,22 @@ define(['js/logger',
         return result;
     };
 
-    // PUBLIC METHODS
-    ModelEditorControl.prototype._onLoad = function (gmeID, objD) {
-        var uiComponent,
-            decClass,
-            objDesc,
-            sources = [],
-            destinations = [],
-            getDecoratorTerritoryQueries,
+    ModelEditorControl.prototype._addGMEConnection = function (gmeID, objDesc) {
+        var uiComponent = this.designerCanvas.createConnection(objDesc);
+        this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
+            objDesc.id);
+
+        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+        this._ComponentID2GMEID[uiComponent.id] = gmeID;
+    };
+
+    ModelEditorControl.prototype._addGMEModel = function (gmeID, objDesc) {
+        var self = this,
             territoryChanged = false,
-            self = this,
+            decClass,
+            uiComponent;
 
-            srcDst,
-            k,
-            l;
-
-        getDecoratorTerritoryQueries = function (decorator) {
+        function getDecoratorTerritoryQueries(decorator) {
             var query,
                 entry;
 
@@ -609,7 +609,38 @@ define(['js/logger',
                     }
                 }
             }
-        };
+        }
+
+        this._GMEModels.push(gmeID);
+
+        decClass = this._getItemDecorator(objDesc.decorator);
+
+        objDesc.decoratorClass = decClass;
+        objDesc.control = this;
+        objDesc.metaInfo = {};
+        objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+        objDesc.aspect = this._selectedAspect;
+
+        uiComponent = this.designerCanvas.createDesignerItem(objDesc);
+
+        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+        this._ComponentID2GMEID[uiComponent.id] = gmeID;
+
+        getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
+
+        return territoryChanged;
+    };
+
+    // PUBLIC METHODS
+    ModelEditorControl.prototype._onLoad = function (gmeID, objD) {
+        var objDesc,
+            sources = [],
+            destinations = [],
+            territoryChanged = false,
+            srcDst,
+            sn,
+            dn;
 
         //component loaded
         //we are interested in the load of sub_components of the opened component
@@ -620,25 +651,7 @@ define(['js/logger',
                     this._GMEID2ComponentID[gmeID] = [];
 
                     if (objDesc.kind === 'MODEL' || objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
-
-                        this._GMEModels.push(gmeID);
-
-                        decClass = this._getItemDecorator(objDesc.decorator);
-
-                        objDesc.decoratorClass = decClass;
-                        objDesc.control = this;
-                        objDesc.metaInfo = {};
-                        objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
-                        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-                        objDesc.aspect = this._selectedAspect;
-
-                        uiComponent = this.designerCanvas.createDesignerItem(objDesc);
-
-                        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
-                        this._ComponentID2GMEID[uiComponent.id] = gmeID;
-
-                        getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
-
+                        territoryChanged = this._addGMEModel(gmeID, objDesc);
                     }
 
                     if (objDesc.kind === 'CONNECTION') {
@@ -649,16 +662,13 @@ define(['js/logger',
                         sources = srcDst.sources;
                         destinations = srcDst.destinations;
 
-                        k = sources.length;
-                        l = destinations.length;
-
-                        if (k > 0 && l > 0) {
-                            while (k--) {
-                                while (l--) {
-                                    objDesc.srcObjId = sources[k].objId;
-                                    objDesc.srcSubCompId = sources[k].subCompId;
-                                    objDesc.dstObjId = destinations[l].objId;
-                                    objDesc.dstSubCompId = destinations[l].subCompId;
+                        if (sources.length > 0 && destinations.length > 0) {
+                            for (sn = 0; sn < sources.length; sn += 1) {
+                                for (dn = 0; dn < destinations.length; dn += 1) {
+                                    objDesc.srcObjId = sources[sn].objId;
+                                    objDesc.srcSubCompId = sources[sn].subCompId;
+                                    objDesc.dstObjId = destinations[dn].objId;
+                                    objDesc.dstSubCompId = destinations[dn].subCompId;
                                     objDesc.reconnectable = true;
                                     objDesc.editable = true;
 
@@ -666,13 +676,7 @@ define(['js/logger',
                                     delete objDesc.target;
 
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    uiComponent = this.designerCanvas.createConnection(objDesc);
-
-                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
-                                        objDesc.id);
-
-                                    this._GMEID2ComponentID[gmeID].push(uiComponent.id);
-                                    this._ComponentID2GMEID[uiComponent.id] = gmeID;
+                                    this._addGMEConnection(gmeID, objDesc);
                                 }
                             }
                         } else {
@@ -701,15 +705,16 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
-        var componentID,
+        var territoryChanged = false,
+            updatedBox,
+            componentID,
             len,
             decClass,
             srcDst,
             sources,
             destinations,
-            k,
-            l,
-            uiComponent;
+            sn,
+            dn;
 
         //self or child updated
         //check if the updated object is the opened node
@@ -725,18 +730,30 @@ define(['js/logger',
                     if (objDesc.kind === 'MODEL' || objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
                         if (this._GMEID2ComponentID[gmeID]) {
                             len = this._GMEID2ComponentID[gmeID].length;
+                            updatedBox = false;
                             while (len--) {
                                 componentID = this._GMEID2ComponentID[gmeID][len];
+                                if (this.designerCanvas.connectionIds.indexOf(componentID) === -1) {
+                                    updatedBox = true;
+                                    decClass = this._getItemDecorator(objDesc.decorator);
 
-                                decClass = this._getItemDecorator(objDesc.decorator);
+                                    objDesc.decoratorClass = decClass;
+                                    objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+                                    objDesc.aspect = this._selectedAspect;
 
-                                objDesc.decoratorClass = decClass;
-                                objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-                                objDesc.aspect = this._selectedAspect;
+                                    this.designerCanvas.updateDesignerItem(componentID, objDesc);
+                                }
+                            }
 
-                                this.designerCanvas.updateDesignerItem(componentID, objDesc);
+                            if (objDesc[REGISTRY_KEYS.BOX_DECORATION] && updatedBox === false) {
+                                //  There wasn't any box associated with the connection.
+                                territoryChanged = this._addGMEModel(gmeID, objDesc);
                             }
                         }
+                    } else if (objDesc.kind === 'CONNECTION' &&
+                        objDesc[REGISTRY_KEYS.BOX_DECORATION] &&
+                        this._GMEID2ComponentID[gmeID].length > 1) {
+
                     }
 
                     //there is a connection associated with this GMEID
@@ -746,16 +763,14 @@ define(['js/logger',
                         sources = srcDst.sources;
                         destinations = srcDst.destinations;
 
-                        k = sources.length;
-                        l = destinations.length;
                         len -= 1;
 
-                        for (k = sources.length - 1; k >= 0; k -= 1) {
-                            for (l = destinations.length - 1; l >= 0; l -= 1) {
-                                objDesc.srcObjId = sources[k].objId;
-                                objDesc.srcSubCompId = sources[k].subCompId;
-                                objDesc.dstObjId = destinations[l].objId;
-                                objDesc.dstSubCompId = destinations[l].subCompId;
+                        for (sn = 0; sn < sources.length; sn += 1) {
+                            for (dn = 0; dn < destinations.length; dn += 1) {
+                                objDesc.srcObjId = sources[sn].objId;
+                                objDesc.srcSubCompId = sources[sn].subCompId;
+                                objDesc.dstObjId = destinations[dn].objId;
+                                objDesc.dstSubCompId = destinations[dn].subCompId;
                                 objDesc.reconnectable = true;
                                 objDesc.editable = true;
 
@@ -766,30 +781,30 @@ define(['js/logger',
                                     componentID = this._GMEID2ComponentID[gmeID][len];
 
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    this.designerCanvas.updateConnection(componentID, objDesc);
+
+                                    if (this.designerCanvas.connectionIds.indexOf(componentID) > -1) {
+                                        this.designerCanvas.updateConnection(componentID, objDesc);
+                                    } else {
+                                        this._addGMEConnection(gmeID, objDesc);
+                                    }
 
                                     len -= 1;
                                 } else {
-                                    this.logger.warn('Updating connections...Existing connections are less than the ' +
+                                    this.logger.error('Updating connections...Existing connections are less than the ' +
                                         'needed src-dst combo...');
                                     //let's create a connection
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    uiComponent = this.designerCanvas.createConnection(objDesc);
-                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
-                                        objDesc.id);
-                                    this._GMEID2ComponentID[gmeID].push(uiComponent.id);
-                                    this._ComponentID2GMEID[uiComponent.id] = gmeID;
+                                    this._addGMEConnection(gmeID, objDesc);
                                 }
                             }
                         }
 
-                        if (len >= 0) {
-                            //some leftover connections on the widget
-                            //delete them if BOX_DECORATION is false
+                        if (len >= 0 && !objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
+                            //some leftover connection boxes on the widget
                             len += 1;
                             while (len--) {
-                                if (!objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
-                                    componentID = this._GMEID2ComponentID[gmeID][len];
+                                componentID = this._GMEID2ComponentID[gmeID][len];
+                                if (this.designerCanvas.connectionIds.indexOf(componentID) > -1) {
                                     this.designerCanvas.deleteComponent(componentID);
                                     this._GMEID2ComponentID[gmeID].splice(len, 1);
                                     delete this._ComponentID2GMEID[componentID];
@@ -803,6 +818,8 @@ define(['js/logger',
                 }
             }
         }
+
+        return territoryChanged;
     };
 
     ModelEditorControl.prototype._updateSheetName = function (name) {
