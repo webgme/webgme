@@ -39,8 +39,8 @@ define(['js/logger',
 
     ModelEditorControl = function (options, config) {
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
-                'ModelEditorControl',
-                WebGMEGlobal.gmeConfig.client.log);
+            'ModelEditorControl',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
         this._config = ModelEditorControl.getDefaultConfig();
@@ -181,12 +181,54 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._getObjectDescriptor = function (nodeId) {
-        var nodeObj = this._client.getNode(nodeId),
+        var self = this,
+            nodeObj = this._client.getNode(nodeId),
             objDescriptor,
-            pos,
-            defaultPos = 0,
-            customPoints,
-            memberListContainerObj;
+            customPoints;
+
+        function extendWithBoxProperties() {
+            var defaultPos = 0,
+                pos,
+                memberListContainerObj;
+            //aspect specific coordinate
+            if (self._selectedAspect === CONSTANTS.ASPECT_ALL) {
+                pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+            } else {
+                memberListContainerObj = self._client.getNode(self.currentNodeInfo.id);
+                try {
+                    pos = memberListContainerObj.getMemberRegistry(self._selectedAspect,
+                        nodeId,
+                        REGISTRY_KEYS.POSITION);
+                } catch (err) {
+                    if (err.name !== 'CoreIllegalOperationError') {
+                        throw err;
+                    }
+                }
+
+                pos = pos || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+            }
+
+            if (pos) {
+                objDescriptor.position = {x: pos.x, y: pos.y};
+            } else {
+                objDescriptor.position = {x: defaultPos, y: defaultPos};
+            }
+
+            if (objDescriptor.position.hasOwnProperty('x')) {
+                objDescriptor.position.x = self._getDefaultValueForNumber(objDescriptor.position.x, defaultPos);
+            } else {
+                objDescriptor.position.x = defaultPos;
+            }
+
+            if (objDescriptor.position.hasOwnProperty('y')) {
+                objDescriptor.position.y = self._getDefaultValueForNumber(objDescriptor.position.y, defaultPos);
+            } else {
+                objDescriptor.position.y = defaultPos;
+            }
+
+            objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || '';
+            objDescriptor.rotation = parseInt(nodeObj.getRegistry(REGISTRY_KEYS.ROTATION), 10) || 0;
+        }
 
         if (nodeObj) {
             objDescriptor = {};
@@ -212,6 +254,10 @@ define(['js/logger',
                     //get all the other visual properties of the connection
                     _.extend(objDescriptor, GMEVisualConcepts.getConnectionVisualProperties(nodeId));
 
+                    if (objDescriptor[REGISTRY_KEYS.BOX_DECORATION]) {
+                        extendWithBoxProperties();
+                    }
+
                     // If srcText or dstText is given -> remove the name.
                     if (objDescriptor.srcText || objDescriptor.dstText) {
                         delete objDescriptor.name;
@@ -228,44 +274,7 @@ define(['js/logger',
                     objDescriptor.connectionChanged = this._GMEModels.indexOf(nodeId) === -1 &&
                         this._GMEConnections.indexOf(nodeId) > -1;
 
-                    //aspect specific coordinate
-                    if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                        pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
-                    } else {
-                        memberListContainerObj = this._client.getNode(this.currentNodeInfo.id);
-                        try {
-                            pos = memberListContainerObj.getMemberRegistry(this._selectedAspect,
-                                nodeId,
-                                REGISTRY_KEYS.POSITION);
-                        } catch (err) {
-                            if (err.name !== 'CoreIllegalOperationError') {
-                                throw err;
-                            }
-                        }
-
-                        pos = pos || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
-                    }
-
-                    if (pos) {
-                        objDescriptor.position = {x: pos.x, y: pos.y};
-                    } else {
-                        objDescriptor.position = {x: defaultPos, y: defaultPos};
-                    }
-
-                    if (objDescriptor.position.hasOwnProperty('x')) {
-                        objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, defaultPos);
-                    } else {
-                        objDescriptor.position.x = defaultPos;
-                    }
-
-                    if (objDescriptor.position.hasOwnProperty('y')) {
-                        objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, defaultPos);
-                    } else {
-                        objDescriptor.position.y = defaultPos;
-                    }
-
-                    objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || '';
-                    objDescriptor.rotation = parseInt(nodeObj.getRegistry(REGISTRY_KEYS.ROTATION), 10) || 0;
+                    extendWithBoxProperties();
                 }
             }
         }
@@ -490,7 +499,6 @@ define(['js/logger',
 
         //connections
         events = orderedConnectionEvents;
-        i = events.length;
 
         //items
         for (i = 0; i < events.length; i += 1) {
@@ -611,7 +619,7 @@ define(['js/logger',
                     objDesc = _.extend({}, objD);
                     this._GMEID2ComponentID[gmeID] = [];
 
-                    if (objDesc.kind === 'MODEL') {
+                    if (objDesc.kind === 'MODEL' || objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
 
                         this._GMEModels.push(gmeID);
 
@@ -714,7 +722,7 @@ define(['js/logger',
         } else {
             if (objDesc) {
                 if (objDesc.parentId === this.currentNodeInfo.id) {
-                    if (objDesc.kind === 'MODEL') {
+                    if (objDesc.kind === 'MODEL' || objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
                         if (this._GMEID2ComponentID[gmeID]) {
                             len = this._GMEID2ComponentID[gmeID].length;
                             while (len--) {
@@ -777,13 +785,15 @@ define(['js/logger',
 
                         if (len >= 0) {
                             //some leftover connections on the widget
-                            //delete them
+                            //delete them if BOX_DECORATION is false
                             len += 1;
                             while (len--) {
-                                componentID = this._GMEID2ComponentID[gmeID][len];
-                                this.designerCanvas.deleteComponent(componentID);
-                                this._GMEID2ComponentID[gmeID].splice(len, 1);
-                                delete this._ComponentID2GMEID[componentID];
+                                if (!objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
+                                    componentID = this._GMEID2ComponentID[gmeID][len];
+                                    this.designerCanvas.deleteComponent(componentID);
+                                    this._GMEID2ComponentID[gmeID].splice(len, 1);
+                                    delete this._ComponentID2GMEID[componentID];
+                                }
                             }
                         }
                     }

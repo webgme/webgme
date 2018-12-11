@@ -28,7 +28,7 @@ define([
             targetSubcomponentId = objDescriptor.dstSubCompId,
             newComponent;
 
-        this.logger.debug('Creating connection component with parameters: ' + JSON.stringify(objDescriptor));
+        this.logger.debug('Creating connection component with parameters:', objDescriptor);
 
         objDescriptor.designerCanvas = this;
 
