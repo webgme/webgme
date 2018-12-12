@@ -12,7 +12,9 @@ define(['js/logger',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
     'js/DragDrop/DragSource',
-    'jquery-fancytree',
+    'jquery-fancytree/jquery.fancytree',
+    'jquery-fancytree/jquery.fancytree.edit',
+    'jquery-fancytree/jquery.fancytree.filter',
     'jquery-contextMenu',
     'css!./styles/TreeBrowserWidget.css'
 ], function (Logger, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
@@ -197,8 +199,15 @@ define(['js/logger',
             createNode: function (event, data) {
                 self._makeNodeDraggable(data.node);
             },
-            removeNode: function (event, data) {
-                self._destroyDraggable(data.node);
+            modifyChild: function (event, data) {
+                // This replaces
+                // removeNode: function (event, data) {
+                //     self._destroyDraggable(data.node);
+                // },
+                // Changed in https://github.com/mar10/fancytree/releases/tag/v2.20.0
+                if (data.operation === 'remove') {
+                    (data.node.children || []).forEach(self._destroyDraggable);
+                }
             },
 
             // Extensions
