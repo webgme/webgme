@@ -4,7 +4,7 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Controls/PropertyGrid/Widgets/WidgetBase', 'clipboard'], function (WidgetBase, Clipboard) {
+define(['js/Controls/PropertyGrid/Widgets/WidgetBase', 'clipboard'], function (WidgetBase, ClipboardJS) {
 
     'use strict';
 
@@ -23,7 +23,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase', 'clipboard'], function (W
         this.__clipboard = propertyDesc.clipboard;
 
         if (this.__clipboard === true) {
-            new Clipboard(this.__label[0]);
+            new ClipboardJS(this.__label[0]);
             this.__label.attr('title', 'Copy to clipboard');
             this.__label.css('cursor', 'copy');
         }

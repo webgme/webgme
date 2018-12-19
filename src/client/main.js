@@ -59,11 +59,11 @@ require.config({
         jquery: 'bower_components/jquery/dist/jquery',
         'jquery-ui': 'bower_components/jquery-ui/jquery-ui',
         'jquery-ui-iPad': 'lib/jquery/jquery.ui.ipad',
-        'jquery-dataTables': 'lib/jquery/jquery.dataTables.min',
+        'jquery-dataTables': 'lib/jquery/jquery.dataTables',
         'jquery-dataTables-bootstrapped': 'lib/jquery/jquery.dataTables.bootstrapped',
         'jquery-spectrum': 'bower_components/spectrum/spectrum',
         'jquery-fancytree': 'bower_components/jquery.fancytree/dist/modules',
-        'jquery-layout': 'lib/jquery/jquery.layout.min',
+        'jquery-layout': 'lib/jquery/jquery.layout',
 
         'jquery-contextMenu': 'bower_components/jQuery-contextMenu/dist/jquery.contextMenu',
         'jquery-csszoom': 'bower_components/jquery.csszoom/jquery.csszoom',
