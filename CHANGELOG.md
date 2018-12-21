@@ -1,5 +1,14 @@
 # Change Log
 
+## [v2.34.0](https://github.com/webgme/webgme/tree/v2.34.0) (2018-12-21)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.33.0...v2.34.0)
+
+**Implemented enhancements:**
+
+- Expose overridefromenv from webgme-engine from webgme [\#1658](https://github.com/webgme/webgme/issues/1658)
+- Bump webgme-engine to v2.22.2 [\#1659](https://github.com/webgme/webgme/pull/1659) ([pmeijer](https://github.com/pmeijer))
+- Update fancy tree from v2.19.0 to v2.30.1 [\#1657](https://github.com/webgme/webgme/pull/1657) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.33.0](https://github.com/webgme/webgme/tree/v2.33.0) (2018-11-20)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.32.0...v2.33.0)
 
