@@ -1,3 +1,4 @@
+dist: xenial
 language: node_js
 services:
   - mongodb
@@ -8,7 +9,7 @@ sudo: false
 addons:
   apt:
     sources:
-      - mongodb-3.2-precise
+      - mongodb-4.0-xenial
 
     packages:
       - mongodb-org-server
@@ -24,6 +25,7 @@ cache:
 node_js:
   - "6"
   - "8"
+  - "10"
 
 env:
   - TEST_BROWSER=true
