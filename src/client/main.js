@@ -82,7 +82,6 @@ require.config({
         epiceditor: 'bower_components/EpicEditor/epiceditor/js/epiceditor',
         ravenjs: 'bower_components/raven-js/dist/raven',
         clipboard: 'bower_components/clipboard/dist/clipboard',
-        knockout: 'bower_components/knockout/dist/knockout.debug',
         diff_match_patch: 'bower_components/google-diff-match-patch/diff_match_patch_uncompressed',
 
         //RaphaelJS family
