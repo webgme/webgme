@@ -1,4 +1,3 @@
-// This file contains changes that makes this module work with jquery 3.3
 /**
  * @preserve
  * jquery.layout 1.3.0 - Release Candidate 30.79

@@ -7,18 +7,23 @@ define([
 
     'jquery',
     'jquery-ui',
-    'jquery-contextMenu',
+    'jquery-ui-iPad',
     'jquery-spectrum',
+
+    'jquery-contextMenu',
+    'jquery-csszoom',
 
     'jquery-fancytree/jquery.fancytree',
     'jquery-fancytree/jquery.fancytree.edit',
     'jquery-fancytree/jquery.fancytree.filter',
+    'jquery-layout',
 
     'bootstrap',
     'bootstrap-multiselect',
     'bootstrap-notify',
 
     'q',
+    'ejs',
     'webgme-ot',
     'superagent',
     'jszip',
@@ -35,6 +40,9 @@ define([
     'diff_match_patch',
     'epiceditor',
     'clipboard',
+
+    'eve',
+    'raphaeljs',
 
     'angular',
     'angular-ui-bootstrap',

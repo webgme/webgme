@@ -9,7 +9,7 @@
  * For additional documentation of the notify feature see: http://bootstrap-notify.remabledesigns.com/
  */
 
-define(['clipboard', 'jquery'], function (Clipboard) {
+define(['clipboard', 'jquery'], function (ClipboardJS) {
 
     'use strict';
 
@@ -51,7 +51,7 @@ define(['clipboard', 'jquery'], function (Clipboard) {
                     .css('padding-left', '0')
                     .hide();
 
-                new Clipboard(btnEl[0]);
+                new ClipboardJS(btnEl[0]);
 
                 note.__oldUpdate = note.update;
                 note.update = function (name, value) {

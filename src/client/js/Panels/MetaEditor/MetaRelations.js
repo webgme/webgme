@@ -6,7 +6,8 @@
 
 define(['js/Constants',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
-    'js/Utils/SvgManager'
+    'js/Utils/SvgManager',
+    'raphaeljs'
 ], function (CONSTANTS,
              DiagramDesignerWidgetConstants,
              SvgManager) {

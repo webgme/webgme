@@ -33,14 +33,18 @@ define(['js/logger'], function (Logger) {
                 if (Object.keys(self._decorators).length === total) {
                     callback();
                 } else {
-                    callback('Failed to download all requested decorators ' + decoratorNames.toString() +
-                             ' only got ' + Object.keys(self._decorators).toString());
+                    callback(new Error('Failed to download all requested decorators ' +
+                        decoratorNames.toString() + ' only got ' + Object.keys(self._decorators).toString()));
                 }
             }
         }
 
         for (i = 0; i < total; i += 1) {
             self._downloadOne(decoratorNames[i], countCallback);
+        }
+
+        if (total === 0) {
+            callback();
         }
     };
 

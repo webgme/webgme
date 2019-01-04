@@ -218,8 +218,8 @@ define([
     };
 
     ModelDecoratorCore.prototype._updateSvgMargin = function () {
-        var nbrOfLHSPorts = this.skinParts.$portsContainerLeft.children().size(),
-        nbrOfRHSPorts = this.skinParts.$portsContainerRight.children().size();
+        var nbrOfLHSPorts = this.skinParts.$portsContainerLeft.children().length,
+        nbrOfRHSPorts = this.skinParts.$portsContainerRight.children().length;
 
         if (nbrOfLHSPorts + nbrOfRHSPorts > 0) {
             if (nbrOfLHSPorts > nbrOfRHSPorts) {
