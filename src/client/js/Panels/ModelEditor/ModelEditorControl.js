@@ -473,7 +473,6 @@ define(['js/logger',
         }
 
         events = unloadEvents.concat(orderedItemEvents);
-        i = events.length;
 
         this._notifyPackage = {};
 
