@@ -375,6 +375,12 @@ define([
                 groupClass;
             self._setSelected();
 
+            self._groupTabList.find('li.tab').each(function () {
+                $(this).removeClass('active');
+            });
+
+            el.addClass('active');
+
             groupClass = TAB_GROUP_PREFIX + el.data(DATA_TAB);
             self._modalBody.find('div.image-container').each(function () {
                 var divImg = $(this);

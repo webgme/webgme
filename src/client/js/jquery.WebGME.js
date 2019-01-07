@@ -268,8 +268,15 @@ define(['jquery'], function () {
 
             this.each(function () {
                 $(this).append(ul.clone(true));
+
                 $(this).on('click.groupedAlphabetTabs', 'li', function (event) {
                     var filter = $(this).data('filter');
+
+                    $(this).parent().find('li').each(function () {
+                        $(this).removeClass('active');
+                    });
+
+                    $(this).addClass('active');
 
                     if (params && params.onClick) {
                         params.onClick(filter);

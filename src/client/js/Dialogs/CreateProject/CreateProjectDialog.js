@@ -84,6 +84,12 @@ define(['js/Loader/LoaderCircles',
             self._btnDuplicate.removeClass('activated');
             self._btnCreateBlob.removeClass('activated');
 
+            self._dialog.find('li.tab').each(function () {
+                $(this).removeClass('active');
+            });
+
+            tabEl.addClass('active');
+
             if (tabEl.hasClass('snap-shot')) {
                 self._formSnapShot.addClass('activated');
                 self._btnCreateSnapShot.addClass('activated');
@@ -93,8 +99,6 @@ define(['js/Loader/LoaderCircles',
             } else if (tabEl.hasClass('blob')) {
                 self._formBlob.addClass('activated');
                 self._btnCreateBlob.addClass('activated');
-            } else {
-                return;
             }
         }
 
