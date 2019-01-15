@@ -867,10 +867,23 @@ define(['js/logger',
     MetaEditorControl.prototype._updateConnectionText = function (gmeSrcId, gmeDstId, connType, connTexts) {
         var connectionID,
             idx,
-            len = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].length,
+            len,
             pointerOrSetName = connTexts.name,
             found = false,
+            connectionPresent = false,
             connDesc;
+
+        if (this._connectionListBySrcGMEID[gmeSrcId] &&
+            this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] &&
+            this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType]) {
+            connectionPresent = true;
+        }
+
+        if (!connectionPresent) {
+            return;
+        }
+
+        len = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].length;
 
         while (len--) {
             connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType][len];
@@ -1002,11 +1015,12 @@ define(['js/logger',
 
         //compute updated and added connections
         children.items.forEach(function (target, idx) {
-            if (self._nodeMetaContainment[gmeID].items.indexOf(target) > -1) {
+            var prevIdx = self._nodeMetaContainment[gmeID].items.indexOf(target);
+            if (prevIdx > -1) {
                 sameCnt += 1;
                 // Potential Update
-                if (self._nodeMetaContainment[gmeID].minItems[idx] !== children.minItems[idx] ||
-                    self._nodeMetaContainment[gmeID].maxItems[idx] !== children.maxItems[idx]) {
+                if (self._nodeMetaContainment[gmeID].minItems[prevIdx] !== children.minItems[idx] ||
+                    self._nodeMetaContainment[gmeID].maxItems[prevIdx] !== children.maxItems[idx]) {
                     self._updateConnectionText(gmeID, target, MetaRelations.META_RELATIONS.CONTAINMENT, {
                         dstText: getMultiplicityText(children.minItems[idx], children.maxItems[idx]),
                         dstTextEdit: true
@@ -1099,13 +1113,14 @@ define(['js/logger',
                     if (isOneToOnePointer(newPtrDesc) === isOneToOnePointer(oldPtrDesc)) {
                         sameTargetCnt = 0;
                         newPtrDesc.items.forEach(function (target, idx) {
-                            if (oldPtrDesc.items.indexOf(target) > -1) {
+                            var prevIdx = oldPtrDesc.items.indexOf(target);
+                            if (prevIdx > -1) {
                                 sameTargetCnt += 1;
 
                                 // Potential text update for set
                                 if (isOneToOnePointer(newPtrDesc) === false &&
-                                    (oldPtrDesc.minItems[idx] !== newPtrDesc.minItems[idx] ||
-                                    oldPtrDesc.maxItems[idx] !== newPtrDesc.maxItems[idx])) {
+                                    (oldPtrDesc.minItems[prevIdx] !== newPtrDesc.minItems[idx] ||
+                                    oldPtrDesc.maxItems[prevIdx] !== newPtrDesc.maxItems[idx])) {
                                     self._updateConnectionText(gmeID, target, MetaRelations.META_RELATIONS.SET, {
                                         name: ptrName,
                                         dstText: getMultiplicityText(newPtrDesc.minItems[idx],
