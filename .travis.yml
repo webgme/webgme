@@ -13,6 +13,7 @@ addons:
 
     packages:
       - mongodb-org-server
+      - xvfb
 
 cache:
   directories:
@@ -31,8 +32,8 @@ env:
   - TEST_BROWSER=true
   - TEST_FOLDER=test RECURSIVE=true
 
-#before_script:
-#  - export DISPLAY=:99.0
-#  - sh -e /etc/init.d/xvfb start
+before_script:
+  - xvfb :99
+  - export DISPLAY=:99.0
 
 script: ./test/travis.sh
