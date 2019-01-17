@@ -321,6 +321,7 @@ define([
 
     DiagramDesignerWidgetTabs.prototype._onTabsSortStop = function () {
         var ul = this.$ulTabTab,
+            orderChanged = false,
             allLi = ul.find('li'),
             i,
             li,
@@ -331,7 +332,14 @@ define([
             order.push(li.data(TAB_ID));
         }
 
-        if (order.length > 0) {
+        for (i = 0; i < order.length; i += 1) {
+            if (i + '' !== order[i]) {
+                orderChanged = true;
+                break;
+            }
+        }
+
+        if (orderChanged) {
             this.onTabsSorted(order);
         }
     };
