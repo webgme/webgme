@@ -248,7 +248,8 @@ define(['js/logger',
                 title: crosscutsRegistry[len].title,
                 filterInfo: crosscutsRegistry[len].filter || {},
                 enableDeleteTab: true,
-                enableRenameTab: true
+                enableRenameTab: true,
+                order: crosscutsRegistry[len].order
             });
         }
 
@@ -266,7 +267,7 @@ define(['js/logger',
     CrosscutController.prototype.getMemberListSetsRegistryKey = function () {
         return REGISTRY_KEYS.CROSSCUTS;
     };
-    
+
     CrosscutController.prototype.getMemberListSetsRegistry = GMEConcepts.getCrosscuts;
 
     CrosscutController.prototype.getNewSetNamePrefixDesc = function () {
