@@ -1,5 +1,31 @@
 # Change Log
 
+## [v2.35.0](https://github.com/webgme/webgme/tree/v2.35.0) (2019-01-21)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.35.0-alpha.1...v2.35.0)
+
+**Implemented enhancements:**
+
+- Sliding a diagram-designer tab without reordering triggers a commit [\#1665](https://github.com/webgme/webgme/issues/1665)
+- Zip files used without DEFLATE [\#1662](https://github.com/webgme/webgme/issues/1662)
+- Bump webgme-engine to v2.22.3 [\#1667](https://github.com/webgme/webgme/pull/1667) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- MetaEditor throws exception when trying to update text on non-rendered connection [\#1663](https://github.com/webgme/webgme/issues/1663)
+- Fixes \#1665 do not trigger orTabsSorted when no change and crosscut tab ordering [\#1666](https://github.com/webgme/webgme/pull/1666) ([pmeijer](https://github.com/pmeijer))
+- Fixes \#1663 meta-editor conn update exception by ensuring connection present on current sheet [\#1664](https://github.com/webgme/webgme/pull/1664) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.35.0-alpha.1](https://github.com/webgme/webgme/tree/v2.35.0-alpha.1) (2019-01-07)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.34.0...v2.35.0-alpha.1)
+
+**Fixed bugs:**
+
+- Fixes exception for tabs by ensuring active class is handled explicitly [\#1661](https://github.com/webgme/webgme/pull/1661) ([pmeijer](https://github.com/pmeijer))
+
+**Merged pull requests:**
+
+- jquery 3.3.1 and bower updates [\#1660](https://github.com/webgme/webgme/pull/1660) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.34.0](https://github.com/webgme/webgme/tree/v2.34.0) (2018-12-21)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.33.0...v2.34.0)
 
@@ -8,6 +34,10 @@
 - Expose overridefromenv from webgme-engine from webgme [\#1658](https://github.com/webgme/webgme/issues/1658)
 - Bump webgme-engine to v2.22.2 [\#1659](https://github.com/webgme/webgme/pull/1659) ([pmeijer](https://github.com/pmeijer))
 - Update fancy tree from v2.19.0 to v2.30.1 [\#1657](https://github.com/webgme/webgme/pull/1657) ([pmeijer](https://github.com/pmeijer))
+
+**Fixed bugs:**
+
+- Propagating changes fails when client not in sync with server. [\#1632](https://github.com/webgme/webgme/issues/1632)
 
 ## [v2.33.0](https://github.com/webgme/webgme/tree/v2.33.0) (2018-11-20)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.32.0...v2.33.0)
