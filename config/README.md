@@ -89,7 +89,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.authentication.jwt.tokenGenerator = 'node_modules/webgme-engine/src/server/middleware/auth/localtokengenerator.js'`
  - Replaceable module for generating tokens in case webgme should not generated new tokens by itself.
 - `config.authentication.adminAccount = null`
- - If specified, will create an admin account at the given username at server startup. By default a random password will be generated and logged in the terminal - to specify a password add a `:`, e.g. `'admin:password'`. 
+ - If specified, will create an admin account at the given username at server startup. By default a random password will be generated and logged in the terminal - to specify a password add a `:`, e.g. `'admin:password'`.
 (Once the admin exists the password will not be updated at startup.)
 - `config.authentication.publicOrganizations = []`
  - Array of organizations to be created at server startup. New users will be added as members to these organizations. (Note that the guest account will not be added to the organizations.)
@@ -100,7 +100,8 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Logger settings when running bin scripts.
 
 ##### blob
-
+- `config.blob.compressionLevel = 0`
+ - Compression level of DEFLATE (between 0 and 9) to use when serving bundled complex artifacts.
 - `config.blob.type = 'FS'`
  - Type of storage, available options: `'FS'` (File System), `'S3'` (Simple Storage Service).
 - `config.blob.fsDir = './blob-local-storage'`
@@ -129,7 +130,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.client.errorReporting.ravenOptions = null`
  - Options passed to the [raven-client](https://docs.sentry.io/clients/javascript/config/), if not specified {release: <webgmeversion>} will be passed.
 - `config.client.allowUserDefinedSVG = true`
- - Set to false to disabled injection of user-defined svgs into the DOM. 
+ - Set to false to disabled injection of user-defined svgs into the DOM.
 
 ##### core
 
@@ -183,7 +184,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 
 ##### rest
 - `config.rest.components = {}`
- - Collection of external rest routes index by their (unique) ids. The value is an object with keys; `src` file-path (or name) 
+ - Collection of external rest routes index by their (unique) ids. The value is an object with keys; `src` file-path (or name)
  to the module defining the router, `mount` where the router will be mounted relative the <host>, `options` an object with setting for the specific router.
  Use the `RestRouterGenerator` plugin to generate a template router (see the generated file for more info).
 
@@ -227,14 +228,14 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.server.workerManager.path = 'node_modules/webgme-engine/src/server/worker/serverworkermanager'`
  - Path to module (implementing `node_modules/webgme-engine/src/server/worker/WorkerManagerBase`) handling worker requests.
 - `config.server.workerManager.options = {}`
- - Options for non-default workerManager (valid fields depend on type of worker-manager). 
+ - Options for non-default workerManager (valid fields depend on type of worker-manager).
 - `config.server.log = see webgme-engine default.config`
  - Transports and options for the server (winston) logger.
 - `config.server.extlibExcludes = ['.\.pem$', 'config\/config\..*\.js$']`
  - Array of regular expressions that will hinder access to files via the '/extlib/' route. Requests to files matching any of the provided pattern will result in 403.
 - `config.server.behindSecureProxy = false`
  - Indicate if the webgme server is behind a secure proxy (needed for adding correct OG Metadata in index.html).
- 
+
 ##### socketIO
 - `config.socketIO.clientOptions = see webgme-engine default.config`
  - Options passed to the [socketIO client](https://github.com/socketio/socket.io-client#managerurlstring-optsobject) when connecting to the sever.
