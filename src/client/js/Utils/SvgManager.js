@@ -15,33 +15,40 @@ define([
     var SVG_CACHE = {},
         BASEDIR = CONSTANTS.ASSETS_DECORATOR_SVG_FOLDER;
 
-    //TODO we try our best to remove the ejs portions without actual rendering, but that might not help...
     /**
      * The function checks if the input string is a potential svg string or svg template string (and not a simple path)
      * @param {string} text - the string to check
      * @return {boolean} Returns if the checked text can be used as an svg string or template
      */
     function isSvg(text) {
-        var result = false;
-
         if (DecoratorSVGIconList.indexOf(text) > -1 || WebGMEGlobal.gmeConfig.client.allowUserDefinedSVG !== true) {
             return false;
         }
 
         text = text || '';
-        text = text.split('<%');
-        for (var i = 0; i < text.length; i += 1) {
-            text[i] = text[i].replace(/^(.|\n)*%>/g, '');
-        }
-        text = text.join('');
 
-        try {
-            result = $(text).is('svg');
-        } catch (e) {
-            result = false;
-        }
+        // As this method only helps with distinguishing between a url-path and svg/ejs text we simply check
+        // if there are any tags in the text (as the char '<' must be URL-encoded it should not be in any paths).
+        return text.indexOf('<') > -1;
 
-        return result;
+
+        //TODO we try our best to remove the ejs portions without actual rendering, but that might not help...
+        // Removing ejs brackets doesn't mean the left over part is a valid svg
+        // and $(text).is('svg') logs errors for empty attributes etc.
+
+        // text = text.split('<%');
+        // for (var i = 0; i < text.length; i += 1) {
+        //     text[i] = text[i].replace(/^(.|\n)*%>/g, '');
+        // }
+        // text = text.join('');
+        //
+        // try {
+        //     result = $(text).is('svg');
+        // } catch (e) {
+        //     result = false;
+        // }
+        //
+        // return result;
     }
 
     function getSvgFileContent(svgFilePath) {
@@ -232,7 +239,7 @@ define([
         sanitizedEl.find('use').each(function () {
             var useEl = $(this);
             if (useEl.attr('xlink:href') && !useEl.attr('xmlns:xlink')) {
-                useEl.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
+                useEl.attr('xmlns:xlink', 'http://www.w3.org/1999/xlink');
             }
         });
 
