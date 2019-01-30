@@ -23,7 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "bower": "1.8.4",
+    "bower": "1.8.8",
     "q": "1.5.1",
     "require-uncached": "1.0.3",
     "requirejs": "2.3.5",
