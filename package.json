@@ -1,6 +1,6 @@
 {
   "name": "webgme",
-  "version": "2.35.0",
+  "version": "2.36.0",
   "description": "Web-based Generic Modeling Environment",
   "engines": {
     "node": ">=4.0.0"
