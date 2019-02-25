@@ -1,5 +1,16 @@
 # Change Log
 
+## [v2.36.0](https://github.com/webgme/webgme/tree/v2.36.0) (2019-02-25)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.35.0...v2.36.0)
+
+**Implemented enhancements:**
+
+- Quiet check within SvgManager.isSvg [\#1668](https://github.com/webgme/webgme/pull/1668) ([pmeijer](https://github.com/pmeijer))
+
+**Merged pull requests:**
+
+- Bump bower dependency to 1.8.8 [\#1669](https://github.com/webgme/webgme/pull/1669) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.35.0](https://github.com/webgme/webgme/tree/v2.35.0) (2019-01-21)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.35.0-alpha.1...v2.35.0)
 
@@ -14,17 +25,14 @@
 - MetaEditor throws exception when trying to update text on non-rendered connection [\#1663](https://github.com/webgme/webgme/issues/1663)
 - Fixes \#1665 do not trigger orTabsSorted when no change and crosscut tab ordering [\#1666](https://github.com/webgme/webgme/pull/1666) ([pmeijer](https://github.com/pmeijer))
 - Fixes \#1663 meta-editor conn update exception by ensuring connection present on current sheet [\#1664](https://github.com/webgme/webgme/pull/1664) ([pmeijer](https://github.com/pmeijer))
-
-## [v2.35.0-alpha.1](https://github.com/webgme/webgme/tree/v2.35.0-alpha.1) (2019-01-07)
-[Full Changelog](https://github.com/webgme/webgme/compare/v2.34.0...v2.35.0-alpha.1)
-
-**Fixed bugs:**
-
 - Fixes exception for tabs by ensuring active class is handled explicitly [\#1661](https://github.com/webgme/webgme/pull/1661) ([pmeijer](https://github.com/pmeijer))
 
 **Merged pull requests:**
 
 - jquery 3.3.1 and bower updates [\#1660](https://github.com/webgme/webgme/pull/1660) ([pmeijer](https://github.com/pmeijer))
+
+## [v2.35.0-alpha.1](https://github.com/webgme/webgme/tree/v2.35.0-alpha.1) (2019-01-07)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.34.0...v2.35.0-alpha.1)
 
 ## [v2.34.0](https://github.com/webgme/webgme/tree/v2.34.0) (2018-12-21)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.33.0...v2.34.0)

@@ -27,7 +27,7 @@
     "q": "1.5.1",
     "require-uncached": "1.0.3",
     "requirejs": "2.3.5",
-    "webgme-engine": "2.22.3",
+    "webgme-engine": "^2.22.4",
     "webgme-user-management-page": "0.4.3"
   },
   "devDependencies": {
