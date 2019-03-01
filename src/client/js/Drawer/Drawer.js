@@ -28,7 +28,7 @@ define(['js/logger',
 
         this._el = $('<div id="webgme-drawer" class=' + DRAWER_CLASS + '/>');
 
-        var table = $('<table class="table table-hover table-dark table-bordered"></table>'),
+        var table = $('<table class="table table-hover table-dark table-bordered table-sm"></table>'),
             thead = $('<thead><tr>' +
                 '<th scope="col">Name</th><th scope="col">Environment</th><th scope="col">Actions</th></tr></thead>');
 
