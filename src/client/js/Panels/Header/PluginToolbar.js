@@ -4,7 +4,11 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 
-define(['js/Dialogs/PluginResults/PluginResultsDialog', 'common/util/guid'], function (PluginResultsDialog, GUID) {
+define([
+    'js/Dialogs/PluginResults/PluginResultsDialog',
+    'common/util/guid',
+    'js/RunningPluginDrawer/RunningPluginDrawer'
+], function (PluginResultsDialog, GUID, RunningPluginDrawer) {
     'use strict';
 
     var PluginToolbar,
@@ -30,13 +34,16 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog', 'common/util/guid'], fun
             setBadgeText,
             badge;
 
+        self._usePopUpNotification = RunningPluginDrawer.getConfig().disablePopUpNotification !== true;
+
+
         setBadgeText = function (text) {
             self.$btnExecutePlugin.el.find('.' + BADGE_CLASS).text(text);
         };
 
         fillMenuItems = function () {
             var pluginIds = WebGMEGlobal.gmeConfig.plugin.displayAll ? WebGMEGlobal.allPlugins :
-                    client.filterPlugins(WebGMEGlobal.allPlugins, WebGMEGlobal.State.getActiveObject()),
+                client.filterPlugins(WebGMEGlobal.allPlugins, WebGMEGlobal.State.getActiveObject()),
                 executeClickFunction = function (data) {
                     executePlugin(data);
                 },
@@ -122,31 +129,34 @@ define(['js/Dialogs/PluginResults/PluginResultsDialog', 'common/util/guid'], fun
                     msg += 'failed (click for details), error: ' + result.error;
                 }
 
-                note = $.notify({
-                    icon: metadata.icon.class ? metadata.icon.class : DEFAULT_ICON_CLASS,
-                    message: msg
-                },{
-                    delay: 10000,
-                    type: result.success ? 'success' : 'danger',
-                    offset: {
-                        x: 20,
-                        y: 37
-                    },
-                    mouse_over: 'pause',
-                    onClose: function () {
-                        note.$ele.off();
-                    }
-                });
+                if (self._usePopUpNotification) {
+                    note = $.notify({
+                        icon: metadata.icon.class ? metadata.icon.class : DEFAULT_ICON_CLASS,
+                        message: msg
+                    }, {
+                        delay: 10000,
+                        type: result.success ? 'success' : 'danger',
+                        offset: {
+                            x: 20,
+                            y: 37
+                        },
+                        mouse_over: 'pause',
+                        onClose: function () {
+                            note.$ele.off();
+                        }
+                    });
 
-                note.$ele.css('cursor', 'pointer');
+                    note.$ele.css('cursor', 'pointer');
 
-                note.$ele.on('click', function () {
-                    if (self._results.length > 0) {
-                        showResults(result.__id);
-                    }
+                    note.$ele.on('click', function () {
+                        if (self._results.length > 0) {
+                            showResults(result.__id);
+                        }
 
-                    note.close();
-                });
+                        note.close();
+                    });
+                }
+
 
                 if (unreadResults > 0) {
                     setBadgeText(unreadResults);

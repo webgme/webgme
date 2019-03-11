@@ -8,27 +8,32 @@
 
 define([
     'js/logger',
-    'js/Drawer/Drawer'
+    'js/RunningPluginDrawer/RunningPluginDrawer'
 ], function (Logger, Drawer) {
 
     'use strict';
 
-    var DrawerOpenWidget;
+    var RunningPluginDrawerButtonWidget;
 
-    DrawerOpenWidget = function (containerEl, client) {
-        this._logger = Logger.create('gme:Widgets:DrawerOpenWidget', WebGMEGlobal.gmeConfig.client.log);
+    RunningPluginDrawerButtonWidget = function (containerEl, client) {
+        this._logger = Logger.create('gme:Widgets:RunningPluginDrawerButtonWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;
 
         this._initializeUI();
 
-        Drawer.createDrawer(this._client, this);
+        var drawer = Drawer.createDrawer(this._client, this),
+            config = drawer.getConfig();
+
+        if (config.useRunningPluginDrawer !== true) {
+            this._button.hide();
+        }
 
         this._logger.debug('Created');
     };
 
-    DrawerOpenWidget.prototype._initializeUI = function () {
+    RunningPluginDrawerButtonWidget.prototype._initializeUI = function () {
         this._el.empty();
 
         this._btnContainerEl = $('<div class="btn-group dropup pull-right"></div>');
@@ -48,7 +53,7 @@ define([
         this._button.prop('disabled', true);
     };
 
-    DrawerOpenWidget.prototype.setElementNumber = function (numberOfItems) {
+    RunningPluginDrawerButtonWidget.prototype.setElementNumber = function (numberOfItems) {
         //TODO we should set a badge that show the number of ongoing plugins
         if (numberOfItems > 0) {
             this._button.prop('disabled', false);
@@ -59,13 +64,13 @@ define([
         }
     };
 
-    DrawerOpenWidget.prototype.on = function (event, eventFn) {
+    RunningPluginDrawerButtonWidget.prototype.on = function (event, eventFn) {
         this._button.on(event, eventFn);
     };
 
-    DrawerOpenWidget.prototype.off = function (event, eventFn) {
+    RunningPluginDrawerButtonWidget.prototype.off = function (event, eventFn) {
         this._button.off(event, eventFn);
     };
 
-    return DrawerOpenWidget;
+    return RunningPluginDrawerButtonWidget;
 });

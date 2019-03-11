@@ -10,23 +10,40 @@ define(['js/logger',
     'js/Dialogs/PluginResults/PluginResultsDialog',
     'plugin/PluginResult',
     'js/Dialogs/PluginConfig/PluginConfigDialog',
-    'css!./styles/Drawer.css'
-], function (Logger, CONSTANTS, PluginResultsDialog, PluginResult, PluginConfigDialog) {
+    'js/Utils/ComponentSettings',
+    'css!./styles/RunningPluginDrawer.css'
+], function (Logger, CONSTANTS, PluginResultsDialog, PluginResult, PluginConfigDialog, ComponentSettings) {
 
     'use strict';
 
-    var Drawer,
-        DRAWER_CLASS = 'webgme-drawer';
+    var RunningPluginDrawer,
+        DRAWER_CLASS = 'webgme-running-plugin-drawer',
+        drawer = null;
 
     function _createDrawer(client, buttonEl) {
-        if (!WebGMEGlobal.drawer) {
-            WebGMEGlobal.drawer = new Drawer(client, buttonEl);
+        if (!drawer) {
+            drawer = new RunningPluginDrawer(client, buttonEl);
         }
 
-        return WebGMEGlobal.drawer;
+        return drawer;
     }
 
-    Drawer = function (client, buttonEl) {
+    function _getDefaultConfig() {
+        return {
+            disablePopUpNotification: false,
+            useRunningPluginDrawer: false
+        };
+    }
+
+    function _getComponentId() {
+        return 'GenericUIPluginNotification';
+    }
+
+    function _getConfig() {
+        return ComponentSettings.resolveWithWebGMEGlobal(_getDefaultConfig(), _getComponentId());
+    }
+
+    RunningPluginDrawer = function (client, buttonEl) {
         var self = this;
 
         this._el = $('<div id="webgme-drawer" class=' + DRAWER_CLASS + '/>');
@@ -41,7 +58,7 @@ define(['js/logger',
         table.append(thead);
         table.append(this._table);
 
-        this._logger = Logger.create('gme:Drawer:Drawer', WebGMEGlobal.gmeConfig.client.log);
+        this._logger = Logger.create('gme:RunningPluginDrawer:RunningPluginDrawer', WebGMEGlobal.gmeConfig.client.log);
 
         this._plugins = [];
 
@@ -79,32 +96,44 @@ define(['js/logger',
         client.addEventListener(CONSTANTS.CLIENT.PLUGIN_FINISHED, self.onPluginFinished);
     };
 
-    Drawer.prototype.onPluginInitiated = function (sender, event) {
-        WebGMEGlobal.drawer._logger.debug('plugin initiated:', {metadata: event});
-        WebGMEGlobal.drawer._addPluginEntry(event);
+    RunningPluginDrawer.prototype.getComponentId = function () {
+        return _getComponentId();
     };
 
-    Drawer.prototype.onPluginFinished = function (sender, event) {
-        WebGMEGlobal.drawer._logger.debug('plugin finished:', {metadata: event});
-        WebGMEGlobal.drawer._addResultButton(event);
-        WebGMEGlobal.drawer._removePluginEntry(event.executionId);
+    RunningPluginDrawer.prototype.getDefaultConfig = function () {
+        return _getDefaultConfig();
     };
 
-    Drawer.prototype._clear = function () {
+    RunningPluginDrawer.prototype.getConfig = function () {
+        return _getConfig();
+    };
+
+    RunningPluginDrawer.prototype.onPluginInitiated = function (sender, event) {
+        drawer._logger.debug('plugin initiated:', {metadata: event});
+        drawer._addPluginEntry(event);
+    };
+
+    RunningPluginDrawer.prototype.onPluginFinished = function (sender, event) {
+        drawer._logger.debug('plugin finished:', {metadata: event});
+        drawer._addResultButton(event);
+        drawer._removePluginEntry(event.executionId);
+    };
+
+    RunningPluginDrawer.prototype._clear = function () {
         this._table.empty();
     };
 
-    Drawer.prototype.open = function () {
+    RunningPluginDrawer.prototype.open = function () {
         this._el.css('height', '250px');
         this._isOpened = true;
     };
 
-    Drawer.prototype.close = function () {
+    RunningPluginDrawer.prototype.close = function () {
         this._el.css('height', '0px');
         this._isOpened = false;
     };
 
-    Drawer.prototype.toggle = function () {
+    RunningPluginDrawer.prototype.toggle = function () {
         if (this._isOpened) {
             this.close();
         } else {
@@ -112,7 +141,7 @@ define(['js/logger',
         }
     };
 
-    Drawer.prototype._removePluginEntry = function (executionId) {
+    RunningPluginDrawer.prototype._removePluginEntry = function (executionId) {
         var self = this,
             sizeWithoutMe,
             i;
@@ -133,7 +162,7 @@ define(['js/logger',
         }, 5000);
     };
 
-    Drawer.prototype._viewConfig = function (pluginEntry) {
+    RunningPluginDrawer.prototype._viewConfig = function (pluginEntry) {
         var dialog = new PluginConfigDialog({client: this._client});
 
         dialog.displayConfig(pluginEntry.metadata, pluginEntry.context.pluginConfig, function () {
@@ -141,7 +170,7 @@ define(['js/logger',
         });
     };
 
-    Drawer.prototype._addPluginEntry = function (pluginEntry) {
+    RunningPluginDrawer.prototype._addPluginEntry = function (pluginEntry) {
         var self = this,
             entry = '<tr id="' + pluginEntry.executionId + '"><td>',
             client = this._client;
@@ -188,7 +217,7 @@ define(['js/logger',
         this._button.setElementNumber(this._plugins.length);
     };
 
-    Drawer.prototype._redraw = function () {
+    RunningPluginDrawer.prototype._redraw = function () {
         var self = this;
         this._clear();
         this._plugins.forEach(function (pluginEntry) {
@@ -196,7 +225,7 @@ define(['js/logger',
         });
     };
 
-    Drawer.prototype._refreshTimes = function () {
+    RunningPluginDrawer.prototype._refreshTimes = function () {
         var self = this,
             now = Math.round((new Date()).getTime() / 1000);
 
@@ -206,7 +235,7 @@ define(['js/logger',
         });
     };
 
-    Drawer.prototype._addResultButton = function (pluginEntry) {
+    RunningPluginDrawer.prototype._addResultButton = function (pluginEntry) {
         var action = $('#' + pluginEntry.executionId + '_action'),
             client = this._client;
 
@@ -219,5 +248,5 @@ define(['js/logger',
 
     };
 
-    return {createDrawer: _createDrawer};
+    return {createDrawer: _createDrawer, getConfig: _getConfig};
 });

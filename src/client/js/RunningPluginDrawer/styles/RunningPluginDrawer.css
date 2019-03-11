@@ -1,4 +1,4 @@
-.webgme-drawer {
+.webgme-running-plugin-drawer {
   height: 0;
   /* changing it whit javascript only */
   width: 40%;
@@ -19,14 +19,14 @@
   /* 0.5 second transition effect to slide in the sidenav */
   opacity: .9;
   font-size: 14px; }
-  .webgme-drawer .closebtn {
+  .webgme-running-plugin-drawer .closebtn {
     position: absolute;
     bottom: 0;
     right: 7px;
     font-size: 14px;
     margin-left: 12px; }
-  .webgme-drawer thead {
+  .webgme-running-plugin-drawer thead {
     text-align: center;
     font-size: 16px; }
 
-/*# sourceMappingURL=Drawer.css.map */
+/*# sourceMappingURL=RunningPluginDrawer.css.map */
