@@ -11,18 +11,32 @@ define(['js/logger',
     'plugin/PluginResult',
     'js/Dialogs/PluginConfig/PluginConfigDialog',
     'js/Utils/ComponentSettings',
-    'css!./styles/RunningPluginDrawer.css'
-], function (Logger, CONSTANTS, PluginResultsDialog, PluginResult, PluginConfigDialog, ComponentSettings) {
+    'moment',
+    'ejs',
+    'text!./templates/Entry.html',
+    'css!./styles/RunningPluginsDrawer.css'
+], function (
+    Logger,
+    CONSTANTS,
+    PluginResultsDialog,
+    PluginResult,
+    PluginConfigDialog,
+    ComponentSettings,
+    moment,
+    ejs,
+    PluginEntryTemplate) {
 
     'use strict';
 
-    var RunningPluginDrawer,
+    var RunningPluginsDrawer,
         DRAWER_CLASS = 'webgme-running-plugin-drawer',
+        STAY_ALIVE_TIME = 5000,
+        CLOCK_TICK_TIME = 5000,
         drawer = null;
 
     function _createDrawer(client, buttonEl) {
         if (!drawer) {
-            drawer = new RunningPluginDrawer(client, buttonEl);
+            drawer = new RunningPluginsDrawer(client, buttonEl);
         }
 
         return drawer;
@@ -30,8 +44,7 @@ define(['js/logger',
 
     function _getDefaultConfig() {
         return {
-            disablePopUpNotification: false,
-            useRunningPluginDrawer: false
+            useRunningPluginsDrawer: true
         };
     }
 
@@ -43,7 +56,7 @@ define(['js/logger',
         return ComponentSettings.resolveWithWebGMEGlobal(_getDefaultConfig(), _getComponentId());
     }
 
-    RunningPluginDrawer = function (client, buttonEl) {
+    RunningPluginsDrawer = function (client, buttonEl) {
         var self = this;
 
         this._el = $('<div id="webgme-drawer" class=' + DRAWER_CLASS + '/>');
@@ -58,7 +71,7 @@ define(['js/logger',
         table.append(thead);
         table.append(this._table);
 
-        this._logger = Logger.create('gme:RunningPluginDrawer:RunningPluginDrawer', WebGMEGlobal.gmeConfig.client.log);
+        this._logger = Logger.create('gme:RunningPluginsDrawer:RunningPluginsDrawer', WebGMEGlobal.gmeConfig.client.log);
 
         this._plugins = [];
 
@@ -90,50 +103,50 @@ define(['js/logger',
 
         setInterval(function () {
             self._refreshTimes();
-        }, 1000);
+        }, CLOCK_TICK_TIME);
 
         client.addEventListener(CONSTANTS.CLIENT.PLUGIN_INITIATED, self.onPluginInitiated);
         client.addEventListener(CONSTANTS.CLIENT.PLUGIN_FINISHED, self.onPluginFinished);
     };
 
-    RunningPluginDrawer.prototype.getComponentId = function () {
+    RunningPluginsDrawer.prototype.getComponentId = function () {
         return _getComponentId();
     };
 
-    RunningPluginDrawer.prototype.getDefaultConfig = function () {
+    RunningPluginsDrawer.prototype.getDefaultConfig = function () {
         return _getDefaultConfig();
     };
 
-    RunningPluginDrawer.prototype.getConfig = function () {
+    RunningPluginsDrawer.prototype.getConfig = function () {
         return _getConfig();
     };
 
-    RunningPluginDrawer.prototype.onPluginInitiated = function (sender, event) {
+    RunningPluginsDrawer.prototype.onPluginInitiated = function (sender, event) {
         drawer._logger.debug('plugin initiated:', {metadata: event});
         drawer._addPluginEntry(event);
     };
 
-    RunningPluginDrawer.prototype.onPluginFinished = function (sender, event) {
+    RunningPluginsDrawer.prototype.onPluginFinished = function (sender, event) {
         drawer._logger.debug('plugin finished:', {metadata: event});
         drawer._addResultButton(event);
         drawer._removePluginEntry(event.executionId);
     };
 
-    RunningPluginDrawer.prototype._clear = function () {
+    RunningPluginsDrawer.prototype._clear = function () {
         this._table.empty();
     };
 
-    RunningPluginDrawer.prototype.open = function () {
+    RunningPluginsDrawer.prototype.open = function () {
         this._el.css('height', '250px');
         this._isOpened = true;
     };
 
-    RunningPluginDrawer.prototype.close = function () {
+    RunningPluginsDrawer.prototype.close = function () {
         this._el.css('height', '0px');
         this._isOpened = false;
     };
 
-    RunningPluginDrawer.prototype.toggle = function () {
+    RunningPluginsDrawer.prototype.toggle = function () {
         if (this._isOpened) {
             this.close();
         } else {
@@ -141,28 +154,22 @@ define(['js/logger',
         }
     };
 
-    RunningPluginDrawer.prototype._removePluginEntry = function (executionId) {
-        var self = this,
-            sizeWithoutMe,
-            i;
+    RunningPluginsDrawer.prototype._removePluginEntry = function (executionId) {
+        var i;
 
         for (i = this._plugins.length - 1; i >= 0; i -= 1) {
             if (this._plugins[i].executionId === executionId) {
                 this._plugins.splice(i, 1);
             }
         }
-        sizeWithoutMe = this._plugins.length;
+        this._button.setElementNumber(this._plugins.length);
 
         setTimeout(function () {
             $('#' + executionId).remove();
-            self._button.setElementNumber(sizeWithoutMe);
-            if (sizeWithoutMe === 0) {
-                self.close();
-            }
-        }, 5000);
+        }, STAY_ALIVE_TIME);
     };
 
-    RunningPluginDrawer.prototype._viewConfig = function (pluginEntry) {
+    RunningPluginsDrawer.prototype._viewConfig = function (pluginEntry) {
         var dialog = new PluginConfigDialog({client: this._client});
 
         dialog.displayConfig(pluginEntry.metadata, pluginEntry.context.pluginConfig, function () {
@@ -170,43 +177,28 @@ define(['js/logger',
         });
     };
 
-    RunningPluginDrawer.prototype._addPluginEntry = function (pluginEntry) {
+    RunningPluginsDrawer.prototype._addPluginEntry = function (pluginEntry) {
         var self = this,
-            entry = '<tr id="' + pluginEntry.executionId + '"><td>',
+            entry = $(ejs.render(PluginEntryTemplate, {entry: pluginEntry})),
             client = this._client;
 
+        console.log('PE:', pluginEntry);
         this._plugins.push(pluginEntry);
 
-        entry += pluginEntry.name || 'N/A';
-        entry += '</td><td>';
-        entry += pluginEntry.clientSide === true ? 'client' : 'server';
-        entry += '</td><td style="text-align:center;"><button id="' + pluginEntry.executionId +
-            '_config" type="button" class="btn btn-primary">Check</button></td>';
-        entry += '</td><td id="' + pluginEntry.executionId + '_time">';
-        //running time
-        entry += (Math.round((new Date()).getTime() / 1000) -
-            Math.round(pluginEntry.start / 1000)) + 's';
-        entry += '</td><td id="' + pluginEntry.executionId + '_action" style="text-align:center;">';
-
-        if (pluginEntry.canBeAborted === true) {
-            entry += '<button type="button" class="btn btn-primary">Abort</button>';
-            entry += '</td></tr>';
-            entry = $(entry);
-
-            entry.find('#' + pluginEntry.executionId + '_action').find('button').on('click', function (event) {
+        if (pluginEntry.canBeAborted !== true) {
+            entry.find('.action_btn').find('button').prop('disabled', true);
+        } else {
+            entry.find('.action_btn').find('button').on('click', function (event) {
                 event.stopPropagation();
                 event.preventDefault();
                 client.abortPlugin(pluginEntry.executionId);
             });
-        } else {
-            entry += '</td></tr>';
-            entry = $(entry);
         }
 
         if (Object.keys(pluginEntry.context.pluginConfig).length === 0) {
-            entry.find('#' + pluginEntry.executionId + '_config').prop('disabled', true);
+            entry.find('.config_btn').prop('disabled', true);
         } else {
-            entry.find('#' + pluginEntry.executionId + '_config').on('click', function (event) {
+            entry.find('.config_btn').on('click', function (event) {
                 event.stopPropagation();
                 event.preventDefault();
                 self._viewConfig(pluginEntry);
@@ -215,9 +207,10 @@ define(['js/logger',
 
         this._table.append(entry);
         this._button.setElementNumber(this._plugins.length);
+        this._refreshTimes();
     };
 
-    RunningPluginDrawer.prototype._redraw = function () {
+    RunningPluginsDrawer.prototype._redraw = function () {
         var self = this;
         this._clear();
         this._plugins.forEach(function (pluginEntry) {
@@ -225,18 +218,15 @@ define(['js/logger',
         });
     };
 
-    RunningPluginDrawer.prototype._refreshTimes = function () {
-        var self = this,
-            now = Math.round((new Date()).getTime() / 1000);
-
+    RunningPluginsDrawer.prototype._refreshTimes = function () {
         this._plugins.forEach(function (pluginEntry) {
-            $('#' + pluginEntry.executionId + '_time')
-                .text((now - Math.round(pluginEntry.start / 1000)) + 's');
+            $('#' + pluginEntry.executionId).find('.time_field')
+                .text(moment().diff(pluginEntry.start, 'seconds') + 's');
         });
     };
 
-    RunningPluginDrawer.prototype._addResultButton = function (pluginEntry) {
-        var action = $('#' + pluginEntry.executionId + '_action'),
+    RunningPluginsDrawer.prototype._addResultButton = function (pluginEntry) {
+        var action = $('.action_field'),
             client = this._client;
 
         action.empty();

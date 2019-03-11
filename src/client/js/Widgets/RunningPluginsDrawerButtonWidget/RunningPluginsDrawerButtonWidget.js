@@ -2,21 +2,20 @@
 /*jshint browser: true*/
 
 /**
- * @author rkereskenyi / https://github.com/rkereskenyi
- * @author pmeijer / https://github.com/pmeijer
+ * @author kecso / https://github.com/kecso
  */
 
 define([
     'js/logger',
-    'js/RunningPluginDrawer/RunningPluginDrawer'
+    'js/RunningPluginsDrawer/RunningPluginsDrawer'
 ], function (Logger, Drawer) {
 
     'use strict';
 
-    var RunningPluginDrawerButtonWidget;
+    var RunningPluginsDrawerButtonWidget;
 
-    RunningPluginDrawerButtonWidget = function (containerEl, client) {
-        this._logger = Logger.create('gme:Widgets:RunningPluginDrawerButtonWidget', WebGMEGlobal.gmeConfig.client.log);
+    RunningPluginsDrawerButtonWidget = function (containerEl, client) {
+        this._logger = Logger.create('gme:Widgets:RunningPluginsDrawerButtonWidget', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
         this._el = containerEl;
@@ -26,14 +25,14 @@ define([
         var drawer = Drawer.createDrawer(this._client, this),
             config = drawer.getConfig();
 
-        if (config.useRunningPluginDrawer !== true) {
+        if (config.useRunningPluginsDrawer !== true) {
             this._button.hide();
         }
 
         this._logger.debug('Created');
     };
 
-    RunningPluginDrawerButtonWidget.prototype._initializeUI = function () {
+    RunningPluginsDrawerButtonWidget.prototype._initializeUI = function () {
         this._el.empty();
 
         this._btnContainerEl = $('<div class="btn-group dropup pull-right"></div>');
@@ -49,28 +48,24 @@ define([
         });
         this._btnContainerEl.append(this._button);
         this._el.append(this._btnContainerEl);
-
-        this._button.prop('disabled', true);
     };
 
-    RunningPluginDrawerButtonWidget.prototype.setElementNumber = function (numberOfItems) {
+    RunningPluginsDrawerButtonWidget.prototype.setElementNumber = function (numberOfItems) {
         //TODO we should set a badge that show the number of ongoing plugins
         if (numberOfItems > 0) {
-            this._button.prop('disabled', false);
             this._button.find('.badge').html(numberOfItems);
         } else {
-            this._button.prop('disabled', true);
             this._button.find('.badge').empty();
         }
     };
 
-    RunningPluginDrawerButtonWidget.prototype.on = function (event, eventFn) {
+    RunningPluginsDrawerButtonWidget.prototype.on = function (event, eventFn) {
         this._button.on(event, eventFn);
     };
 
-    RunningPluginDrawerButtonWidget.prototype.off = function (event, eventFn) {
+    RunningPluginsDrawerButtonWidget.prototype.off = function (event, eventFn) {
         this._button.off(event, eventFn);
     };
 
-    return RunningPluginDrawerButtonWidget;
+    return RunningPluginsDrawerButtonWidget;
 });

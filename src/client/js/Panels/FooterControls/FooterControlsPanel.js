@@ -9,14 +9,14 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/BranchStatus/BranchStatusWidget',
     'js/Widgets/KeyboardManager/KeyboardManagerWidget',
     'js/Widgets/Notification/NotificationWidget',
-    'js/Widgets/RunningPluginDrawerButtonWidget/RunningPluginDrawerButtonWidget',
+    'js/Widgets/RunningPluginsDrawerButtonWidget/RunningPluginsDrawerButtonWidget',
     'js/Utils/ComponentSettings'
 ], function (PanelBase,
              NetworkStatusWidget,
              BranchStatusWidget,
              KeyboardManagerWidget,
              NotificationWidget,
-             RunningPluginDrawerButtonWidget,
+             RunningPluginsDrawerButtonWidget,
              ComponentSettings) {
 
     'use strict';
@@ -121,7 +121,7 @@ define(['js/PanelBase/PanelBase',
 
         //drawer open button
         drawerOpenEl = widgetPlaceHolder.clone();
-        this._widgets.push(new RunningPluginDrawerButtonWidget(drawerOpenEl, this._client));
+        this._widgets.push(new RunningPluginsDrawerButtonWidget(drawerOpenEl, this._client));
         navBarInner.append(drawerOpenEl).append(separator.clone());
     };
 

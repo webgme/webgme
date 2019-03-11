@@ -7,8 +7,9 @@
 define([
     'js/Dialogs/PluginResults/PluginResultsDialog',
     'common/util/guid',
-    'js/RunningPluginDrawer/RunningPluginDrawer'
-], function (PluginResultsDialog, GUID, RunningPluginDrawer) {
+    'js/RunningPluginsDrawer/RunningPluginsDrawer',
+    'js/Utils/ComponentSettings'
+], function (PluginResultsDialog, GUID, RunningPluginsDrawer, ComponentSettings) {
     'use strict';
 
     var PluginToolbar,
@@ -20,6 +21,20 @@ define([
         this._results = [];
         this.$btnExecutePlugin = null;
         this._initialize();
+    };
+
+    PluginToolbar.prototype.getDefaultConfig = function () {
+        return {
+            disablePopUpNotification: false
+        };
+    };
+
+    PluginToolbar.prototype.getComponentId = function () {
+        return 'GenericUIPluginToolbar';
+    };
+
+    PluginToolbar.prototype.getConfig = function () {
+        return ComponentSettings.resolveWithWebGMEGlobal(this.getDefaultConfig(), this.getComponentId());
     };
 
     PluginToolbar.prototype._initialize = function () {
@@ -34,7 +49,7 @@ define([
             setBadgeText,
             badge;
 
-        self._usePopUpNotification = RunningPluginDrawer.getConfig().disablePopUpNotification !== true;
+        self._usePopUpNotification = self.getConfig().disablePopUpNotification !== true;
 
 
         setBadgeText = function (text) {

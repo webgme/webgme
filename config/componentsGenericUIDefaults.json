@@ -184,8 +184,10 @@
       "smartypants": false
     }
   },
+  "GenericUIPluginToolbar": {
+    "disablePopUpNotification": false
+  },
   "GenericUIPluginNotification": {
-    "disablePopUpNotification": false,
-    "useRunningPluginDrawer": false
+    "useRunningPluginsDrawer": true
   }
 }

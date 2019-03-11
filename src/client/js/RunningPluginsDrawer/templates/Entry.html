@@ -1,0 +1,11 @@
+<tr id="<%= entry.executiondId %>">
+    <td><%= entry.name || 'N/A' %></td>
+    <td><%= entry.clientSide === true ? 'client' : 'server' %></td>
+    <td style="text-align:center;">
+        <button type="button" class="btn btn-primary config_btn">Check</button>
+    </td>
+    <td class="time_field" style="text-align:center;"></td>
+    <td class="action_field" style="text-align:center;">
+        <button type="button" class="btn btn-primary action_btn">Abort</button>
+    </td>
+</tr>
