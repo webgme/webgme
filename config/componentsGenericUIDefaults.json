@@ -188,6 +188,6 @@
     "disablePopUpNotification": false
   },
   "GenericUIPluginNotification": {
-    "useRunningPluginsDrawer": true
+    "useRunningPluginsDrawer": false
   }
 }

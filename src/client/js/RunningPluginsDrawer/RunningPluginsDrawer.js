@@ -44,7 +44,7 @@ define(['js/logger',
 
     function _getDefaultConfig() {
         return {
-            useRunningPluginsDrawer: true
+            useRunningPluginsDrawer: false
         };
     }
 
@@ -182,7 +182,6 @@ define(['js/logger',
             entry = $(ejs.render(PluginEntryTemplate, {entry: pluginEntry})),
             client = this._client;
 
-        console.log('PE:', pluginEntry);
         this._plugins.push(pluginEntry);
 
         if (pluginEntry.canBeAborted !== true) {

@@ -22,10 +22,12 @@ define([
 
         this._initializeUI();
 
-        var drawer = Drawer.createDrawer(this._client, this),
-            config = drawer.getConfig();
+        var drawer,
+            config = Drawer.getConfig();
 
-        if (config.useRunningPluginsDrawer !== true) {
+        if (config.useRunningPluginsDrawer === true) {
+            drawer = Drawer.createDrawer(this._client, this);
+        } else {
             this._button.hide();
         }
 
