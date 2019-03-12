@@ -213,7 +213,7 @@ define(['js/logger',
             });
         }
 
-        this._table.append(entry);
+        this._table.prepend(entry);
         this._button.setElementNumber(this._plugins.length);
         this._refreshTimes();
     };
