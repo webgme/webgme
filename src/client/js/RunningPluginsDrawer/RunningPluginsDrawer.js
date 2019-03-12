@@ -194,9 +194,9 @@ define(['js/logger',
         this._plugins.push(pluginEntry);
 
         if (pluginEntry.canBeAborted !== true) {
-            entry.find('.action_btn').find('button').prop('disabled', true);
+            entry.find('.action_btn').prop('disabled', true);
         } else {
-            entry.find('.action_btn').find('button').on('click', function (event) {
+            entry.find('.action_btn').on('click', function (event) {
                 event.stopPropagation();
                 event.preventDefault();
                 client.abortPlugin(pluginEntry.executionId);
