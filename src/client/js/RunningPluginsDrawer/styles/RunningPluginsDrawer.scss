@@ -9,16 +9,19 @@
   overflow-x: hidden; /* Disable horizontal scroll */
   padding-top: 60px; /* Place content 60px from the top */
   transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
-  opacity: .9;
+  opacity: .8;
   font-size: 14px;
   // color: #0a001f;
 
   .closebtn {
     position: absolute;
-    bottom: 0;
+    top: 70px;
     right: 7px;
     font-size: 14px;
     margin-left: 12px;
+    &:hover {
+      cursor: pointer;
+    }
   }
 
   thead {

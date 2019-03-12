@@ -31,7 +31,7 @@ define(['js/logger',
     var RunningPluginsDrawer,
         DRAWER_CLASS = 'webgme-running-plugin-drawer',
         STAY_ALIVE_TIME = 5000,
-        CLOCK_TICK_TIME = 5000,
+        CLOCK_TICK_TIME = 1000,
         drawer = null;
 
     function _createDrawer(client, buttonEl) {
@@ -44,7 +44,7 @@ define(['js/logger',
 
     function _getDefaultConfig() {
         return {
-            useRunningPluginsDrawer: false
+            useRunningPluginsDrawer: true
         };
     }
 
@@ -62,8 +62,8 @@ define(['js/logger',
         this._el = $('<div id="webgme-drawer" class=' + DRAWER_CLASS + '/>');
 
         var table = $('<table class="table table-hover table-dark table-bordered table-sm"></table>'),
-            thead = $('<thead><tr><th scope="col">Name</th><th scope="col">Environment</th>' +
-                '<th scope="col">Configuration</th><th scope="col">Running</th>' +
+            thead = $('<thead><tr><th scope="col">ID</th><th scope="col">Plugin</th><th scope="col">Env.</th>' +
+                '<th scope="col">Config</th><th scope="col">Elapsed Time</th>' +
                 '<th scope="col">Actions</th></tr></thead>');
 
         this._table = $('<tbody></tbody>');
@@ -71,7 +71,8 @@ define(['js/logger',
         table.append(thead);
         table.append(this._table);
 
-        this._logger = Logger.create('gme:RunningPluginsDrawer:RunningPluginsDrawer', WebGMEGlobal.gmeConfig.client.log);
+        this._logger = Logger.create('gme:RunningPluginsDrawer:RunningPluginsDrawer',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._plugins = [];
 
@@ -81,7 +82,7 @@ define(['js/logger',
 
         this._isOpened = false;
 
-        this._closeBtn = $('<a class="closebtn"><i class="glyphicon glyphicon-eject"></i></a>');
+        this._closeBtn = $('<a class="closebtn"><i class="fa fa-times"></i></a>');
         this._el.append(table);
         this._el.append(this._closeBtn);
 
@@ -100,6 +101,12 @@ define(['js/logger',
             self.close();
         });
 
+        // This is only active when the drawer is open.
+        this._onEscDown = function (e) {
+            if (e.keyCode === 27) {
+                self.close();
+            }
+        };
 
         setInterval(function () {
             self._refreshTimes();
@@ -139,11 +146,13 @@ define(['js/logger',
     RunningPluginsDrawer.prototype.open = function () {
         this._el.css('height', '250px');
         this._isOpened = true;
+        $('body').on('keydown', this._onEscDown);
     };
 
     RunningPluginsDrawer.prototype.close = function () {
         this._el.css('height', '0px');
         this._isOpened = false;
+        $('body').off('keydown', this._onEscDown);
     };
 
     RunningPluginsDrawer.prototype.toggle = function () {
@@ -220,7 +229,7 @@ define(['js/logger',
     RunningPluginsDrawer.prototype._refreshTimes = function () {
         this._plugins.forEach(function (pluginEntry) {
             $('#' + pluginEntry.executionId).find('.time_field')
-                .text(moment().diff(pluginEntry.start, 'seconds') + 's');
+                .text(moment().diff(pluginEntry.start, 'seconds') + ' s');
         });
     };
 
@@ -229,7 +238,7 @@ define(['js/logger',
             client = this._client;
 
         action.empty();
-        action.append('<button type="button" class="btn btn-primary">Show result</button>');
+        action.append('<button type="button" class="btn btn-primary btn-xs">Show result</button>');
         action.find('button').on('click', function (/*event*/) {
             var dialog = new PluginResultsDialog();
             dialog.show(client, [new PluginResult(pluginEntry.result)], null);

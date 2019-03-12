@@ -38,7 +38,7 @@ define([
         this._el.empty();
 
         this._btnContainerEl = $('<div class="btn-group dropup pull-right"></div>');
-        this._button = $('<button class="btn btn-micro btn-success">Plugins ' +
+        this._button = $('<button class="btn btn-micro btn-success">PLUGINS ' +
             '<span class="badge badge-pill badge-light"></span></button>');
 
         this._button.find('.badge').css({

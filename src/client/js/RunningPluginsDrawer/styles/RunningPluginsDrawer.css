@@ -17,16 +17,16 @@
   /* Place content 60px from the top */
   transition: 0.5s;
   /* 0.5 second transition effect to slide in the sidenav */
-  opacity: .9;
+  opacity: .8;
   font-size: 14px; }
   .webgme-running-plugin-drawer .closebtn {
     position: absolute;
-    bottom: 0;
+    top: 70px;
     right: 7px;
     font-size: 14px;
     margin-left: 12px; }
+    .webgme-running-plugin-drawer .closebtn:hover {
+      cursor: pointer; }
   .webgme-running-plugin-drawer thead {
     text-align: center;
     font-size: 16px; }
-
-/*# sourceMappingURL=RunningPluginsDrawer.css.map */
