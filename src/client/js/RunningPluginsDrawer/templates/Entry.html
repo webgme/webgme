@@ -1,0 +1,12 @@
+<tr id="<%= entry.executionId %>">
+    <td><%= entry.executionId.substring(0, 6) %></td>
+    <td><%= entry.name || 'N/A' %></td>
+    <td><%= entry.clientSide === true ? 'client' : 'server' %></td>
+    <td style="text-align:center;">
+        <button type="button" class="btn btn-primary btn-xs config_btn">View</button>
+    </td>
+    <td class="time_field" style="text-align:center;"></td>
+    <td class="action_field" style="text-align:center;">
+        <button type="button" class="btn btn-primary btn-xs action_btn">Abort</button>
+    </td>
+</tr>

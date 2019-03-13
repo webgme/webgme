@@ -9,12 +9,14 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/BranchStatus/BranchStatusWidget',
     'js/Widgets/KeyboardManager/KeyboardManagerWidget',
     'js/Widgets/Notification/NotificationWidget',
+    'js/Widgets/RunningPluginsDrawerButtonWidget/RunningPluginsDrawerButtonWidget',
     'js/Utils/ComponentSettings'
 ], function (PanelBase,
              NetworkStatusWidget,
              BranchStatusWidget,
              KeyboardManagerWidget,
              NotificationWidget,
+             RunningPluginsDrawerButtonWidget,
              ComponentSettings) {
 
     'use strict';
@@ -72,7 +74,7 @@ define(['js/PanelBase/PanelBase',
         pullLeft = $('<div class="pull-left inline"></div>');
 
         version = 'version: <a href="https://github.com/webgme/webgme/releases/tag/v' + WebGMEGlobal.version +
-                      '">' + WebGMEGlobal.version + '</a>';
+            '">' + WebGMEGlobal.version + '</a>';
 
         pullLeft.append($('<div class="navbar-text"><div class="webgme-version">' + version + '</div></div>'));
 
@@ -88,6 +90,7 @@ define(['js/PanelBase/PanelBase',
             extraEl,
             notificationEl,
             networkStatusEl,
+            drawerOpenEl,
             keyBoardManagerEl;
 
         //keyboard enable/disbale widget (NOTE: only on non touch device)
@@ -115,6 +118,11 @@ define(['js/PanelBase/PanelBase',
         branchStatusEl = widgetPlaceHolder.clone();
         this._widgets.push(new BranchStatusWidget(branchStatusEl, this._client));
         navBarInner.append(branchStatusEl).append(separator.clone());
+
+        //drawer open button
+        drawerOpenEl = widgetPlaceHolder.clone();
+        this._widgets.push(new RunningPluginsDrawerButtonWidget(drawerOpenEl, this._client));
+        navBarInner.append(drawerOpenEl).append(separator.clone());
     };
 
     FooterControlsPanel.prototype.clear = function () {

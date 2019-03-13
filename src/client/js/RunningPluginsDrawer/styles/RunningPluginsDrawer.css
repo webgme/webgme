@@ -1,0 +1,32 @@
+.webgme-running-plugin-drawer {
+  height: 0;
+  /* changing it whit javascript only */
+  width: 40%;
+  position: fixed;
+  /* Stay in place */
+  /* z-index: 1000; Stay on top */
+  top: 0;
+  /* Stay at the top */
+  left: 30%;
+  /* to have it somewhat centered */
+  background-color: #DDDCDC;
+  /* Black*/
+  overflow-x: hidden;
+  /* Disable horizontal scroll */
+  padding-top: 60px;
+  /* Place content 60px from the top */
+  transition: 0.5s;
+  /* 0.5 second transition effect to slide in the sidenav */
+  opacity: .8;
+  font-size: 14px; }
+  .webgme-running-plugin-drawer .closebtn {
+    position: absolute;
+    top: 68px;
+    right: 7px;
+    font-size: 14px;
+    margin-left: 12px; }
+    .webgme-running-plugin-drawer .closebtn:hover {
+      cursor: pointer; }
+  .webgme-running-plugin-drawer thead {
+    text-align: center;
+    font-size: 16px; }
