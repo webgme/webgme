@@ -234,7 +234,8 @@ define(['js/logger',
     };
 
     RunningPluginsDrawer.prototype._addResultButton = function (pluginEntry) {
-        var action = $('.action_field'),
+        var entry = this._el.find('#' + pluginEntry.executionId),
+            action = entry.find('.action_field'),
             client = this._client;
 
         action.empty();

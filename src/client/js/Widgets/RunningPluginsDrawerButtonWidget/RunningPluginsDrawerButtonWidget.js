@@ -44,8 +44,6 @@ define([
         this._button.find('.badge').css({
             'font-size': '8px',
             'vertical-align': 'top',
-            height: '10px',
-            top: '2px',
             position: 'relative'
         });
         this._btnContainerEl.append(this._button);
