@@ -58,6 +58,7 @@ define(['js/logger',
             REGISTRY_KEYS.COLOR,
             REGISTRY_KEYS.TEXT_COLOR,
             REGISTRY_KEYS.BORDER_COLOR,
+            REGISTRY_KEYS.BOX_DECORATION,
             REGISTRY_KEYS.LINE_STYLE,
             REGISTRY_KEYS.LINE_START_ARROW,
             REGISTRY_KEYS.LINE_END_ARROW,
@@ -68,6 +69,7 @@ define(['js/logger',
             REGISTRY_KEYS.REPLACEABLE
         ],
         LINE_REG_KEYS = [
+            REGISTRY_KEYS.BOX_DECORATION,
             REGISTRY_KEYS.LINE_STYLE,
             REGISTRY_KEYS.LINE_START_ARROW,
             REGISTRY_KEYS.LINE_END_ARROW,
@@ -650,8 +652,11 @@ define(['js/logger',
                                 delete dst[cbyKey];
                             }
                         }
-                    } else if (key === CONSTANTS.POINTER_CONSTRAINED_BY) {
-                        // This is handled by the REPLACEABLE above.
+                    } else if (key === REGISTRY_KEYS.BOX_DECORATION) {
+                        repKey = LINE_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        dst[repKey].value = !!dst[extKey].value;
+                        dst[repKey].valueType = 'boolean';
                     }
                 } else if (prefix === CONSTANTS.PROPERTY_GROUP_META + '.') {
                     if (key === REGISTRY_KEYS.VALID_VISUALIZERS) {

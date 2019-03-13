@@ -39,8 +39,8 @@ define(['js/logger',
 
     ModelEditorControl = function (options, config) {
         this.logger = options.logger || Logger.create(options.loggerName || 'gme:Panels:ModelEditor:' +
-                'ModelEditorControl',
-                WebGMEGlobal.gmeConfig.client.log);
+            'ModelEditorControl',
+            WebGMEGlobal.gmeConfig.client.log);
 
         this._client = options.client;
         this._config = ModelEditorControl.getDefaultConfig();
@@ -181,12 +181,54 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._getObjectDescriptor = function (nodeId) {
-        var nodeObj = this._client.getNode(nodeId),
+        var self = this,
+            nodeObj = this._client.getNode(nodeId),
             objDescriptor,
-            pos,
-            defaultPos = 0,
-            customPoints,
-            memberListContainerObj;
+            customPoints;
+
+        function extendWithBoxProperties() {
+            var defaultPos = 0,
+                pos,
+                memberListContainerObj;
+            //aspect specific coordinate
+            if (self._selectedAspect === CONSTANTS.ASPECT_ALL) {
+                pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+            } else {
+                memberListContainerObj = self._client.getNode(self.currentNodeInfo.id);
+                try {
+                    pos = memberListContainerObj.getMemberRegistry(self._selectedAspect,
+                        nodeId,
+                        REGISTRY_KEYS.POSITION);
+                } catch (err) {
+                    if (err.name !== 'CoreIllegalOperationError') {
+                        throw err;
+                    }
+                }
+
+                pos = pos || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
+            }
+
+            if (pos) {
+                objDescriptor.position = {x: pos.x, y: pos.y};
+            } else {
+                objDescriptor.position = {x: defaultPos, y: defaultPos};
+            }
+
+            if (objDescriptor.position.hasOwnProperty('x')) {
+                objDescriptor.position.x = self._getDefaultValueForNumber(objDescriptor.position.x, defaultPos);
+            } else {
+                objDescriptor.position.x = defaultPos;
+            }
+
+            if (objDescriptor.position.hasOwnProperty('y')) {
+                objDescriptor.position.y = self._getDefaultValueForNumber(objDescriptor.position.y, defaultPos);
+            } else {
+                objDescriptor.position.y = defaultPos;
+            }
+
+            objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || '';
+            objDescriptor.rotation = parseInt(nodeObj.getRegistry(REGISTRY_KEYS.ROTATION), 10) || 0;
+        }
 
         if (nodeObj) {
             objDescriptor = {};
@@ -212,6 +254,10 @@ define(['js/logger',
                     //get all the other visual properties of the connection
                     _.extend(objDescriptor, GMEVisualConcepts.getConnectionVisualProperties(nodeId));
 
+                    if (objDescriptor[REGISTRY_KEYS.BOX_DECORATION]) {
+                        extendWithBoxProperties();
+                    }
+
                     // If srcText or dstText is given -> remove the name.
                     if (objDescriptor.srcText || objDescriptor.dstText) {
                         delete objDescriptor.name;
@@ -228,44 +274,7 @@ define(['js/logger',
                     objDescriptor.connectionChanged = this._GMEModels.indexOf(nodeId) === -1 &&
                         this._GMEConnections.indexOf(nodeId) > -1;
 
-                    //aspect specific coordinate
-                    if (this._selectedAspect === CONSTANTS.ASPECT_ALL) {
-                        pos = nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
-                    } else {
-                        memberListContainerObj = this._client.getNode(this.currentNodeInfo.id);
-                        try {
-                            pos = memberListContainerObj.getMemberRegistry(this._selectedAspect,
-                                nodeId,
-                                REGISTRY_KEYS.POSITION);
-                        } catch (err) {
-                            if (err.name !== 'CoreIllegalOperationError') {
-                                throw err;
-                            }
-                        }
-
-                        pos = pos || nodeObj.getRegistry(REGISTRY_KEYS.POSITION);
-                    }
-
-                    if (pos) {
-                        objDescriptor.position = {x: pos.x, y: pos.y};
-                    } else {
-                        objDescriptor.position = {x: defaultPos, y: defaultPos};
-                    }
-
-                    if (objDescriptor.position.hasOwnProperty('x')) {
-                        objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, defaultPos);
-                    } else {
-                        objDescriptor.position.x = defaultPos;
-                    }
-
-                    if (objDescriptor.position.hasOwnProperty('y')) {
-                        objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, defaultPos);
-                    } else {
-                        objDescriptor.position.y = defaultPos;
-                    }
-
-                    objDescriptor.decorator = nodeObj.getRegistry(REGISTRY_KEYS.DECORATOR) || '';
-                    objDescriptor.rotation = parseInt(nodeObj.getRegistry(REGISTRY_KEYS.ROTATION), 10) || 0;
+                    extendWithBoxProperties();
                 }
             }
         }
@@ -464,7 +473,6 @@ define(['js/logger',
         }
 
         events = unloadEvents.concat(orderedItemEvents);
-        i = events.length;
 
         this._notifyPackage = {};
 
@@ -478,7 +486,7 @@ define(['js/logger',
                     territoryChanged = this._onLoad(e.eid, e.desc) || territoryChanged;
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UPDATE:
-                    this._onUpdate(e.eid, e.desc);
+                    territoryChanged = this._onUpdate(e.eid, e.desc) || territoryChanged;
                     break;
                 case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     territoryChanged = this._onUnload(e.eid) || territoryChanged;
@@ -490,7 +498,6 @@ define(['js/logger',
 
         //connections
         events = orderedConnectionEvents;
-        i = events.length;
 
         //items
         for (i = 0; i < events.length; i += 1) {
@@ -570,22 +577,22 @@ define(['js/logger',
         return result;
     };
 
-    // PUBLIC METHODS
-    ModelEditorControl.prototype._onLoad = function (gmeID, objD) {
-        var uiComponent,
-            decClass,
-            objDesc,
-            sources = [],
-            destinations = [],
-            getDecoratorTerritoryQueries,
+    ModelEditorControl.prototype._addGMEConnection = function (gmeID, objDesc) {
+        var uiComponent = this.designerCanvas.createConnection(objDesc);
+        this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
+            objDesc.id);
+
+        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+        this._ComponentID2GMEID[uiComponent.id] = gmeID;
+    };
+
+    ModelEditorControl.prototype._addGMEModel = function (gmeID, objDesc) {
+        var self = this,
             territoryChanged = false,
-            self = this,
+            decClass,
+            uiComponent;
 
-            srcDst,
-            k,
-            l;
-
-        getDecoratorTerritoryQueries = function (decorator) {
+        function getDecoratorTerritoryQueries(decorator) {
             var query,
                 entry;
 
@@ -601,7 +608,38 @@ define(['js/logger',
                     }
                 }
             }
-        };
+        }
+
+        this._GMEModels.push(gmeID);
+
+        decClass = this._getItemDecorator(objDesc.decorator);
+
+        objDesc.decoratorClass = decClass;
+        objDesc.control = this;
+        objDesc.metaInfo = {};
+        objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+        objDesc.aspect = this._selectedAspect;
+
+        uiComponent = this.designerCanvas.createDesignerItem(objDesc);
+
+        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
+        this._ComponentID2GMEID[uiComponent.id] = gmeID;
+
+        getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
+
+        return territoryChanged;
+    };
+
+    // PUBLIC METHODS
+    ModelEditorControl.prototype._onLoad = function (gmeID, objD) {
+        var objDesc,
+            sources = [],
+            destinations = [],
+            territoryChanged = false,
+            srcDst,
+            sn,
+            dn;
 
         //component loaded
         //we are interested in the load of sub_components of the opened component
@@ -611,26 +649,8 @@ define(['js/logger',
                     objDesc = _.extend({}, objD);
                     this._GMEID2ComponentID[gmeID] = [];
 
-                    if (objDesc.kind === 'MODEL') {
-
-                        this._GMEModels.push(gmeID);
-
-                        decClass = this._getItemDecorator(objDesc.decorator);
-
-                        objDesc.decoratorClass = decClass;
-                        objDesc.control = this;
-                        objDesc.metaInfo = {};
-                        objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
-                        objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-                        objDesc.aspect = this._selectedAspect;
-
-                        uiComponent = this.designerCanvas.createDesignerItem(objDesc);
-
-                        this._GMEID2ComponentID[gmeID].push(uiComponent.id);
-                        this._ComponentID2GMEID[uiComponent.id] = gmeID;
-
-                        getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
-
+                    if (objDesc.kind === 'MODEL' || objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
+                        territoryChanged = this._addGMEModel(gmeID, objDesc);
                     }
 
                     if (objDesc.kind === 'CONNECTION') {
@@ -641,16 +661,13 @@ define(['js/logger',
                         sources = srcDst.sources;
                         destinations = srcDst.destinations;
 
-                        k = sources.length;
-                        l = destinations.length;
-
-                        if (k > 0 && l > 0) {
-                            while (k--) {
-                                while (l--) {
-                                    objDesc.srcObjId = sources[k].objId;
-                                    objDesc.srcSubCompId = sources[k].subCompId;
-                                    objDesc.dstObjId = destinations[l].objId;
-                                    objDesc.dstSubCompId = destinations[l].subCompId;
+                        if (sources.length > 0 && destinations.length > 0) {
+                            for (sn = 0; sn < sources.length; sn += 1) {
+                                for (dn = 0; dn < destinations.length; dn += 1) {
+                                    objDesc.srcObjId = sources[sn].objId;
+                                    objDesc.srcSubCompId = sources[sn].subCompId;
+                                    objDesc.dstObjId = destinations[dn].objId;
+                                    objDesc.dstSubCompId = destinations[dn].subCompId;
                                     objDesc.reconnectable = true;
                                     objDesc.editable = true;
 
@@ -658,13 +675,7 @@ define(['js/logger',
                                     delete objDesc.target;
 
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    uiComponent = this.designerCanvas.createConnection(objDesc);
-
-                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
-                                        objDesc.id);
-
-                                    this._GMEID2ComponentID[gmeID].push(uiComponent.id);
-                                    this._ComponentID2GMEID[uiComponent.id] = gmeID;
+                                    this._addGMEConnection(gmeID, objDesc);
                                 }
                             }
                         } else {
@@ -693,15 +704,16 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
-        var componentID,
+        var territoryChanged = false,
+            updatedBox,
+            componentID,
             len,
             decClass,
             srcDst,
             sources,
             destinations,
-            k,
-            l,
-            uiComponent;
+            sn,
+            dn;
 
         //self or child updated
         //check if the updated object is the opened node
@@ -714,21 +726,33 @@ define(['js/logger',
         } else {
             if (objDesc) {
                 if (objDesc.parentId === this.currentNodeInfo.id) {
-                    if (objDesc.kind === 'MODEL') {
+                    if (objDesc.kind === 'MODEL' || objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
                         if (this._GMEID2ComponentID[gmeID]) {
                             len = this._GMEID2ComponentID[gmeID].length;
+                            updatedBox = false;
                             while (len--) {
                                 componentID = this._GMEID2ComponentID[gmeID][len];
+                                if (this.designerCanvas.connectionIds.indexOf(componentID) === -1) {
+                                    updatedBox = true;
+                                    decClass = this._getItemDecorator(objDesc.decorator);
 
-                                decClass = this._getItemDecorator(objDesc.decorator);
+                                    objDesc.decoratorClass = decClass;
+                                    objDesc.preferencesHelper = PreferencesHelper.getPreferences();
+                                    objDesc.aspect = this._selectedAspect;
 
-                                objDesc.decoratorClass = decClass;
-                                objDesc.preferencesHelper = PreferencesHelper.getPreferences();
-                                objDesc.aspect = this._selectedAspect;
+                                    this.designerCanvas.updateDesignerItem(componentID, objDesc);
+                                }
+                            }
 
-                                this.designerCanvas.updateDesignerItem(componentID, objDesc);
+                            if (objDesc[REGISTRY_KEYS.BOX_DECORATION] && updatedBox === false) {
+                                //  There wasn't any box associated with the connection.
+                                territoryChanged = this._addGMEModel(gmeID, objDesc);
                             }
                         }
+                    } else if (objDesc.kind === 'CONNECTION' &&
+                        objDesc[REGISTRY_KEYS.BOX_DECORATION] &&
+                        this._GMEID2ComponentID[gmeID].length > 1) {
+
                     }
 
                     //there is a connection associated with this GMEID
@@ -738,16 +762,14 @@ define(['js/logger',
                         sources = srcDst.sources;
                         destinations = srcDst.destinations;
 
-                        k = sources.length;
-                        l = destinations.length;
                         len -= 1;
 
-                        for (k = sources.length - 1; k >= 0; k -= 1) {
-                            for (l = destinations.length - 1; l >= 0; l -= 1) {
-                                objDesc.srcObjId = sources[k].objId;
-                                objDesc.srcSubCompId = sources[k].subCompId;
-                                objDesc.dstObjId = destinations[l].objId;
-                                objDesc.dstSubCompId = destinations[l].subCompId;
+                        for (sn = 0; sn < sources.length; sn += 1) {
+                            for (dn = 0; dn < destinations.length; dn += 1) {
+                                objDesc.srcObjId = sources[sn].objId;
+                                objDesc.srcSubCompId = sources[sn].subCompId;
+                                objDesc.dstObjId = destinations[dn].objId;
+                                objDesc.dstSubCompId = destinations[dn].subCompId;
                                 objDesc.reconnectable = true;
                                 objDesc.editable = true;
 
@@ -758,32 +780,34 @@ define(['js/logger',
                                     componentID = this._GMEID2ComponentID[gmeID][len];
 
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    this.designerCanvas.updateConnection(componentID, objDesc);
+
+                                    if (this.designerCanvas.connectionIds.indexOf(componentID) > -1) {
+                                        this.designerCanvas.updateConnection(componentID, objDesc);
+                                    } else {
+                                        this._addGMEConnection(gmeID, objDesc);
+                                    }
 
                                     len -= 1;
                                 } else {
-                                    this.logger.warn('Updating connections...Existing connections are less than the ' +
+                                    this.logger.error('Updating connections...Existing connections are less than the ' +
                                         'needed src-dst combo...');
                                     //let's create a connection
                                     _.extend(objDesc, this.getConnectionDescriptor(gmeID));
-                                    uiComponent = this.designerCanvas.createConnection(objDesc);
-                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' +
-                                        objDesc.id);
-                                    this._GMEID2ComponentID[gmeID].push(uiComponent.id);
-                                    this._ComponentID2GMEID[uiComponent.id] = gmeID;
+                                    this._addGMEConnection(gmeID, objDesc);
                                 }
                             }
                         }
 
-                        if (len >= 0) {
-                            //some leftover connections on the widget
-                            //delete them
+                        if (len >= 0 && !objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
+                            //some leftover connection boxes on the widget
                             len += 1;
                             while (len--) {
                                 componentID = this._GMEID2ComponentID[gmeID][len];
-                                this.designerCanvas.deleteComponent(componentID);
-                                this._GMEID2ComponentID[gmeID].splice(len, 1);
-                                delete this._ComponentID2GMEID[componentID];
+                                if (this.designerCanvas.connectionIds.indexOf(componentID) > -1) {
+                                    this.designerCanvas.deleteComponent(componentID);
+                                    this._GMEID2ComponentID[gmeID].splice(len, 1);
+                                    delete this._ComponentID2GMEID[componentID];
+                                }
                             }
                         }
                     }
@@ -793,6 +817,8 @@ define(['js/logger',
                 }
             }
         }
+
+        return territoryChanged;
     };
 
     ModelEditorControl.prototype._updateSheetName = function (name) {

@@ -31,6 +31,7 @@ define([
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = CONSTANTS.LINE_STYLE.LINE_ARROWS.NONE;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.CUSTOM_POINTS] = [];
+    DEFAULT_LINE_STYLE[REGISTRY_KEYS.BOX_DECORATION] = false;
 
     var _initialize = function (client) {
         if (!_client) {
@@ -140,6 +141,13 @@ define([
             val = getValue(obj, REGISTRY_KEYS.LINE_END_ARROW);
             if (val) {
                 result[CONSTANTS.LINE_STYLE.END_ARROW] = val;
+            }
+
+            //box decoration
+            val = getValue(obj, REGISTRY_KEYS.BOX_DECORATION);
+            if (val === true) {
+                // It's false by default..
+                result[REGISTRY_KEYS.BOX_DECORATION] = val;
             }
         }
 

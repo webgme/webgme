@@ -224,11 +224,11 @@ define(['js/logger',
         var self = this,
             connIds = WebGMEGlobal.State.getActiveSelection().filter(function (gmeId) {
                 var nodeObj = self._client.getNode(gmeId);
-                return nodeObj && nodeObj.isConnection() && !posInfo[gmeId];
+                return nodeObj && nodeObj.isConnection();
             });
 
-        connIds.forEach(function (id) {
-            var nodeObj = self._client.getNode(id),
+        connIds.forEach(function (gmeId) {
+            var nodeObj = self._client.getNode(gmeId),
                 linePoints = nodeObj && nodeObj.getRegistry(REGISTRY_KEYS.LINE_CUSTOM_POINTS);
 
             if (linePoints instanceof Array && linePoints.length > 0) {
@@ -249,7 +249,8 @@ define(['js/logger',
                 if (srcNode && posInfo[srcNode.getId()] && dstNode && posInfo[dstNode.getId()]) {
                     var srcPos = srcNode.getRegistry('position'),
                         dstPos = dstNode.getRegistry('position'),
-                        delta = {x: 0, y: 0};
+                        delta = {x: 0, y: 0},
+                        pos;
 
                     if (srcPos && dstPos) {
                         delta.x = ( posInfo[srcNode.getId()].x - srcPos.x + posInfo[dstNode.getId()].x - dstPos.x ) / 2;
@@ -263,9 +264,19 @@ define(['js/logger',
                             point[1] = point[1] > 0 ? Math.round(point[1]) : 0;
                         });
 
-                        posInfo[id] = {};
-                        posInfo[id][REGISTRY_STRING] = {};
-                        posInfo[id][REGISTRY_STRING][REGISTRY_KEYS.LINE_CUSTOM_POINTS] = linePoints;
+                        if (posInfo[gmeId]) {
+                            // The connection is selected as a box as well - the new position must be
+                            // stored under postion registry.
+                            pos = posInfo[gmeId];
+                        }
+
+                        posInfo[gmeId] = {};
+                        posInfo[gmeId][REGISTRY_STRING] = {};
+                        posInfo[gmeId][REGISTRY_STRING][REGISTRY_KEYS.LINE_CUSTOM_POINTS] = linePoints;
+
+                        if (pos) {
+                            posInfo[gmeId][REGISTRY_STRING][REGISTRY_KEYS.POSITION] = pos;
+                        }
                     }
                 }
             }
@@ -334,7 +345,8 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onCreateNewConnection = function (params) {
-        var sourceId,
+        var self = this,
+            sourceId,
             targetId,
             parentId = this.currentNodeInfo.id,
             createConnection,
@@ -348,13 +360,27 @@ define(['js/logger',
             validConnectionTypes,
             dstPosition;
 
+        function getMidPosition() {
+            var srcPos = self.designerCanvas.items[params.dst].getBoundingBox(),
+                dstPos = self.designerCanvas.items[params.src].getBoundingBox();
+
+            return {
+                x: (srcPos.x + dstPos.x) / 2,
+                y: (srcPos.y + dstPos.y) / 2
+            };
+        }
+
         //local callback to create the connection
         createConnection = function (connTypeToCreate) {
             if (connTypeToCreate) {
                 _client.startTransaction();
 
                 //create new object
-                newConnID = _client.createChild({parentId: parentId, baseId: connTypeToCreate});
+                newConnID = _client.createChild({
+                    parentId: parentId,
+                    baseId: connTypeToCreate,
+                    position: getMidPosition(),
+                });
 
                 //set source and target pointers
                 _client.setPointer(newConnID, CONSTANTS.POINTER_SOURCE, sourceId);
@@ -821,19 +847,32 @@ define(['js/logger',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
-        var gmeIDs = [],
-            len = selectedIds.length,
-            id,
+        var self = this,
+            gmeIDs = [],
+            extraIds = [],
             enableEditConnections = selectedIds.length > 0;
 
-        while (len--) {
-            id = this._ComponentID2GMEID[selectedIds[len]];
-            if (id) {
-                gmeIDs.push(id);
+        selectedIds.forEach(function (id) {
+            var gmeId = self._ComponentID2GMEID[id];
 
-                enableEditConnections = enableEditConnections && GMEConcepts.isConnectionType(id);
+            if (gmeId) {
+                if (gmeIDs.indexOf(gmeId) === -1) {
+                    gmeIDs.push(gmeId);
+                }
+
+                // Make sure any connection boxes are selected when selecting a connection edge
+                // (and the other way around too).
+                if (self._GMEID2ComponentID[gmeId] && self._GMEID2ComponentID[gmeId].length > 1) {
+                    self._GMEID2ComponentID[gmeId].forEach(function (cId) {
+                        if (selectedIds.indexOf(cId) === -1 && extraIds.indexOf(cId) === -1) {
+                            extraIds.push(cId);
+                        }
+                    });
+                }
+
+                enableEditConnections = enableEditConnections && GMEConcepts.isConnectionType(gmeId);
             }
-        }
+        });
 
         enableEditConnections = enableEditConnections && this.designerCanvas.getIsReadOnlyMode() === false;
 
@@ -846,7 +885,19 @@ define(['js/logger',
 
         this.$btnConnectionRemoveSegmentPoints.enabled(enableEditConnections);
 
-        WebGMEGlobal.State.registerActiveSelection(gmeIDs, {invoker: this});
+        if (extraIds.length > 0) {
+            if (selectedIds.length === 1 &&
+                enableEditConnections &&
+                WebGMEGlobal.State.getActiveSelection().length === 1 &&
+                WebGMEGlobal.State.getActiveSelection()[0] === gmeIDs[0]) {
+                // Same connection selected again -> will not add box to selection
+                // needed for seg points and reverse makes moving conn-boxes nicer.
+            } else {
+                this.designerCanvas.select(selectedIds.concat(extraIds));
+            }
+        } else {
+            WebGMEGlobal.State.registerActiveSelection(gmeIDs, {invoker: this});
+        }
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onClipboardCopy = function (selectedIds) {
