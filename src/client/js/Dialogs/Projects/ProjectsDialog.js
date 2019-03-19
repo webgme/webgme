@@ -13,13 +13,14 @@ define([
     'js/Utils/GMEConcepts',
     'js/Dialogs/CreateProject/CreateProjectDialog',
     'js/Dialogs/Confirm/ConfirmDialog',
+    'js/Widgets/UserProfile/UserProfileWidget',
     'common/storage/util',
     'js/util',
     'common/regexp',
     'superagent',
     'text!./templates/ProjectsDialog.html',
     'css!./styles/ProjectsDialog.css'
-], function (Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDialog,
+], function (Logger, CONSTANTS, LoaderCircles, GMEConcepts, CreateProjectDialog, ConfirmDialog, UserProfileWidget,
              StorageUtil, clientUtil, REGEXP, superagent, projectsDialogTemplate) {
 
     'use strict';
@@ -101,6 +102,10 @@ define([
         var self = this,
             extraTabs,
             selectedId;
+
+        function isValidProjectName(aProjectName, projectId) {
+            return REGEXP.PROJECT_NAME.test(aProjectName) && self._projectIds.indexOf(projectId) === -1;
+        }
 
         function openProject(projectId) {
             self._logger.debug('openProject requested, already opening?', self._openingProject);
@@ -212,29 +217,9 @@ define([
 
         this._userId = WebGMEGlobal.userInfo._id;
 
-        // The user should not leave the dialog if no active project is there
-        if (!this._client.getActiveProjectId()) {
-
-            this._needProject = true;
-            this._dialog.modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-
-            // this._dialog.find("#projectsDialCloseBtn").hide();
-            this._dialog.find("#projectsDialCloseBtn").prop("disabled", true);
-            // this._dialog.find("#projectDialXBtn").prop( "disabled", true );
-            this._dialog.find("#projectDialXBtn").hide();
-
-            this._dialog.on('hide.bs.modal', function (event) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                event.stopPropagation();
-            });
-        }
-
         //get controls
         this._modalContent = this._dialog.find('.modal-content').first();
+        this._modalHeader = this._dialog.find('.modal-header').first();
         this._el = this._dialog.find('.modal-body').first();
         this._table = this._el.find('table').first();
         this._tableHead = this._table.find('thead').first();
@@ -256,6 +241,34 @@ define([
         this._ownerId = this._userId;
         this._visibleOwnerId = WebGMEGlobal.getUserDisplayName(this._userId);
         this._selectedOwner.text(this._visibleOwnerId);
+
+        // The user should not leave the dialog if no active project is there
+        if (!this._client.getActiveProjectId()) {
+
+            this._needProject = true;
+            this._dialog.modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+
+            // this._dialog.find("#projectsDialCloseBtn").hide();
+            this._dialog.find('#projectsDialCloseBtn').prop('disabled', true);
+            // this._dialog.find("#projectDialXBtn").prop( "disabled", true );
+            this._dialog.find('#projectDialXBtn').hide();
+
+            this._dialog.on('hide.bs.modal', function (event) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                event.stopPropagation();
+            });
+
+            if (WebGMEGlobal.gmeConfig.authentication.enable === true) {
+                var userProfileEl = $('<div/>', {class: 'inline pull-right', style: 'padding: 6px 0px;'});
+                this.defaultUserProfileWidget = new UserProfileWidget(userProfileEl, this._client);
+
+                this._modalHeader.prepend(userProfileEl);
+            }
+        }
 
         this._ownerIdList.append($('<li><a class="ownerId-selection" data-id="' + self._userId + '">' +
             self._visibleOwnerId + '</a></li>'));
@@ -415,10 +428,6 @@ define([
                 self._btnNewProjectCreate.disable(false);
             }
         });
-
-        function isValidProjectName(aProjectName, projectId) {
-            return REGEXP.PROJECT_NAME.test(aProjectName) && self._projectIds.indexOf(projectId) === -1;
-        }
 
         this._txtNewProjectName.on('keyup', function () {
             var val = self._txtNewProjectName.val(),
