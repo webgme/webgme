@@ -1,5 +1,18 @@
 # Change Log
 
+## [v2.37.0](https://github.com/webgme/webgme/tree/v2.37.0) (2019-03-25)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.36.0...v2.37.0)
+
+**Implemented enhancements:**
+
+- Bump webgme-engine to v2.23.0 [\#1672](https://github.com/webgme/webgme/issues/1672)
+- Enable users to logout/login from sticky projects dialog [\#1674](https://github.com/webgme/webgme/pull/1674) ([pmeijer](https://github.com/pmeijer))
+
+**Merged pull requests:**
+
+- Add option to display Connections as boxes in addition to edges [\#1671](https://github.com/webgme/webgme/pull/1671) ([pmeijer](https://github.com/pmeijer))
+- Drawer for viewing and aborting running plugins [\#1670](https://github.com/webgme/webgme/pull/1670) ([kecso](https://github.com/kecso))
+
 ## [v2.36.0](https://github.com/webgme/webgme/tree/v2.36.0) (2019-02-25)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.35.0...v2.36.0)
 
