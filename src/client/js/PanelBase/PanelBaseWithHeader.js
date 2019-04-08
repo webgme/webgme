@@ -6,7 +6,11 @@
  * @author nabana / https://github.com/nabana
  */
 
-define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], function (PanelBase) {
+define([
+    'js/PanelBase/PanelBase',
+    'js/Constants',
+    'css!./styles/PanelBaseWithHeader.css'
+], function (PanelBase, CONSTANTS) {
 
     'use strict';
 
@@ -25,6 +29,9 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] =
             options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true;
 
+        options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] =
+            options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] || {};
+
         //call parent's constructor
         PanelBase.apply(this, [options, layoutManager]);
 
@@ -34,7 +41,8 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
     PanelBaseWithHeader.OPTIONS = _.extend(PanelBase.OPTIONS, {
         HEADER_TITLE: 'HEADER_TITLE',
         FLOATING_TITLE: 'FLOATING_TITLE',
-        NO_SCROLLING: 'NO_SCROLLING'
+        NO_SCROLLING: 'NO_SCROLLING',
+        NAVIGATION_TITLE: 'NAVIGATION_TITLE'
     });
     _.extend(PanelBaseWithHeader.prototype, PanelBase.prototype);
 
@@ -95,6 +103,9 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
                 class: 'panel-header-title'
             });
             this.$panelHeader.append(this.$panelHeaderTitle);
+            this.$panelHeaderTitle.on('click', function (event) {
+                console.log('titleclick');
+            });
         } else if (options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true) {
             this.$_el.append(this.$panelBody);
             this.$_el.append(this.$panelHeader);
@@ -108,20 +119,86 @@ define(['js/PanelBase/PanelBase', 'css!./styles/PanelBaseWithHeader.css'], funct
             this.$floatingTitle.append(this.$panelReadOnlyIndicator);
             this.$floatingTitle.append(this.$panelHeaderTitle);
             this.$_el.append(this.$floatingTitle);
+            this.$panelHeaderTitle.on('click', function (event) {
+                console.log('floatingtitleclick');
+            });
         } else {
             this.$_el.append(this.$panelBody);
             this.$_el.append(this.$panelReadOnlyIndicator);
         }
+
+        //Navigator title - if used, title will not be set, but client event will be followed
+        if (options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].enabled === true) {
+            this._client = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].client;
+            if (this._client) {
+                this._navigatorTitleInUse = true;
+                this._attachClientEventListener();
+                if (typeof options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].attribute === 'string') {
+                    this._navigatorAttribute = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].attribute;
+
+                }
+                this._navigatorTitleDepth = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].depth || 1;
+            }
+        }
+    };
+
+    PanelBaseWithHeader.prototype._detachClientEventListener = function () {
+        WebGMEGlobal.State.off('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._activeNodeChanged, this);
+    };
+
+    PanelBaseWithHeader.prototype._attachClientEventListener = function () {
+        this._detachClientEventListener();
+        WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._activeNodeChanged, this);
+    };
+
+    PanelBaseWithHeader.prototype._activeNodeChanged = function (model, activeObjectId) {
+        var self = this,
+            navigationItems = [],
+            node = this._client.getNode(activeObjectId),
+            levelSeparatorAdded = false,
+            item;
+
+        self.$panelHeaderTitle.empty();
+        if (node) {
+            while (node) {
+                item = {};
+                item.id = node.getId();
+                item.text = self._navigatorAttribute ? node.getAttribute(self._navigatorAttribute) : item.id;
+                navigationItems.unshift(item);
+                node = self._client.getNode(node.getParentId());
+            }
+
+            navigationItems.forEach(function (dataItem, index) {
+                if (index + 1 === navigationItems.length) {
+                    self.$panelHeaderTitle.append('<span>' + dataItem.text + '</span>');
+                } else {
+                    if (index < self._navigatorTitleDepth) {
+                        item = $('<span class="panel-header-title-navigation-item" data-webgme-id="' +
+                            dataItem.id + '">' + dataItem.text + '\>' + '</span>');
+                        item.on('dblclick', self._navigatorTitleClicked);
+                        self.$panelHeaderTitle.append(item);
+                    } else if (!levelSeparatorAdded) {
+                        levelSeparatorAdded = true;
+                        self.$panelHeaderTitle.append('<span>...\></span>');
+                    }
+                }
+            });
+        }
+    };
+
+    PanelBaseWithHeader.prototype._navigatorTitleClicked = function (event) {
+        console.log(event);
     };
 
     PanelBaseWithHeader.prototype.destroy = function () {
+        this._detachClientEventListener();
         this.clear();
         this.$_el.remove();
         this._destroyedInstance = true;
     };
 
     PanelBaseWithHeader.prototype.setTitle = function (text) {
-        if (this.$panelHeaderTitle) {
+        if (this.$panelHeaderTitle && !this._navigatorTitleInUse) {
             this.$panelHeaderTitle.text(text);
         }
     };

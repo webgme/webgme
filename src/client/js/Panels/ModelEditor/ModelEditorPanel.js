@@ -23,6 +23,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'ModelEditorPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
+        //TODO - this has to be controlled from the components configuration
+        options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] = {
+            enabled: true,
+            client: params.client,
+            depth: 2,
+            attribute: 'name'
+        };
+
         //call parent's constructor
         PanelBaseWithHeader.apply(this, [options, layoutManager]);
 
