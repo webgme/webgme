@@ -187,7 +187,9 @@ define([
     };
 
     PanelBaseWithHeader.prototype._navigatorTitleClicked = function (event) {
-        console.log(event);
+        var settings = {};
+        settings[CONSTANTS.STATE_ACTIVE_OBJECT] = $(event.target).data('webgme-id');
+        WebGMEGlobal.State.set(settings);
     };
 
     PanelBaseWithHeader.prototype.destroy = function () {

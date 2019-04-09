@@ -7,11 +7,13 @@
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
     'js/Widgets/ModelEditor/ModelEditorWidget',
-    './ModelEditorControl'
+    './ModelEditorControl',
+    'js/Utils/ComponentSettings'
 ], function (PanelBaseWithHeader,
              IActivePanel,
              ModelEditorWidget,
-             ModelEditorControl) {
+             ModelEditorControl,
+             ComponentSettings) {
 
     'use strict';
 
@@ -19,17 +21,20 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     ModelEditorPanel = function (layoutManager, params) {
         var options = {};
+
+        //set properties from component settings
+        this._config = ModelEditorPanel.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, ModelEditorPanel.getComponentId());
+
+        //TODO - this has to be controlled from the components configuration
+        options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] = this._config.navigationTitle || {enabled: false};
+        if (options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].enabled) {
+            options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].client = params.client;
+        }
+
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'ModelEditorPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
-
-        //TODO - this has to be controlled from the components configuration
-        options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] = {
-            enabled: true,
-            client: params.client,
-            depth: 2,
-            attribute: 'name'
-        };
 
         //call parent's constructor
         PanelBaseWithHeader.apply(this, [options, layoutManager]);
@@ -113,6 +118,26 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     ModelEditorPanel.prototype.getNodeID = function () {
         return this.control.getNodeID();
+    };
+
+    ModelEditorPanel.getDefaultConfig = function () {
+        return {
+            navigatorTitle: {
+                enabled: false,
+                attribute: 'name',
+                depth: 2
+            },
+            byProjectKind: {
+                navigatorTitle: {}
+            },
+            byProjectId: {
+                navigatorTitle: {}
+            }
+        };
+    };
+
+    ModelEditorPanel.getComponentId = function () {
+        return 'GenericUIModelEditorPanel';
     };
 
     return ModelEditorPanel;
