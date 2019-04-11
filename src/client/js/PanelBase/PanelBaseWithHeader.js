@@ -79,6 +79,9 @@ define([
         this.$panelHeader = $('<div/>', {
             class: 'panel-header no-print'
         });
+        this.$panelHeaderTitle = $('<div/>', {
+            class: 'panel-header-title'
+        });
 
         //Create Panel's BODY
         //set $el to panel-body for subclass use
@@ -99,13 +102,8 @@ define([
             this.$_el.append(this.$panelHeader);
             this.$_el.append(this.$panelBody);
             this.$panelHeader.append(this.$panelReadOnlyIndicator);
-            this.$panelHeaderTitle = $('<div/>', {
-                class: 'panel-header-title'
-            });
             this.$panelHeader.append(this.$panelHeaderTitle);
-            this.$panelHeaderTitle.on('click', function (event) {
-                console.log('titleclick');
-            });
+
         } else if (options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true) {
             this.$_el.append(this.$panelBody);
             this.$_el.append(this.$panelHeader);
@@ -113,25 +111,23 @@ define([
             this.$floatingTitle = $('<div/>', {
                 class: 'floating-title no-print'
             });
-            this.$panelHeaderTitle = $('<div/>', {
-                class: 'panel-header-title'
-            });
             this.$floatingTitle.append(this.$panelReadOnlyIndicator);
             this.$floatingTitle.append(this.$panelHeaderTitle);
             this.$_el.append(this.$floatingTitle);
-            this.$panelHeaderTitle.on('click', function (event) {
-                console.log('floatingtitleclick');
-            });
+
         } else {
             this.$_el.append(this.$panelBody);
             this.$_el.append(this.$panelReadOnlyIndicator);
         }
+
+        this._configNavigationTitle(options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE]);
 
         //Navigator title - if used, title will not be set, but client event will be followed
         if (options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].enabled === true) {
             this._client = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].client;
             if (this._client) {
                 this._navigatorTitleInUse = true;
+                this._navigationTitleConfig = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE];
                 this._attachClientEventListener();
                 if (typeof options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].attribute === 'string') {
                     this._navigatorAttribute = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].attribute;
@@ -199,7 +195,36 @@ define([
         this._destroyedInstance = true;
     };
 
-    PanelBaseWithHeader.prototype.setTitle = function (text) {
+    PanelBaseWithHeader.prototype._configNavigationTitle = function (navigationTitleConfig) {
+        // We save it in case the navigation title config would change between projects.
+        this._navigationTitleConfig = navigationTitleConfig;
+        this.$panelHeaderTitle.empty();
+
+        //Navigator title - if used, title will not be set, but client event will be followed
+        if (this._navigationTitleConfig.enabled === true) {
+            this._client = this._navigationTitleConfig.client;
+            if (this._client) {
+                this._navigatorTitleInUse = true;
+                this._attachClientEventListener();
+                if (typeof this._navigationTitleConfig.attribute === 'string') {
+                    this._navigatorAttribute = this._navigationTitleConfig.attribute;
+
+                } else {
+                    this._navigatorAttribute = null;
+                }
+                this._navigatorTitleDepth = this._navigationTitleConfig.depth || 1;
+            }
+        } else {
+            this._navigatorTitleInUse = false;
+            this._detachClientEventListener();
+        }
+    };
+
+    PanelBaseWithHeader.prototype.setTitle = function (text, navigationTitleConfig) {
+
+        if (navigationTitleConfig && !_.isEqual(navigationTitleConfig, this._navigationTitleConfig)) {
+            this._configNavigationTitle(navigationTitleConfig);
+        }
         if (this.$panelHeaderTitle && !this._navigatorTitleInUse) {
             this.$panelHeaderTitle.text(text);
         }
