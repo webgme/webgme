@@ -1214,7 +1214,7 @@ define(['js/logger',
             childrenIDs = [],
             aspect = this._selectedAspect;
 
-        if (parentID) {
+        if (typeof parentID === 'string') {
             try {
                 data = JSON.parse(data);
             } catch (e) {
