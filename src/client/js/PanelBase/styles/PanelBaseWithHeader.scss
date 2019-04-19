@@ -44,6 +44,10 @@ $panel-header-title-font-size: 0.85em;
 
 .panel-header-title-navigation-item {
   cursor: pointer;
+  min-width: 50px;
+  &:hover {
+    opacity: 0.5;
+  }
 }
 
 .panel-base-wh {

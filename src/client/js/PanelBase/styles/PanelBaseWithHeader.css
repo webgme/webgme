@@ -2,7 +2,10 @@
  * @author rkereskenyi / https://github.com/rkereskenyi
  */
 .panel-header-title-navigation-item {
-  cursor: pointer; }
+  cursor: pointer;
+  min-width: 50px; }
+  .panel-header-title-navigation-item:hover {
+    opacity: 0.5; }
 
 .panel-base-wh {
   box-sizing: border-box; }

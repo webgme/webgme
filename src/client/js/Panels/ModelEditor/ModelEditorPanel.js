@@ -26,12 +26,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this._config = ModelEditorPanel.getDefaultConfig();
         ComponentSettings.resolveWithWebGMEGlobal(this._config, ModelEditorPanel.getComponentId());
 
-        //TODO - this has to be controlled from the components configuration
-        options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] = this._config.navigationTitle || {enabled: false};
-        if (options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].enabled) {
-            options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].client = params.client;
-        }
-
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'ModelEditorPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
@@ -40,6 +34,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         PanelBaseWithHeader.apply(this, [options, layoutManager]);
 
         this._client = params.client;
+
 
         //initialize UI
         this._initialize();
@@ -122,16 +117,16 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     ModelEditorPanel.getDefaultConfig = function () {
         return {
-            navigatorTitle: {
+            navigationTitle: {
                 enabled: false,
                 attribute: 'name',
                 depth: 2
             },
             byProjectKind: {
-                navigatorTitle: {}
+                navigationTitle: {}
             },
             byProjectId: {
-                navigatorTitle: {}
+                navigationTitle: {}
             }
         };
     };

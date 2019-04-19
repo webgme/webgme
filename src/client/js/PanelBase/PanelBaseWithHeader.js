@@ -29,9 +29,6 @@ define([
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] =
             options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true;
 
-        options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] =
-            options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE] || {};
-
         //call parent's constructor
         PanelBase.apply(this, [options, layoutManager]);
 
@@ -41,8 +38,7 @@ define([
     PanelBaseWithHeader.OPTIONS = _.extend(PanelBase.OPTIONS, {
         HEADER_TITLE: 'HEADER_TITLE',
         FLOATING_TITLE: 'FLOATING_TITLE',
-        NO_SCROLLING: 'NO_SCROLLING',
-        NAVIGATION_TITLE: 'NAVIGATION_TITLE'
+        NO_SCROLLING: 'NO_SCROLLING'
     });
     _.extend(PanelBaseWithHeader.prototype, PanelBase.prototype);
 
@@ -120,22 +116,13 @@ define([
             this.$_el.append(this.$panelReadOnlyIndicator);
         }
 
-        this._configNavigationTitle(options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE]);
 
         //Navigator title - if used, title will not be set, but client event will be followed
-        if (options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].enabled === true) {
-            this._client = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].client;
-            if (this._client) {
-                this._navigatorTitleInUse = true;
-                this._navigationTitleConfig = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE];
-                this._attachClientEventListener();
-                if (typeof options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].attribute === 'string') {
-                    this._navigatorAttribute = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].attribute;
-
-                }
-                this._navigatorTitleDepth = options[PanelBaseWithHeader.OPTIONS.NAVIGATION_TITLE].depth || 1;
-            }
+        this._navigationTitleConfig = null;
+        if (this._client) {
+            this._configNavigationTitle(this._getCurrentNavigationConfig());
         }
+        this._attachClientEventListener();
     };
 
     PanelBaseWithHeader.prototype._detachClientEventListener = function () {
@@ -147,19 +134,32 @@ define([
         WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, this._activeNodeChanged, this);
     };
 
-    PanelBaseWithHeader.prototype._activeNodeChanged = function (model, activeObjectId) {
+    PanelBaseWithHeader.prototype._shouldUseNavigationTitle = function () {
+        var config = {enabled: false};
+        if (this._config && this._client) {
+            config = this._getCurrentNavigationConfig();
+        }
+        return config.enabled === true;
+    };
+
+    PanelBaseWithHeader.prototype._refreshNavigationTitle = function () {
+        console.log(WebGMEGlobal.State.getActiveObject());
         var self = this,
             navigationItems = [],
+            config = self._getCurrentNavigationConfig(),
+            activeObjectId = WebGMEGlobal.State.getActiveObject(),
             node = this._client.getNode(activeObjectId),
             levelSeparatorAdded = false,
             item;
 
         self.$panelHeaderTitle.empty();
+
         if (node) {
+            config.depth = config.depth || 2;
             while (node) {
                 item = {};
                 item.id = node.getId();
-                item.text = self._navigatorAttribute ? node.getAttribute(self._navigatorAttribute) : item.id;
+                item.text = config.attribute ? node.getAttribute(config.attribute) : item.id;
                 navigationItems.unshift(item);
                 node = self._client.getNode(node.getParentId());
             }
@@ -168,21 +168,52 @@ define([
                 if (index + 1 === navigationItems.length) {
                     self.$panelHeaderTitle.append('<span>' + dataItem.text + '</span>');
                 } else {
-                    if (index < self._navigatorTitleDepth) {
+                    if (index < config.depth) {
                         item = $('<span class="panel-header-title-navigation-item" data-webgme-id="' +
-                            dataItem.id + '">' + dataItem.text + '\>' + '</span>');
-                        item.on('dblclick', self._navigatorTitleClicked);
+                            dataItem.id + '">' + dataItem.text + ' \> ' + '</span>');
+                        item.on('dblclick', self._navigationTitleClicked);
                         self.$panelHeaderTitle.append(item);
                     } else if (!levelSeparatorAdded) {
                         levelSeparatorAdded = true;
-                        self.$panelHeaderTitle.append('<span>...\></span>');
+                        self.$panelHeaderTitle.append('<span>... \> </span>');
                     }
                 }
             });
         }
     };
 
-    PanelBaseWithHeader.prototype._navigatorTitleClicked = function (event) {
+    PanelBaseWithHeader.prototype._activeNodeChanged = function (model, activeObjectId) {
+        if (!(this._config && this._client)) {
+            return;
+        } else if (this._shouldUseNavigationTitle() !== true) {
+            return;
+        }
+        this._refreshNavigationTitle();
+    };
+
+    PanelBaseWithHeader.prototype._getCurrentNavigationConfig = function () {
+        var config = null,
+            projectId = this._client.getActiveProjectId(),
+            projectKind;
+
+        if (projectId) {
+            projectKind = this._client.getActiveProjectKind();
+            if (this._config.byProjectId.navigationTitle.hasOwnProperty(projectId)) {
+                config = this._config.byProjectId.navigationTitle[projectId];
+            } else if (projectKind &&
+                this._config.byProjectKind.navigationTitle.hasOwnProperty(projectKind)) {
+                config = this._config.byProjectKind.navigationTitle[projectKind];
+            } else {
+                config = this._config.navigationTitle;
+            }
+        } else {
+            config = this._config.navigationTitle;
+        }
+
+        return config;
+    };
+
+    PanelBaseWithHeader.prototype._navigationTitleClicked = function (event) {
         var settings = {};
         settings[CONSTANTS.STATE_ACTIVE_OBJECT] = $(event.target).data('webgme-id');
         WebGMEGlobal.State.set(settings);
@@ -195,37 +226,26 @@ define([
         this._destroyedInstance = true;
     };
 
-    PanelBaseWithHeader.prototype._configNavigationTitle = function (navigationTitleConfig) {
-        // We save it in case the navigation title config would change between projects.
-        this._navigationTitleConfig = navigationTitleConfig;
+    PanelBaseWithHeader.prototype._configNavigationTitle = function (config) {
         this.$panelHeaderTitle.empty();
 
         //Navigator title - if used, title will not be set, but client event will be followed
-        if (this._navigationTitleConfig.enabled === true) {
-            this._client = this._navigationTitleConfig.client;
+        if (config.enabled === true) {
             if (this._client) {
-                this._navigatorTitleInUse = true;
                 this._attachClientEventListener();
                 if (typeof this._navigationTitleConfig.attribute === 'string') {
-                    this._navigatorAttribute = this._navigationTitleConfig.attribute;
+                    this._navigationAttribute = this._navigationTitleConfig.attribute;
 
                 } else {
-                    this._navigatorAttribute = null;
+                    this._navigationAttribute = null;
                 }
-                this._navigatorTitleDepth = this._navigationTitleConfig.depth || 1;
+                this._navigationTitleDepth = this._navigationTitleConfig.depth || 1;
             }
-        } else {
-            this._navigatorTitleInUse = false;
-            this._detachClientEventListener();
         }
     };
 
-    PanelBaseWithHeader.prototype.setTitle = function (text, navigationTitleConfig) {
-
-        if (navigationTitleConfig && !_.isEqual(navigationTitleConfig, this._navigationTitleConfig)) {
-            this._configNavigationTitle(navigationTitleConfig);
-        }
-        if (this.$panelHeaderTitle && !this._navigatorTitleInUse) {
+    PanelBaseWithHeader.prototype.setTitle = function (text) {
+        if (this.$panelHeaderTitle && !this._shouldUseNavigationTitle()) {
             this.$panelHeaderTitle.text(text);
         }
     };
