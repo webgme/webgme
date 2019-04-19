@@ -116,12 +116,6 @@ define([
             this.$_el.append(this.$panelReadOnlyIndicator);
         }
 
-
-        //Navigator title - if used, title will not be set, but client event will be followed
-        this._navigationTitleConfig = null;
-        if (this._client) {
-            this._configNavigationTitle(this._getCurrentNavigationConfig());
-        }
         this._attachClientEventListener();
     };
 
@@ -143,7 +137,6 @@ define([
     };
 
     PanelBaseWithHeader.prototype._refreshNavigationTitle = function () {
-        console.log(WebGMEGlobal.State.getActiveObject());
         var self = this,
             navigationItems = [],
             config = self._getCurrentNavigationConfig(),
@@ -224,24 +217,6 @@ define([
         this.clear();
         this.$_el.remove();
         this._destroyedInstance = true;
-    };
-
-    PanelBaseWithHeader.prototype._configNavigationTitle = function (config) {
-        this.$panelHeaderTitle.empty();
-
-        //Navigator title - if used, title will not be set, but client event will be followed
-        if (config.enabled === true) {
-            if (this._client) {
-                this._attachClientEventListener();
-                if (typeof this._navigationTitleConfig.attribute === 'string') {
-                    this._navigationAttribute = this._navigationTitleConfig.attribute;
-
-                } else {
-                    this._navigationAttribute = null;
-                }
-                this._navigationTitleDepth = this._navigationTitleConfig.depth || 1;
-            }
-        }
     };
 
     PanelBaseWithHeader.prototype.setTitle = function (text) {
