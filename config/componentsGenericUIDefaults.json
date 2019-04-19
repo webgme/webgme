@@ -60,6 +60,19 @@
       "topNode": {}
     }
   },
+  "GenericUIModelEditorPanel": {
+    "navigationTitle": {
+      "enabled": false,
+      "attribute": "name",
+      "depth": 2
+    },
+    "byProjectKind": {
+      "navigationTitle": {}
+    },
+    "byProjectId": {
+      "navigationTitle": {}
+    }
+  },
   "GenericUICrosscutController": {
     "autoCreateCrosscut": false
   },

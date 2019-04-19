@@ -42,6 +42,14 @@ $panel-header-title-font-size: 0.85em;
   margin-top: 8px;
 }
 
+.panel-header-title-navigation-item {
+  cursor: pointer;
+  min-width: 50px;
+  &:hover {
+    opacity: 0.5;
+  }
+}
+
 .panel-base-wh {
   box-sizing: border-box;
 
@@ -193,6 +201,7 @@ $panel-header-title-font-size: 0.85em;
     overflow: auto;
   }
 }
+
 .side-panel {
 
   .panel-base-wh {

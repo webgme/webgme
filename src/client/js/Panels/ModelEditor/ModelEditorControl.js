@@ -82,7 +82,7 @@ define(['js/logger',
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
 
-        //this._updateTopNode();
+        this._updateTopNode();
         this.logger.debug('ModelEditorControl ctor finished');
     };
 
@@ -1054,7 +1054,7 @@ define(['js/logger',
     };
 
     ModelEditorControl.prototype._activeProjectChanged = function (/*model, activeProjectId*/) {
-        //this._updateTopNode();
+        this._updateTopNode();
     };
 
     ModelEditorControl.prototype._updateTopNode = function () {

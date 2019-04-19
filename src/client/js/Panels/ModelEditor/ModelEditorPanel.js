@@ -7,11 +7,13 @@
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
     'js/Widgets/ModelEditor/ModelEditorWidget',
-    './ModelEditorControl'
+    './ModelEditorControl',
+    'js/Utils/ComponentSettings'
 ], function (PanelBaseWithHeader,
              IActivePanel,
              ModelEditorWidget,
-             ModelEditorControl) {
+             ModelEditorControl,
+             ComponentSettings) {
 
     'use strict';
 
@@ -19,6 +21,11 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     ModelEditorPanel = function (layoutManager, params) {
         var options = {};
+
+        //set properties from component settings
+        this._config = ModelEditorPanel.getDefaultConfig();
+        ComponentSettings.resolveWithWebGMEGlobal(this._config, ModelEditorPanel.getComponentId());
+
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = 'ModelEditorPanel';
         options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
@@ -27,6 +34,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         PanelBaseWithHeader.apply(this, [options, layoutManager]);
 
         this._client = params.client;
+
 
         //initialize UI
         this._initialize();
@@ -105,6 +113,26 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     ModelEditorPanel.prototype.getNodeID = function () {
         return this.control.getNodeID();
+    };
+
+    ModelEditorPanel.getDefaultConfig = function () {
+        return {
+            navigationTitle: {
+                enabled: false,
+                attribute: 'name',
+                depth: 2
+            },
+            byProjectKind: {
+                navigationTitle: {}
+            },
+            byProjectId: {
+                navigationTitle: {}
+            }
+        };
+    };
+
+    ModelEditorPanel.getComponentId = function () {
+        return 'GenericUIModelEditorPanel';
     };
 
     return ModelEditorPanel;
