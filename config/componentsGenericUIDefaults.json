@@ -1,6 +1,7 @@
 {
   "GenericUIProjectNavigatorController": {
     "disableProjectActions": false,
+    "disableNodeMenu": false,
     "rootMenuClass": "gme-root",
     "rootDisplayName": "GME",
     "projectMenuClass": "",

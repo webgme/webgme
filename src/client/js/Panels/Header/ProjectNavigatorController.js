@@ -1139,7 +1139,7 @@ define([
             }
         }
 
-        if (typeof nodeId !== 'string' || !this.gmeClient.getNode(nodeId)) {
+        if (typeof nodeId !== 'string' || !this.gmeClient.getNode(nodeId) || self.config.disableNodeMenu === true) {
             this.$scope.navigator.items.length = this.navIdBranch + 1;
             return;
         }
@@ -1318,6 +1318,7 @@ define([
     ProjectNavigatorController.getDefaultConfig = function () {
         return {
             disableProjectActions: false,
+            disableNodeMenu: false,
             rootMenuClass: 'gme-root',
             rootDisplayName: 'GME',
             projectMenuClass: '',
