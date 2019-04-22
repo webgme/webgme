@@ -1,5 +1,24 @@
 # Change Log
 
+## [v2.38.0](https://github.com/webgme/webgme/tree/v2.38.0) (2019-04-22)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.37.0...v2.38.0)
+
+**Implemented enhancements:**
+
+- Hiding header breadcrumb of the node navigation [\#1680](https://github.com/webgme/webgme/issues/1680)
+- Navigation title [\#1677](https://github.com/webgme/webgme/issues/1677)
+- Hiding header breadcrumb of the node navigation [\#1681](https://github.com/webgme/webgme/pull/1681) ([kecso](https://github.com/kecso))
+- Navigation title [\#1679](https://github.com/webgme/webgme/pull/1679) ([kecso](https://github.com/kecso))
+
+**Fixed bugs:**
+
+- Fixes copy paste from key board inside root node [\#1676](https://github.com/webgme/webgme/pull/1676) ([pmeijer](https://github.com/pmeijer))
+
+**Closed issues:**
+
+- 404 error with jquery.layout.min.js [\#1675](https://github.com/webgme/webgme/issues/1675)
+- Reported ZIP Blob Size Incorrect [\#1673](https://github.com/webgme/webgme/issues/1673)
+
 ## [v2.37.0](https://github.com/webgme/webgme/tree/v2.37.0) (2019-03-25)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.36.0...v2.37.0)
 
