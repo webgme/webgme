@@ -16,6 +16,10 @@
   display: inline-block;
   vertical-align: middle;
   background-size: 28px 28px; }
+.projects-dialog .modal-content .modal-header .guide-button {
+  font-size: 13px;
+  margin-top: -5px;
+  margin-right: 10px; }
 .projects-dialog .modal-content .modal-header span {
   font-size: 28px;
   vertical-align: middle; }

@@ -96,6 +96,10 @@ define([
                 self._logger.error('unable to follow project events', err);
             }
         });
+
+        setTimeout(function () {
+            WebGMEGlobal.UserGuidesManager.startGuide($(self._modalHeader)[0]);
+        }, 1000);
     };
 
     ProjectsDialog.prototype._initDialog = function () {
@@ -217,6 +221,11 @@ define([
 
         this._userId = WebGMEGlobal.userInfo._id;
 
+        this._guide = {
+            tour: WebGMEGlobal.UserGuidesManager.getMyTour('ProjectsDialogTour'),
+            isTourActive: false
+        };
+
         //get controls
         this._modalContent = this._dialog.find('.modal-content').first();
         this._modalHeader = this._dialog.find('.modal-header').first();
@@ -231,6 +240,8 @@ define([
 
         this._btnCreateNew = this._panelButtons.find('.btn-create-new');
         this._btnRefresh = this._panelButtons.find('.btn-refresh');
+
+        this._btnGuide = this._dialog.find('#guideBtn');
 
         this._btnNewProjectCancel = this._panelCreateNew.find('.btn-cancel');
         this._btnNewProjectCreate = this._panelCreateNew.find('.btn-save');
@@ -471,6 +482,10 @@ define([
             self._refreshProjectList.call(self);
             event.stopPropagation();
             event.preventDefault();
+        });
+
+        this._btnGuide.on('click', function(event){
+
         });
     };
 

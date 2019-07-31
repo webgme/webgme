@@ -118,6 +118,9 @@ require.config({
         'angular-ui-bootstrap': 'bower_components/angular-bootstrap/ui-bootstrap-tpls',
         'isis-ui-components': 'bower_components/isis-ui-components/dist/isis-ui-components',
         'isis-ui-components-templates': 'bower_components/isis-ui-components/dist/isis-ui-components-templates',
+
+        //Sheperd
+        'sheperd-js': 'lib/sheperd.js/shepherd',
     },
     packages: [{
         name: 'codemirror',

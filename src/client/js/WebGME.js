@@ -26,6 +26,7 @@ define([
         'js/Utils/SvgManager',
         'common/storage/util',
         'q',
+        'js/UserGuides/UserGuidesManager',
         'jquery'
     ], function (Logger,
                  Client,
@@ -46,7 +47,8 @@ define([
                  ComponentSettings,
                  SvgManager,
                  StorageUtil,
-                 Q) {
+                 Q,
+                 UserGuidesManager) {
 
         'use strict';
 
@@ -113,6 +115,7 @@ define([
 
                 WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
                 WebGMEGlobal.SvgManager = SvgManager;
+                WebGMEGlobal.UserGuidesManager = new UserGuidesManager();
 
                 Object.defineProperty(WebGMEGlobal, 'State', {
                         value: StateManager.initialize(),
@@ -128,7 +131,7 @@ define([
 
                 WebGMEGlobal.State.on('change:' + CONSTANTS.STATE_ACTIVE_OBJECT, function () {
                     // Currently we only emit events to other users when our active object changed,
-                    // this is up for debate. 
+                    // this is up for debate.
                     client.emitStateNotification();
                 });
 
