@@ -79,6 +79,8 @@ define([
                     self._logger.error('error during unsubscribe', err);
                 }
             });
+
+            self._clearGuide();
         });
 
         this._refreshProjectList();
@@ -223,7 +225,7 @@ define([
 
         this._guide = {
             tour: WebGMEGlobal.UserGuidesManager.getMyTour('ProjectsDialogTour'),
-            isTourActive: false
+            state: null
         };
 
         //get controls
@@ -484,7 +486,7 @@ define([
             event.preventDefault();
         });
 
-        this._btnGuide.on('click', function(event){
+        this._btnGuide.on('click', function (event) {
 
         });
     };
@@ -879,6 +881,17 @@ define([
                     selectNewProject(result.projectId);
                 }
             });
+        }
+    };
+
+    ProjectsDialog.prototype._createUserGuide = function () {
+        const guide = this._guide.tour;
+    };
+
+    ProjectsDialog.prototype._clearGuide = function () {
+        const self = this;
+        if (self._guide.state) {
+            self._guide.tour.complete();
         }
     };
 
