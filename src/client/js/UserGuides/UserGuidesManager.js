@@ -44,6 +44,10 @@ define(['sheperd-js'], function (Shepherd) {
                 defaultStepOptions: {
                     classes: 'shadow-md bg-purple-dark',
                     scrollTo: true
+                },
+                styleVariables: {
+                    shepherdTextBackground: '#919ea7',
+                    useDropShadow: true
                 }
             });
         }

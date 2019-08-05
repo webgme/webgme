@@ -98,10 +98,6 @@ define([
                 self._logger.error('unable to follow project events', err);
             }
         });
-
-        setTimeout(function () {
-            WebGMEGlobal.UserGuidesManager.startGuide($(self._modalHeader)[0]);
-        }, 1000);
     };
 
     ProjectsDialog.prototype._initDialog = function () {
@@ -486,8 +482,11 @@ define([
             event.preventDefault();
         });
 
-        this._btnGuide.on('click', function (event) {
-
+        this._btnGuide.on('click', function (/*event*/) {
+            if (!self._guide.state) {
+                self._guide.state = 'started';
+                self._guide.tour.start();
+            }
         });
     };
 
@@ -569,6 +568,7 @@ define([
                     self._txtNewProjectName.focus();
                 }, 500);
             }
+            self._createUserGuide(); //need project content for proper guide functioning
         });
     };
 
@@ -885,7 +885,71 @@ define([
     };
 
     ProjectsDialog.prototype._createUserGuide = function () {
-        const guide = this._guide.tour;
+        const tour = this._guide.tour;
+
+        tour.addStep(
+            {
+                id: 'start-step',
+                showCancelLink: true,
+                text: 'Let me guide you through the usage of WebGME\'s project dialog. ' +
+                    'You can use it to open an existing project or to create a new one.',
+                buttons: [
+                    {
+                        text: 'Open',
+                        action: function () {
+                            tour.show('open-start-step', true);
+                        }
+                    },
+                    {
+                        text: 'Create',
+                        action: function () {
+                            tour.show('create-start-step', true);
+                        }
+                    }
+                ]
+            }
+        );
+        let element = $(this._tableBody).find('.project-row').first().find('.name')[0];
+        tour.addStep(
+            {
+                id: 'open-start-step',
+                showCancelLink: true,
+                attachTo: {
+                    element: element,
+                    on: 'right'
+                },
+                text: 'When you want to open a project, you only need to select it from the list ' +
+                    'by double clicking on its name',
+                buttons: [
+                    {
+                        text: 'Restart-guide',
+                        action: function () {
+                            tour.show('start-step', true);
+                        }
+                    }
+                ]
+            }
+        );
+        tour.addStep(
+            {
+                id: 'create-start-step',
+                showCancelLink: true,
+                text: 'To create a project, you first have to enter a unique name.',
+                buttons: [
+                    {
+                        text: 'Restart-guide',
+                        action: function () {
+                            tour.show('start-step', true);
+                        }
+                    },
+                    {
+                        text: 'Next',
+                        action: tour.next
+                    }
+                ]
+            }
+        );
+
     };
 
     ProjectsDialog.prototype._clearGuide = function () {
