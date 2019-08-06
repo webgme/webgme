@@ -128,12 +128,14 @@ define([
 
         function doCreateProject(/*client*/) {
             var val = self._txtNewProjectName.val(),
+                dialogOptions = {initialTab: self._createType, showTutorial: self._guide.state},
                 d;
 
             if (val !== '' && self._projectIds.indexOf(val) === -1) {
+                self._clearGuide();
                 self._dialog.hide();
 
-                d = new CreateProjectDialog(self._client, val, self._createType,
+                d = new CreateProjectDialog(self._client, val, dialogOptions,
                     self._logger.fork('CreateProjectDialog'));
 
                 d.show(function (seedType, seedName, seedBranchName, seedCommitHash, blobHash) {
@@ -221,7 +223,7 @@ define([
 
         this._guide = {
             tour: WebGMEGlobal.UserGuidesManager.getMyTour('ProjectsDialogTour'),
-            state: null
+            state: false
         };
 
         //get controls
@@ -484,7 +486,7 @@ define([
 
         this._btnGuide.on('click', function (/*event*/) {
             if (!self._guide.state) {
-                self._guide.state = 'started';
+                self._guide.state = true;
                 self._guide.tour.start();
             }
         });
@@ -885,6 +887,7 @@ define([
     };
 
     ProjectsDialog.prototype._createUserGuide = function () {
+        const self = this;
         const tour = this._guide.tour;
 
         tour.addStep(
@@ -909,6 +912,7 @@ define([
                 ]
             }
         );
+
         let element = $(this._tableBody).find('.project-row').first().find('.name')[0];
         tour.addStep(
             {
@@ -919,7 +923,7 @@ define([
                     on: 'right'
                 },
                 text: 'When you want to open a project, you only need to select it from the list ' +
-                    'by double clicking on its name',
+                    'by clicking on its name',
                 buttons: [
                     {
                         text: 'Restart-guide',
@@ -930,31 +934,97 @@ define([
                 ]
             }
         );
+
+        element = $(this._btnCreateNew).get(0);
         tour.addStep(
             {
                 id: 'create-start-step',
                 showCancelLink: true,
-                text: 'To create a project, you first have to enter a unique name.',
+                text: 'To create a project, you need to push the button.',
+                attachTo: {
+                    element: element,
+                    on: 'right'
+                },
+                advanceOn: {selector: '.btn-create-new', event: 'click'},
                 buttons: [
                     {
                         text: 'Restart-guide',
                         action: function () {
                             tour.show('start-step', true);
                         }
-                    },
-                    {
-                        text: 'Next',
-                        action: tour.next
                     }
                 ]
             }
         );
+
+        element = $(this._txtNewProjectName).get(0);
+        tour.addStep(
+            {
+                id: 'create-name-step',
+                showCancelLink: true,
+                text: 'Then you need to type in a unique name for your new project.',
+                attachTo: {
+                    element: element,
+                    on: 'bottom'
+                },
+                advanceOn: {selector: '.txt-project-name', event: 'keyup'},
+                buttons: [
+                    {
+                        text: 'Restart-guide',
+                        action: function () {
+                            tour.show('start-step', true);
+                        }
+                    }
+                ]
+            }
+        );
+        tour.getById('create-name-step').on('show', function () {
+            let step = this;
+            let timer = setInterval(function () {
+                if (step.isOpen()) {
+                    clearInterval(timer);
+                    $(self._txtNewProjectName).focus();
+                }
+            }, 10);
+        });
+
+        element = $(this._btnNewProjectCreate).get(0);
+        tour.addStep(
+            {
+                id: 'create-name-finish-step',
+                showCancelLink: true,
+                text: 'Once you get the name right, just push the button or press enter.',
+                attachTo: {
+                    element: element,
+                    on: 'right'
+                },
+                buttons: [
+                    {
+                        text: 'Restart-guide',
+                        action: function () {
+                            tour.show('start-step', true);
+                        }
+                    }
+                ]
+            }
+        );
+        tour.getById('create-name-finish-step').on('show', function () {
+            let step = this;
+            let timer = setInterval(function () {
+                if (step.isOpen()) {
+                    clearInterval(timer);
+                    $(self._txtNewProjectName).focus();
+                }
+            }, 10);
+        });
+
 
     };
 
     ProjectsDialog.prototype._clearGuide = function () {
         const self = this;
         if (self._guide.state) {
+            self._guide.state = false;
             self._guide.tour.complete();
         }
     };

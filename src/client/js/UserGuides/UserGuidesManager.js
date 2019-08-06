@@ -42,11 +42,11 @@ define(['sheperd-js'], function (Shepherd) {
         if (!this._tours.hasOwnProperty(tourName)) {
             this._tours[tourName] = new Shepherd.Tour({
                 defaultStepOptions: {
-                    classes: 'shadow-md bg-purple-dark',
                     scrollTo: true
                 },
                 styleVariables: {
-                    shepherdTextBackground: '#919ea7',
+                    shepherdThemePrimary: '#00B0F0',
+                    shepherdTextBackground: '#7B7B7B',
                     useDropShadow: true
                 }
             });

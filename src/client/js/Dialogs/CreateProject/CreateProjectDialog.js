@@ -25,7 +25,9 @@ define(['js/Loader/LoaderCircles',
      * @param logger
      * @constructor
      */
-    CreateProjectDialog = function (client, newProjectId, initialTab, logger) {
+    CreateProjectDialog = function (client, newProjectId, options, logger) {
+        const initialTab = typeof options === 'string' ? options : options.initialTab;
+        this._showTutorial = typeof options === 'string' ? false : options.showTutorial;
         this._client = client;
         this._logger = logger.fork('CreateProjectDialog');
         this.blobClient = new BlobClient({logger: this._logger.fork('BlobClient')});
@@ -44,6 +46,8 @@ define(['js/Loader/LoaderCircles',
 
         this._blobIsPackage = false;
 
+        this._tour = WebGMEGlobal.UserGuidesManager.getMyTour('CreateProjectDialogTour');
+
         this._logger.debug('Create form seed ctor');
     };
 
@@ -56,7 +60,16 @@ define(['js/Loader/LoaderCircles',
 
         this._initDialog();
 
+        // As the tour uses html elements we need them to be visible at the time of initialization.
+        if (this._showTutorial) {
+            this._dialog.on('shown.bs.modal', function () {
+                self._initTour();
+                self._tour.start();
+            });
+        }
+
         this._dialog.on('hide.bs.modal', function () {
+            self._clearTour();
             self._dialog.find('li.tab').off('click');
             self._dialog.find('.toggle-info-btn').off('click');
             self._btnCreateSnapShot.off('click');
@@ -71,6 +84,7 @@ define(['js/Loader/LoaderCircles',
         });
 
         this._dialog.modal('show');
+
     };
 
     CreateProjectDialog.prototype._initDialog = function () {
@@ -344,5 +358,107 @@ define(['js/Loader/LoaderCircles',
         this._importErrorLabel.fadeIn();
     };
 
+    CreateProjectDialog.prototype._initTour = function () {
+        if (!this._showTutorial) {
+            return;
+        }
+
+        let tour = this._tour;
+
+        tour.addStep(
+            {
+                id: 'seed-step',
+                showCancelLink: true,
+                attachTo: {
+                    element: 'li.snap-shot',
+                    on: 'top'
+                },
+                text: 'You can create a project by selecting a seed - a given snapshot of an existing project - ' +
+                    'from the available list.',
+                buttons: [
+                    {
+                        text: 'Next',
+                        action: tour.next
+                    }
+                ]
+            }
+        );
+
+        tour.addStep(
+            {
+                id: 'duplicate-step',
+                showCancelLink: true,
+                attachTo: {
+                    element: 'li.duplicate',
+                    on: 'top'
+                },
+                text: 'Alternatively, you can duplicate a project with its complete history to start ' +
+                    'adding your changes.',
+                buttons: [
+                    {
+                        text: 'Prev',
+                        action: tour.back,
+                        secondary: true
+                    },
+                    {
+                        text: 'Next',
+                        action: tour.next
+                    }
+                ]
+            }
+        );
+
+        tour.addStep(
+            {
+                id: 'blob-step',
+                showCancelLink: true,
+                attachTo: {
+                    element: 'li.blob',
+                    on: 'top'
+                },
+                text: 'Finally, you can upload an exported project to initiate yours.',
+                buttons: [
+                    {
+                        text: 'Prev',
+                        action: tour.back,
+                        secondary: true
+                    },
+                    {
+                        text: 'Next',
+                        action: tour.next
+                    }
+                ]
+            }
+        );
+
+        tour.addStep(
+            {
+                id: 'blob-step',
+                showCancelLink: true,
+                attachTo: {
+                    element: 'i.glyphicon-info-sign',
+                    on: 'right'
+                },
+                advanceOn: {selector: 'i.glyphicon-info-sign', event: 'click'},
+                text: 'Finally, you can upload an exported project to initiate yours.',
+                buttons: [
+                    {
+                        text: 'Prev',
+                        action: tour.back,
+                        secondary: true
+                    },
+                    {
+                        text: 'Ok',
+                        action: tour.next
+                    }
+                ]
+            }
+        );
+
+    };
+
+    CreateProjectDialog.prototype._clearTour = function () {
+        this._tour.complete();
+    };
     return CreateProjectDialog;
 });
