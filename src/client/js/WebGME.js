@@ -115,7 +115,7 @@ define([
 
                 WebGMEGlobal.InterpreterManager = new InterpreterManager(client, gmeConfig);
                 WebGMEGlobal.SvgManager = SvgManager;
-                WebGMEGlobal.UserGuidesManager = new UserGuidesManager();
+                WebGMEGlobal.UserGuidesManager = new UserGuidesManager(client, gmeConfig);
 
                 Object.defineProperty(WebGMEGlobal, 'State', {
                         value: StateManager.initialize(),
