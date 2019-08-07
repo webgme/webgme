@@ -42,7 +42,10 @@ define(['sheperd-js'], function (Shepherd) {
         if (!this._tours.hasOwnProperty(tourName)) {
             this._tours[tourName] = new Shepherd.Tour({
                 defaultStepOptions: {
-                    scrollTo: true
+                    scrollTo: true,
+                    tippyOptions: {
+                        flip: false
+                    }
                 },
                 styleVariables: {
                     shepherdThemePrimary: '#00B0F0',

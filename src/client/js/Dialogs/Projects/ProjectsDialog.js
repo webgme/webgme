@@ -996,7 +996,7 @@ define([
                 text: 'Once you get the name right, just push the button or press enter.',
                 attachTo: {
                     element: element,
-                    on: 'right'
+                    on: 'bottom'
                 },
                 buttons: [
                     {

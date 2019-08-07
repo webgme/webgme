@@ -416,7 +416,8 @@ define(['js/Loader/LoaderCircles',
                     element: 'li.blob',
                     on: 'top'
                 },
-                text: 'Finally, you can upload an exported project to initiate yours.',
+                text: 'Finally, you can import an exported project file which will become the seed of your ' +
+                    'new project.',
                 buttons: [
                     {
                         text: 'Prev',
@@ -433,7 +434,7 @@ define(['js/Loader/LoaderCircles',
 
         tour.addStep(
             {
-                id: 'blob-step',
+                id: 'final-step',
                 showCancelLink: true,
                 attachTo: {
                     element: 'i.glyphicon-info-sign',
