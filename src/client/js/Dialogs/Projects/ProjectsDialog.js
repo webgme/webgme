@@ -50,8 +50,8 @@ define([
         this._sortReverse = false;
     };
 
-    ProjectsDialog.prototype.show = function () {
-        var self = this;
+    ProjectsDialog.prototype.show = function (autoStartGuide) {
+        const self = this;
 
         this._initDialog();
 
@@ -98,6 +98,11 @@ define([
                 self._logger.error('unable to follow project events', err);
             }
         });
+
+        if (autoStartGuide) {
+            self._guide.state = true;
+            self._guide.tour.start();
+        }
     };
 
     ProjectsDialog.prototype._initDialog = function () {

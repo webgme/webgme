@@ -15,6 +15,7 @@ define([
     './PluginToolbar',
     './ConstraintToolbar',
     './MetaRulesToolbar',
+    './UserGuideToolbar'
 ], function (util,
              CONSTANTS,
              ProjectsDialog,
@@ -22,7 +23,8 @@ define([
              ProjectRepositoryDialog,
              PluginToolbar,
              ConstraintToolBar,
-             MetaRulesToolbar) {
+             MetaRulesToolbar,
+             UserGuideToolbar) {
 
     'use strict';
 
@@ -33,6 +35,7 @@ define([
         this._pluginToolBar = null;
         this._metaRulesToolBar = null;
         this._constraintToolBar = null;
+        this._guideToolBar = null;
 
         this._initialize();
     };
@@ -45,6 +48,11 @@ define([
         if (this._client.gmeConfig.core.enableCustomConstraints === true) {
             this._constraintToolBar = new ConstraintToolBar(this._client);
         }
+
+        //if (this._client.gmeConfig.core.enableCustomConstraints === true) {
+        this._guideToolBar = new UserGuideToolbar(this._client);
+
+        //}
 
         function activeNodeChanged() {
             var activeNodeId = WebGMEGlobal.State.getActiveObject(),

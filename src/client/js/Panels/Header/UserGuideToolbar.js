@@ -8,18 +8,23 @@ define([
     'js/Dialogs/PluginResults/PluginResultsDialog',
     'common/util/guid',
     'js/RunningPluginsDrawer/RunningPluginsDrawer',
+    'js/Dialogs/Projects/ProjectsDialog',
+    'js/Dialogs/CodeEditor/CodeEditorDialog',
     'js/Utils/ComponentSettings'
-], function (PluginResultsDialog, GUID, RunningPluginsDrawer, ComponentSettings) {
+], function (PluginResultsDialog, GUID, RunningPluginsDrawer, ProjectsDialog, CodeEditorDialog, ComponentSettings) {
     'use strict';
 
     var UserGuideToolbar,
         DEFAULT_ICON_CLASS = 'glyphicon glyphicon-question-sign',
-        BADGE_BASE = $('<span class="label label-info"></span>');
+        BADGE_BASE = $('<span class="label label-info"></span>'),
+        BASIC_PREFIX = 'BASIC_',
+        PROJECT_PREFIX = 'PROJECT_';
 
     UserGuideToolbar = function (client) {
         this._client = client;
         this._results = [];
-        this.$btnExecutePlugin = null;
+        this._manager = WebGMEGlobal.UserGuidesManager;
+        this._button = null;
         this._initialize();
     };
 
@@ -36,6 +41,28 @@ define([
     };
 
     UserGuideToolbar.prototype._initialize = function () {
+        const self = this;
+        const toolbar = WebGMEGlobal.Toolbar;
+
+        /************** Drop-down BUTTON ****************/
+        this._button = toolbar.addDropDownButton(
+            {
+                title: 'User-guides',
+                icon: 'glyphicon glyphicon-question-sign',
+                menuClass: 'no-min-width',
+                clickFn: function () {
+                    self._fillMenuItems();
+                }
+            });
+
+        this._button.el.find('a > i').css({'margin-top': '0px'});
+
+        let badge = BADGE_BASE.clone();
+        badge.insertAfter(this._button.el.find('a > i'));
+        badge.css('margin-left', '3px');
+    };
+
+    UserGuideToolbar.prototype.__initialize = function () {
         var self = this,
             toolbar = WebGMEGlobal.Toolbar,
             fillMenuItems,
@@ -202,9 +229,65 @@ define([
         badge.css('margin-left', '3px');
     };
 
+    UserGuideToolbar.prototype._fillBasicGuides = function () {
+        const self = this;
+        let params;
+
+        //open-create-guide
+        params = {
+            text: 'Open/Create project',
+            title: 'See how to open a project or create a new one.',
+            clickFn: function () {
+                self._openCreateGuide();
+            }
+        };
+
+        self._button.addButton(params);
+    };
+
+    UserGuideToolbar.prototype._fillProjectGuides = function () {
+
+    };
+
+    UserGuideToolbar.prototype._fillMenuItems = function () {
+        const self = this;
+
+        self._button.clear();
+        self._fillBasicGuides();
+        self._button.addDivider();
+        self._fillProjectGuides();
+        self._button.addDivider();
+        self._button.addButton({
+            text: 'Edit...',
+            title: 'Edit the project guides',
+            clickFn: function () {
+                self._editProjectGuides();
+            }
+        });
+    };
+
+    UserGuideToolbar.prototype._openCreateGuide = function () {
+        const pd = new ProjectsDialog(this._client);
+        pd.show(true);
+    };
+
+    UserGuideToolbar.prototype._runGuide = function (id) {
+
+    };
+
+    UserGuideToolbar.prototype._editProjectGuides = function () {
+        const dialog = new CodeEditorDialog();
+        let params = {};
+        params.value = 'something';
+        params.name = '_guides';
+        params.activeObject = '';
+
+        dialog.show(params);
+    };
+
     UserGuideToolbar.prototype.disableButtons = function (disable) {
-        disable = disable && this._results.length === 0;
-        this.$btnExecutePlugin.el.find('.btn').disable(disable);
+        // disable = disable && this._results.length === 0;
+        // this.$btnExecutePlugin.el.find('.btn').disable(disable);
     };
 
     return UserGuideToolbar;
