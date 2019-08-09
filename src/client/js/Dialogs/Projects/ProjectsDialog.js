@@ -100,8 +100,7 @@ define([
         });
 
         if (autoStartGuide) {
-            self._guide.state = true;
-            self._guide.tour.start();
+            self._btnGuide.click();
         }
     };
 
@@ -491,6 +490,7 @@ define([
 
         this._btnGuide.on('click', function (/*event*/) {
             if (!self._guide.state) {
+                self._createUserGuide(); //need project content for proper guide functioning
                 self._guide.state = true;
                 self._guide.tour.start();
             }
@@ -575,7 +575,6 @@ define([
                     self._txtNewProjectName.focus();
                 }, 500);
             }
-            self._createUserGuide(); //need project content for proper guide functioning
         });
     };
 
@@ -977,6 +976,7 @@ define([
                     {
                         text: 'Restart-guide',
                         action: function () {
+                            self._btnNewProjectCancel.click();
                             tour.show('start-step', true);
                         }
                     }
@@ -1003,10 +1003,14 @@ define([
                     element: element,
                     on: 'bottom'
                 },
+                tippyOptions: {
+                    flip: true
+                },
                 buttons: [
                     {
                         text: 'Restart-guide',
                         action: function () {
+                            self._btnNewProjectCancel.click();
                             tour.show('start-step', true);
                         }
                     }
@@ -1023,6 +1027,13 @@ define([
             }, 10);
         });
 
+        tour.on('complete', function () {
+            self._guide.state = false;
+        });
+
+        tour.on('cancel', function () {
+            self._guide.state = false;
+        });
 
     };
 

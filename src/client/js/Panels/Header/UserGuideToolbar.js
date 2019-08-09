@@ -10,15 +10,34 @@ define([
     'js/RunningPluginsDrawer/RunningPluginsDrawer',
     'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/CodeEditor/CodeEditorDialog',
+    'q',
     'js/Utils/ComponentSettings'
-], function (PluginResultsDialog, GUID, RunningPluginsDrawer, ProjectsDialog, CodeEditorDialog, ComponentSettings) {
+], function (
+    PluginResultsDialog,
+    GUID,
+    RunningPluginsDrawer,
+    ProjectsDialog,
+    CodeEditorDialog,
+    Q,
+    ComponentSettings
+) {
     'use strict';
 
     var UserGuideToolbar,
         DEFAULT_ICON_CLASS = 'glyphicon glyphicon-question-sign',
         BADGE_BASE = $('<span class="label label-info"></span>'),
-        BASIC_PREFIX = 'BASIC_',
-        PROJECT_PREFIX = 'PROJECT_';
+        GUIDE_ATTRIBUTE_NAME = '_guides',
+        DEFAULT_CONTENT = '{ "FCO-demo":{\n' +
+            '  "steps":[\n' +
+            '    {"context":{\n' +
+            '      "node":"","visualizer":"model-editor"},\n' +
+            '      "attach":{\n' +
+            '        "id":"/1",\n' +
+            '        "type":"node"},\n' +
+            '      "text":"This node is the First Class Object which is the base of every node."\n' +
+            '    }\n' +
+            '  ]}\n' +
+            '}';
 
     UserGuideToolbar = function (client) {
         this._client = client;
@@ -246,24 +265,70 @@ define([
     };
 
     UserGuideToolbar.prototype._fillProjectGuides = function () {
+        const self = this;
+        const keys = Object.keys(self._guides || {});
 
+        keys.sort().forEach(function (key) {
+            self._button.addButton({
+                text: key,
+                title: self._guides[key].description || 'Project defined guide.',
+                clickFn: function () {
+                    self._runGuide(key);
+                }
+            });
+        });
+    };
+
+    UserGuideToolbar.prototype._getProjectGuides = function () {
+        const self = this;
+        const deferred = Q.defer();
+
+        self._guides = self._client.getNode('').getAttribute(GUIDE_ATTRIBUTE_NAME);
+
+        self._checkProjectGuides()
+            .then(function () {
+                return deferred.resolve();
+            })
+            .catch(deferred.reject);
+        return deferred.promise;
+    };
+
+    UserGuideToolbar.prototype._checkProjectGuides = function () {
+        const self = this;
+        const deferred = Q.defer();
+
+        self._guideErrors = null;
+        try {
+            self._guides = JSON.parse(self._guides);
+            deferred.resolve();
+        } catch (e) {
+            deferred.reject(new Error('the guide attribute is not a JSON object'));
+        }
+
+        //TODO check the format, check if referenced visualizers/plugins/elements are available...
+
+        return deferred.promise;
     };
 
     UserGuideToolbar.prototype._fillMenuItems = function () {
         const self = this;
 
-        self._button.clear();
-        self._fillBasicGuides();
-        self._button.addDivider();
-        self._fillProjectGuides();
-        self._button.addDivider();
-        self._button.addButton({
-            text: 'Edit...',
-            title: 'Edit the project guides',
-            clickFn: function () {
-                self._editProjectGuides();
-            }
-        });
+        self._getProjectGuides()
+            .finally(function () {
+                self._button.clear();
+                self._fillBasicGuides();
+                self._button.addDivider();
+                self._fillProjectGuides();
+                self._button.addDivider();
+                self._button.addButton({
+                    text: 'Edit...',
+                    title: 'Edit the project guides',
+                    clickFn: function () {
+                        self._editProjectGuides();
+                    }
+                });
+            });
+
     };
 
     UserGuideToolbar.prototype._openCreateGuide = function () {
@@ -272,13 +337,15 @@ define([
     };
 
     UserGuideToolbar.prototype._runGuide = function (id) {
-
+        console.log(this._guides[id]);
+        this.disableButtons(true);
     };
 
     UserGuideToolbar.prototype._editProjectGuides = function () {
+        const self = this;
         const dialog = new CodeEditorDialog();
         let params = {};
-        params.value = 'something';
+        params.value = self._client.getNode('').getAttribute(GUIDE_ATTRIBUTE_NAME) || DEFAULT_CONTENT;
         params.name = '_guides';
         params.activeObject = '';
 
