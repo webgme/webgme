@@ -165,6 +165,10 @@ define(['./ButtonBase',
             checkBox.setChecked(checked);
         };
 
+        chkLi.isChecked = function() {
+            return checkBox.isChecked();
+        };
+        
         return chkLi;
     };
 
