@@ -1,5 +1,17 @@
 # Change Log
 
+## [v2.39.0](https://github.com/webgme/webgme/tree/v2.39.0) (2019-11-15)
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.38.0...v2.39.0)
+
+**Fixed bugs:**
+
+- Missing isChecked function for some toolbar button items [\#1683](https://github.com/webgme/webgme/issues/1683)
+- Added missing check inquiry function to DropDown toolbar button. [\#1684](https://github.com/webgme/webgme/pull/1684) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- feature request: Allow adding operation feature for Nodes [\#1649](https://github.com/webgme/webgme/issues/1649)
+
 ## [v2.38.0](https://github.com/webgme/webgme/tree/v2.38.0) (2019-04-22)
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.37.0...v2.38.0)
 
