@@ -88,13 +88,19 @@ define([
         }
 
         function enumSelectionChanged(checked) {
-            var multiChecked = self._cbMultiline.is(':checked');
+            var multiChecked = self._cbMultiline.is(':checked'),
+                passwordChecked = self._cbPassword.is(':checked');
 
             if (checked) {
                 if (multiChecked) {
-                    self._cbMultiline.attr('checked', false);
+                    self._cbMultiline.prop('checked', false);
                     multiLineSelectionChanged(false);
                 }
+                if (passwordChecked) {
+                    self._cbPassword.prop('checked', false);
+                    passwordSelectionChanged(false);
+                }
+
                 self._pEnumValues.show();
                 self._pRange.hide();
                 self._pRangeMax.val('');
@@ -114,12 +120,17 @@ define([
         }
 
         function multiLineSelectionChanged(checked, value) {
-            var enumChecked = self._cbEnum.is(':checked');
+            var enumChecked = self._cbEnum.is(':checked'),
+                passwordChecked = self._cbPassword.is(':checked');
 
             if (checked) {
                 if (enumChecked) {
-                    self._cbEnum.attr('checked', false);
+                    self._cbEnum.prop('checked', false);
                     enumSelectionChanged(false);
+                }
+                if (passwordChecked) {
+                    self._cbPassword.prop('checked', false);
+                    passwordSelectionChanged(false);
                 }
 
                 if (typeof value === 'string') {
@@ -143,6 +154,23 @@ define([
                 self._pMultilineSubTypes.hide();
                 self._pDefaultValueMultiline.hide();
                 self._pDefaultValue.show();
+            }
+        }
+
+        function passwordSelectionChanged(checked) {
+            var enumChecked = self._cbEnum.is(':checked'),
+                multiChecked = self._cbMultiline.is(':checked');
+
+            if (checked) {
+                if (enumChecked) {
+                    self._cbEnum.prop('checked', false);
+                    enumSelectionChanged(false);
+                }
+
+                if (multiChecked) {
+                    self._cbMultiline.prop('checked', false);
+                    multiLineSelectionChanged(false);
+                }
             }
         }
 
@@ -211,6 +239,10 @@ define([
                         attrDesc.multilineType = self._multilineType.val();
                     }
                 }
+
+                if(self._cbPassword.is(':checked')){
+                    attrDesc.isPassword = true;
+                }
             }
 
             self._dialog.modal('hide');
@@ -243,6 +275,8 @@ define([
                 self._pMultilineSubTypes.hide();
             }
 
+            self._pPassword.hide();
+
             switch (newType) {
                 case 'integer':
                     self._pRegExp.hide();
@@ -271,6 +305,7 @@ define([
                     self._pRegExp.show();
                     self._pRange.hide();
                     self._pMultiline.show();
+                    self._pPassword.show();
                     if (self._cbMultiline.is(':checked')) {
                         self._pDefaultValue.hide();
                         self._pDefaultValueMultiline.show();
@@ -287,6 +322,7 @@ define([
         this._cbEnum = this._el.find('#cbEnum').first();
         this._pEnum = this._el.find('#pEnum').first();
         this._cbMultiline = this._el.find('#cbMultiline').first();
+        this._cbPassword = this._el.find('#cbPassword').first();
 
         this._pMultiline = this._el.find('#pMultiline').first();
         this._pMultiline.hide();
@@ -302,6 +338,9 @@ define([
 
         this._pEnumValues = this._el.find('#pEnumValues').first();
         this._pEnumValues.hide();
+
+        this._pPassword = this._el.find('#pPassword').first();
+        this._pPassword.hide();
 
         this._btnSave = this._dialog.find('.btn-save').first();
         this._btnDelete = this._dialog.find('.btn-delete').first();
@@ -386,6 +425,9 @@ define([
             multiLineSelectionChanged($(this).is(':checked'));
         });
 
+        this._cbPassword.on('change', null, function () {
+            passwordSelectionChanged($(this).is(':checked'));
+        });
         //'type' checkbox check change
         this._inputType.on('change', null, function () {
             selectedTypeChanged(self._inputType.val());
@@ -456,6 +498,7 @@ define([
                 this._pRange.hide();
                 this._pRegExp.show();
                 this._pMultiline.show();
+                this._pPassword.show();
                 if (attributeDesc.regexp) {
                     this._pRegExpValue.val(attributeDesc.regexp);
                 }
@@ -477,6 +520,12 @@ define([
                     }
 
                     multiLineSelectionChanged(true, attributeDesc.defaultValue);
+                }
+
+                if (attributeDesc.isPassword){
+                    this._pPassword.show();
+                    this._cbPassword.prop('checked', true);
+                    passwordSelectionChanged(true);
                 }
             } else {
                 this._pRange.show();

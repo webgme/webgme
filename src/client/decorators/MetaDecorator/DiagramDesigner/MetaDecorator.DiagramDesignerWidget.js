@@ -153,7 +153,8 @@ define([
                     max: attrMeta.max,
                     regexp: attrMeta.regexp,
                     readonly: attrMeta.readonly,
-                    hidden: attrMeta.hidden
+                    hidden: attrMeta.hidden,
+                    isPassword: attrMeta.isPassword,
                 });
 
                 //we will not let 'name' attribute to be modified as that is used UI-wise
@@ -587,6 +588,11 @@ define([
 
         if (attrDesc.isEnum) {
             attrSchema.enum = attrDesc.enumValues;
+        }
+
+        attrSchema.isPassword = false;
+        if(attrDesc.isPassword) {
+            attrSchema.isPassword = true;
         }
 
         this.logger.debug('saveAttributeDescriptor: ' + attrName + ', attrDesc: ' + JSON.stringify(attrDesc));

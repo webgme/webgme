@@ -17,7 +17,12 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         WidgetBase.call(this, propertyDesc);
 
         this.__input = INPUT_BASE.clone();
+
         this.__input.val(this.propertyValue);
+
+        if(true/*propertyDesc.isPassword*/){
+            this.__input.prop('type','password');
+        }
 
         if (propertyDesc.regex) {
             propertyDesc.regexMessage = propertyDesc.regexMessage || 'Value has to match regex: ' + propertyDesc.regex;
