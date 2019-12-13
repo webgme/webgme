@@ -21,7 +21,9 @@ define([
         INVALID_BASE_VALUE_BASE = $('<i class="fa fa-exclamation-triangle reset-badge" ' +
             'title="Inherits META-invalid property"/>'),
         INVALID_BUTTON_BASE = $('<i class="glyphicon glyphicon-exclamation-sign reset-badge btn-reset" ' +
-            'title="Remove META-invalid property"/>');
+            'title="Remove META-invalid property"/>'),
+        PASSWORD_BUTTON_BASE = $('<i class="glyphicon glyphicon-eye-open reset-badge btn-reset" ' +
+            'title="Show Password"/>');
 
     PropertyGridPart = function (params) {
         if (params.el) {
@@ -155,6 +157,7 @@ define([
             extraCss = {},
             widget,
             actionBtn,
+            passwordBtn,
             li;
 
         if (this.__widgets[propertyDesc.name] !== undefined) {
@@ -225,6 +228,28 @@ define([
                     event.preventDefault();
                 });
 
+            }
+
+            if(propertyDesc.options.isPassword) {
+                passwordBtn = PASSWORD_BUTTON_BASE.clone();
+                passwordBtn.on('click', function () {
+                    if ($(this).hasClass('glyphicon-eye-open')) {
+                        //was in password mode
+                        $(this).removeClass('glyphicon-eye-open');
+                        $(this).addClass('glyphicon-eye-close');
+                        $(this).prop('title', 'hide password');
+                        self.__widgets[propertyDesc.name].showPassword(true);
+                    } else {
+                        // should hide now
+                        $(this).removeClass('glyphicon-eye-close');
+                        $(this).addClass('glyphicon-eye-open');
+                        $(this).prop('title', 'show password');
+                        self.__widgets[propertyDesc.name].showPassword(false);
+                    }
+                });
+                divAction.append(passwordBtn);
+
+                spnName.addClass('p-reset');
             }
         }
 
