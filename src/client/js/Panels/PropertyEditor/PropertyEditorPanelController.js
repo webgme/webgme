@@ -386,6 +386,7 @@ define(['js/logger',
             key,
             range,
             i,
+            isPassword = false,
             extKey,
             repKey,
             cbyKey,
@@ -414,6 +415,7 @@ define(['js/logger',
                 if (commonAttrMeta.hasOwnProperty(key) === false) {
                     continue;
                 }
+                isPassword = commonAttrMeta[key].isPassword ? true : false;
             }
 
             if (onlyRootSelected) {
@@ -468,7 +470,10 @@ define(['js/logger',
             }
 
             if (isAttribute === true) {
-
+                if (isPassword) {
+                    dst[extKey].options = dst[extKey].options || {};
+                    dst[extKey].options.isPassword = true;
+                }
                 if (this._isReadonlyAttribute(selectedNodes, keyParts[0])) {
                     dst[extKey].readOnly = true;
                 } else {

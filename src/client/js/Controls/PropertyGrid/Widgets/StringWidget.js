@@ -17,7 +17,15 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
         WidgetBase.call(this, propertyDesc);
 
         this.__input = INPUT_BASE.clone();
+
         this.__input.val(this.propertyValue);
+
+        if(propertyDesc.options && propertyDesc.options.isPassword){
+
+            this.__isPassword = true;
+            this.__input.prop('type','password');
+            this.__input.css("width","100%");
+        }
 
         if (propertyDesc.regex) {
             propertyDesc.regexMessage = propertyDesc.regexMessage || 'Value has to match regex: ' + propertyDesc.regex;
@@ -72,6 +80,16 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase'], function (WidgetBase) {
     StringWidget.prototype.focus = function () {
         this.__input.focus();
     };
+
+    StringWidget.prototype.showPassword = function (show) {
+        if (this.__isPassword) {
+            if (show) {
+                this.__input.prop('type','text');
+            } else {
+                this.__input.prop('type','password');
+            }
+        }
+    }
 
     return StringWidget;
 });
