@@ -495,7 +495,7 @@ define(['js/logger',
             nodeDataChanged = true;
         }
 
-        if (objDescriptor.hasOwnProperty('libraryInfo') && typeof objDescriptor.librayInfo === 'string' &&
+        if (objDescriptor.hasOwnProperty('libraryInfo') && typeof objDescriptor.libraryInfo === 'string' &&
             objDescriptor.libraryInfo !== node.data.libraryInfo) {
             node.data.libraryInfo = objDescriptor.libraryInfo;
             node.tooltip = objDescriptor.libraryInfo;
