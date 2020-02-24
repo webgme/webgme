@@ -1,19 +1,24 @@
 # Changelog
 
-## [v2.40.0](https://github.com/webgme/webgme/tree/v2.40.0) (2020-02-23)
+## [v2.40.0](https://github.com/webgme/webgme/tree/v2.40.0) (2020-02-24)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.39.0...v2.40.0)
 
 **Fixed bugs:**
 
+- Unselectable connection in Chrome [\#1689](https://github.com/webgme/webgme/issues/1689)
 - Chrome connection selection issue [\#1695](https://github.com/webgme/webgme/pull/1695) ([kecso](https://github.com/kecso))
 - Library Tooltip update fixed [\#1694](https://github.com/webgme/webgme/pull/1694) ([kecso](https://github.com/kecso))
+
+**Closed issues:**
+
+- Password attribute [\#1688](https://github.com/webgme/webgme/issues/1688)
 
 **Merged pull requests:**
 
 - Bump handlebars from 4.1.0 to 4.5.3 [\#1691](https://github.com/webgme/webgme/pull/1691) ([dependabot[bot]](https://github.com/apps/dependabot))
-- Password - attribute [\#1690](https://github.com/webgme/webgme/pull/1690) ([kecso](https://github.com/kecso))
 - Bump mixin-deep from 1.3.1 to 1.3.2 [\#1685](https://github.com/webgme/webgme/pull/1685) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Password - attribute [\#1690](https://github.com/webgme/webgme/pull/1690) ([kecso](https://github.com/kecso))
 
 ## [v2.39.0](https://github.com/webgme/webgme/tree/v2.39.0) (2019-11-15)
 
@@ -1922,6 +1927,7 @@
 - ConnectionRouteManager3 Silent Errors [\#548](https://github.com/webgme/webgme/issues/548)
 - Browser crashes due autorouter [\#412](https://github.com/webgme/webgme/issues/412)
 - Context menu throws an error [\#373](https://github.com/webgme/webgme/issues/373)
+- Clean up executor upon server shutdown [\#323](https://github.com/webgme/webgme/issues/323)
 - Make sure META nodes are unique in GMEModelStatistics [\#294](https://github.com/webgme/webgme/issues/294)
 - Change of attribute type of base do not propagate correctly [\#249](https://github.com/webgme/webgme/issues/249)
 - openProject should create nonexistent project [\#61](https://github.com/webgme/webgme/issues/61)
@@ -2386,7 +2392,6 @@
 
 **Fixed bugs:**
 
-- Clean up executor upon server shutdown [\#323](https://github.com/webgme/webgme/issues/323)
 - Double click on a connection adds custom routing point. Autorouter \(ConnectionRouteManager3\) fails to draw the connection [\#288](https://github.com/webgme/webgme/issues/288)
 - Use attribute values as they are [\#308](https://github.com/webgme/webgme/issues/308)
 - Custom Path Point Ordering [\#306](https://github.com/webgme/webgme/issues/306)
@@ -2473,6 +2478,7 @@
 - Use mongo directly for storing authentication credentials [\#167](https://github.com/webgme/webgme/issues/167)
 - Shift-\(direction\) should allow for unselect in object browser [\#94](https://github.com/webgme/webgme/issues/94)
 - Improve test stability and coverage. \#171 [\#218](https://github.com/webgme/webgme/pull/218) ([lattmann](https://github.com/lattmann))
+- Issue/239 rest components [\#241](https://github.com/webgme/webgme/pull/241) ([pmeijer](https://github.com/pmeijer))
 - Issue/219 finalizing merge cli [\#240](https://github.com/webgme/webgme/pull/240) ([kecso](https://github.com/kecso))
 - Issue/235 config client [\#238](https://github.com/webgme/webgme/pull/238) ([pmeijer](https://github.com/pmeijer))
 - Karma runs client.js tests with a full webgme server stack. [\#237](https://github.com/webgme/webgme/pull/237) ([lattmann](https://github.com/lattmann))
@@ -2486,6 +2492,7 @@
 - On failed auth, redirect to /login. Also set username and redirect, and ... [\#212](https://github.com/webgme/webgme/pull/212) ([ksmyth](https://github.com/ksmyth))
 - Issue/197 server tests [\#211](https://github.com/webgme/webgme/pull/211) ([lattmann](https://github.com/lattmann))
 - unused parts and duplicates in core layers were removed [\#210](https://github.com/webgme/webgme/pull/210) ([kecso](https://github.com/kecso))
+- Diff fixed [\#200](https://github.com/webgme/webgme/pull/200) ([kecso](https://github.com/kecso))
 - Issue/196 test middleware [\#199](https://github.com/webgme/webgme/pull/199) ([pmeijer](https://github.com/pmeijer))
 - Issue/192 coreplugins [\#194](https://github.com/webgme/webgme/pull/194) ([pmeijer](https://github.com/pmeijer))
 - Autorouter style fixes [\#188](https://github.com/webgme/webgme/pull/188) ([brollb](https://github.com/brollb))
@@ -2508,7 +2515,6 @@
 - \#88 meta editor rm and add all attributes on change [\#207](https://github.com/webgme/webgme/pull/207) ([lattmann](https://github.com/lattmann))
 - Issue/94 tree browser keys [\#206](https://github.com/webgme/webgme/pull/206) ([lattmann](https://github.com/lattmann))
 - Fix creating project under auth. Fixes \#198 [\#201](https://github.com/webgme/webgme/pull/201) ([ksmyth](https://github.com/ksmyth))
-- \#165 cosmetic change [\#166](https://github.com/webgme/webgme/pull/166) ([kecso](https://github.com/kecso))
 
 **Closed issues:**
 
@@ -2555,7 +2561,6 @@
 - Fix project repository dialog box layout [\#163](https://github.com/webgme/webgme/issues/163)
 - \#182 fix logout icon; autofocus on username. [\#183](https://github.com/webgme/webgme/pull/183) ([lattmann](https://github.com/lattmann))
 - \#173 fix password checking bug [\#175](https://github.com/webgme/webgme/pull/175) ([lattmann](https://github.com/lattmann))
-- Issue/170 critical bug fixes to server code. [\#172](https://github.com/webgme/webgme/pull/172) ([lattmann](https://github.com/lattmann))
 - Issue/163 repo dialog [\#164](https://github.com/webgme/webgme/pull/164) ([lattmann](https://github.com/lattmann))
 
 ## [v0.7.0](https://github.com/webgme/webgme/tree/v0.7.0) (2015-02-16)
@@ -2592,7 +2597,6 @@
 - Cannot drag-n-drop after setting pointer [\#100](https://github.com/webgme/webgme/issues/100)
 - GET /doesnotexist returns 400 [\#60](https://github.com/webgme/webgme/issues/60)
 - Model editor title not refreshed when switching project [\#11](https://github.com/webgme/webgme/issues/11)
-- Failing to load a rextrast module should be a fatal error [\#59](https://github.com/webgme/webgme/pull/59) ([ksmyth](https://github.com/ksmyth))
 - \#145 GetActive node after branch selection. [\#146](https://github.com/webgme/webgme/pull/146) ([pmeijer](https://github.com/pmeijer))
 
 **Closed issues:**
@@ -2654,7 +2658,6 @@
 - UI pieces are missing and sometimes invisible [\#76](https://github.com/webgme/webgme/issues/76)
 - Incorrect Cursor Placement when creating Ptrs [\#75](https://github.com/webgme/webgme/issues/75)
 - Selected Box Outline Incorrect Positioning [\#74](https://github.com/webgme/webgme/issues/74)
-- SVGIcon and SVG port icon cannot be set [\#70](https://github.com/webgme/webgme/issues/70)
 - If the an object has no name, the tree browser does not show its name [\#68](https://github.com/webgme/webgme/issues/68)
 - Map files are not downloaded [\#64](https://github.com/webgme/webgme/issues/64)
 - "Bad Request" on Export [\#44](https://github.com/webgme/webgme/issues/44)
@@ -2696,6 +2699,7 @@
 
 - webgme uses too much memory and crashes [\#66](https://github.com/webgme/webgme/issues/66)
 - Loading objects within a territory creates multiple events. [\#65](https://github.com/webgme/webgme/issues/65)
+- Failing to load a rextrast module should be a fatal error [\#59](https://github.com/webgme/webgme/pull/59) ([ksmyth](https://github.com/ksmyth))
 
 ## [webgme_0.6.3](https://github.com/webgme/webgme/tree/webgme_0.6.3) (2014-06-26)
 
@@ -2707,6 +2711,7 @@
 
 **Fixed bugs:**
 
+- SVGIcon and SVG port icon cannot be set [\#70](https://github.com/webgme/webgme/issues/70)
 - Active object setting sometimes lost. [\#63](https://github.com/webgme/webgme/issues/63)
 - Cannot delete item from crosscut [\#56](https://github.com/webgme/webgme/issues/56)
 - direction of inheritance relation on crosscut view is wrong [\#53](https://github.com/webgme/webgme/issues/53)
