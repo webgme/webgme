@@ -317,8 +317,14 @@ define(['js/util',
                     client.removeUI(territoryId);
 
                     if (nodeLoaded) {
-                        WebGMEGlobal.State.registerActiveObject(nodeId);
-                        WebGMEGlobal.State.registerActiveSelection([]);
+                        const parentId = client.getNode(nodeId).getParentId();
+                        if(parentId || parentId === '') {
+                            WebGMEGlobal.State.registerActiveObject(parentId);
+                            WebGMEGlobal.State.registerActiveSelection([nodeId]);
+                        } else {
+                            WebGMEGlobal.State.registerActiveObject(nodeId);
+                            WebGMEGlobal.State.registerActiveSelection([]);
+                        }
                         dialog.modal('hide');
                     } else {
                         self.logger.error('Could not load the linked node at path', nodeId);
