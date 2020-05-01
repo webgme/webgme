@@ -1,5 +1,21 @@
 # Changelog
 
+## [v2.41.0](https://github.com/webgme/webgme/tree/v2.41.0) (2020-05-01)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.40.1...v2.41.0)
+
+**Implemented enhancements:**
+
+- Plugin dialog should take to parent context [\#1698](https://github.com/webgme/webgme/issues/1698)
+
+**Merged pull requests:**
+
+- Bump acorn from 7.1.0 to 7.1.1 [\#1697](https://github.com/webgme/webgme/pull/1697) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v2.40.1](https://github.com/webgme/webgme/tree/v2.40.1) (2020-02-24)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.40.0...v2.40.1)
+
 ## [v2.40.0](https://github.com/webgme/webgme/tree/v2.40.0) (2020-02-24)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.39.0...v2.40.0)
@@ -1687,7 +1703,6 @@
 
 **Fixed bugs:**
 
-- Blob clients in workers raises DEPTH\_ZERO\_SELF\_SIGNED\_CERT when https enabled. [\#521](https://github.com/webgme/webgme/issues/521)
 - saveJsonToDisk failing [\#761](https://github.com/webgme/webgme/issues/761)
 - PartBrowser throws exception when aspect does not exist. [\#757](https://github.com/webgme/webgme/issues/757)
 - Graph View Truncated  [\#746](https://github.com/webgme/webgme/issues/746)
@@ -1931,7 +1946,6 @@
 - Make sure META nodes are unique in GMEModelStatistics [\#294](https://github.com/webgme/webgme/issues/294)
 - Change of attribute type of base do not propagate correctly [\#249](https://github.com/webgme/webgme/issues/249)
 - openProject should create nonexistent project [\#61](https://github.com/webgme/webgme/issues/61)
-- Crosscut view missing events [\#55](https://github.com/webgme/webgme/issues/55)
 - Enable line settings in Meta editor [\#45](https://github.com/webgme/webgme/issues/45)
 - FCO cannot be repositioned [\#603](https://github.com/webgme/webgme/issues/603)
 - Cannot draw connection if connection type is not direct valid children type of parent. [\#601](https://github.com/webgme/webgme/issues/601)
@@ -2064,6 +2078,7 @@
 
 **Fixed bugs:**
 
+- Blob clients in workers raises DEPTH\_ZERO\_SELF\_SIGNED\_CERT when https enabled. [\#521](https://github.com/webgme/webgme/issues/521)
 - Plugin changes not saving [\#476](https://github.com/webgme/webgme/issues/476)
 - Race condition when obtaining branches on project created in ProjectNavigator [\#519](https://github.com/webgme/webgme/issues/519)
 - Open project without branch doesn't work [\#516](https://github.com/webgme/webgme/issues/516)
@@ -2658,6 +2673,7 @@
 - UI pieces are missing and sometimes invisible [\#76](https://github.com/webgme/webgme/issues/76)
 - Incorrect Cursor Placement when creating Ptrs [\#75](https://github.com/webgme/webgme/issues/75)
 - Selected Box Outline Incorrect Positioning [\#74](https://github.com/webgme/webgme/issues/74)
+- SVGIcon and SVG port icon cannot be set [\#70](https://github.com/webgme/webgme/issues/70)
 - If the an object has no name, the tree browser does not show its name [\#68](https://github.com/webgme/webgme/issues/68)
 - Map files are not downloaded [\#64](https://github.com/webgme/webgme/issues/64)
 - "Bad Request" on Export [\#44](https://github.com/webgme/webgme/issues/44)
@@ -2711,9 +2727,9 @@
 
 **Fixed bugs:**
 
-- SVGIcon and SVG port icon cannot be set [\#70](https://github.com/webgme/webgme/issues/70)
 - Active object setting sometimes lost. [\#63](https://github.com/webgme/webgme/issues/63)
 - Cannot delete item from crosscut [\#56](https://github.com/webgme/webgme/issues/56)
+- Crosscut view missing events [\#55](https://github.com/webgme/webgme/issues/55)
 - direction of inheritance relation on crosscut view is wrong [\#53](https://github.com/webgme/webgme/issues/53)
 
 **Closed issues:**
