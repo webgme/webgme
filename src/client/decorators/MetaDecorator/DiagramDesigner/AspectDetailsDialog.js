@@ -175,7 +175,7 @@ define([
         for (i = 0; i < aDesc.validChildrenTypes.length; i += 1) {
             typeInfo = aDesc.validChildrenTypes[i];
 
-            displayName = typeInfo.name;
+            displayName = typeInfo.fullName || typeInfo.name;
             /*if (DEBUG === true) {
              displayName += ' (' + typeInfo.id + ')';
              }*/

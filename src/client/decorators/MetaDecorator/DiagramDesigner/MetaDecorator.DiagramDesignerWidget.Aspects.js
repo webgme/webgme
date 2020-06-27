@@ -214,6 +214,7 @@ define([
             nodeObj = client.getNode(validChildrenTypeIDs[i]);
             if (nodeObj) {
                 typeInfo.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+                typeInfo.fullName = nodeObj.getFullyQualifiedName();
             }
 
             validChildrenTypes.push(typeInfo);
