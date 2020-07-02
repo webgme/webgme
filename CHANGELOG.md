@@ -1,5 +1,23 @@
 # Changelog
 
+## [v2.42.0](https://github.com/webgme/webgme/tree/v2.42.0) (2020-07-02)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.41.1...v2.42.0)
+
+**Closed issues:**
+
+- The meta Aspect Selector does not show fully qualified meta names [\#1702](https://github.com/webgme/webgme/issues/1702)
+- guest user [\#1701](https://github.com/webgme/webgme/issues/1701)
+- installing nodejs/bindings fails [\#1700](https://github.com/webgme/webgme/issues/1700)
+
+**Merged pull requests:**
+
+- Package updates [\#1703](https://github.com/webgme/webgme/pull/1703) ([kecso](https://github.com/kecso))
+
+## [v2.41.1](https://github.com/webgme/webgme/tree/v2.41.1) (2020-05-02)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.41.0...v2.41.1)
+
 ## [v2.41.0](https://github.com/webgme/webgme/tree/v2.41.0) (2020-05-01)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.40.1...v2.41.0)
@@ -1703,6 +1721,7 @@
 
 **Fixed bugs:**
 
+- Blob clients in workers raises DEPTH\_ZERO\_SELF\_SIGNED\_CERT when https enabled. [\#521](https://github.com/webgme/webgme/issues/521)
 - saveJsonToDisk failing [\#761](https://github.com/webgme/webgme/issues/761)
 - PartBrowser throws exception when aspect does not exist. [\#757](https://github.com/webgme/webgme/issues/757)
 - Graph View Truncated  [\#746](https://github.com/webgme/webgme/issues/746)
@@ -1943,9 +1962,9 @@
 - Browser crashes due autorouter [\#412](https://github.com/webgme/webgme/issues/412)
 - Context menu throws an error [\#373](https://github.com/webgme/webgme/issues/373)
 - Clean up executor upon server shutdown [\#323](https://github.com/webgme/webgme/issues/323)
-- Make sure META nodes are unique in GMEModelStatistics [\#294](https://github.com/webgme/webgme/issues/294)
 - Change of attribute type of base do not propagate correctly [\#249](https://github.com/webgme/webgme/issues/249)
 - openProject should create nonexistent project [\#61](https://github.com/webgme/webgme/issues/61)
+- Crosscut view missing events [\#55](https://github.com/webgme/webgme/issues/55)
 - Enable line settings in Meta editor [\#45](https://github.com/webgme/webgme/issues/45)
 - FCO cannot be repositioned [\#603](https://github.com/webgme/webgme/issues/603)
 - Cannot draw connection if connection type is not direct valid children type of parent. [\#601](https://github.com/webgme/webgme/issues/601)
@@ -2078,7 +2097,6 @@
 
 **Fixed bugs:**
 
-- Blob clients in workers raises DEPTH\_ZERO\_SELF\_SIGNED\_CERT when https enabled. [\#521](https://github.com/webgme/webgme/issues/521)
 - Plugin changes not saving [\#476](https://github.com/webgme/webgme/issues/476)
 - Race condition when obtaining branches on project created in ProjectNavigator [\#519](https://github.com/webgme/webgme/issues/519)
 - Open project without branch doesn't work [\#516](https://github.com/webgme/webgme/issues/516)
@@ -2404,9 +2422,11 @@
 - Expand root in ObjectBrowser after load. Using setTimeout. [\#261](https://github.com/webgme/webgme/pull/261) ([lattmann](https://github.com/lattmann))
 - Closes \#251 opencontext [\#259](https://github.com/webgme/webgme/pull/259) ([pmeijer](https://github.com/pmeijer))
 - Update to the latest node package, where possible. [\#257](https://github.com/webgme/webgme/pull/257) ([lattmann](https://github.com/lattmann))
+- Closes \#225 upgrade superagent 0.18.2 to 0.21.0 [\#253](https://github.com/webgme/webgme/pull/253) ([lattmann](https://github.com/lattmann))
 
 **Fixed bugs:**
 
+- Make sure META nodes are unique in GMEModelStatistics [\#294](https://github.com/webgme/webgme/issues/294)
 - Double click on a connection adds custom routing point. Autorouter \(ConnectionRouteManager3\) fails to draw the connection [\#288](https://github.com/webgme/webgme/issues/288)
 - Use attribute values as they are [\#308](https://github.com/webgme/webgme/issues/308)
 - Custom Path Point Ordering [\#306](https://github.com/webgme/webgme/issues/306)
@@ -2463,6 +2483,10 @@
 **Fixed bugs:**
 
 - \#163 fix project repository create branch safari bug [\#256](https://github.com/webgme/webgme/pull/256) ([lattmann](https://github.com/lattmann))
+
+**Closed issues:**
+
+- Ctrl + mouse scroll causes Browser to zoom, distorts WebGME objects [\#33](https://github.com/webgme/webgme/issues/33)
 
 ## [v0.8.1](https://github.com/webgme/webgme/tree/v0.8.1) (2015-03-16)
 
@@ -2699,7 +2723,6 @@
 - FCO deletion only prohibited in the root, not in models [\#72](https://github.com/webgme/webgme/issues/72)
 - Import dialog redesign [\#71](https://github.com/webgme/webgme/issues/71)
 - Connection not working correctly [\#69](https://github.com/webgme/webgme/issues/69)
-- Ctrl + mouse scroll causes Browser to zoom, distorts WebGME objects [\#33](https://github.com/webgme/webgme/issues/33)
 - Tree auto-expand on project open [\#18](https://github.com/webgme/webgme/issues/18)
 
 **Merged pull requests:**
@@ -2729,7 +2752,6 @@
 
 - Active object setting sometimes lost. [\#63](https://github.com/webgme/webgme/issues/63)
 - Cannot delete item from crosscut [\#56](https://github.com/webgme/webgme/issues/56)
-- Crosscut view missing events [\#55](https://github.com/webgme/webgme/issues/55)
 - direction of inheritance relation on crosscut view is wrong [\#53](https://github.com/webgme/webgme/issues/53)
 
 **Closed issues:**
