@@ -4,7 +4,7 @@ This tutorial will guide you on how to build a Design Studio with webgme. If bot
 that's fine. It will also explain what these are.
 
 The tutorial will go through all steps needed to host your own deployment, create your own meta-model, implement interpreters and
-customize the visualization. In order to give you an idea of how all these things play a roll in a Design Studio, these steps
+customize the visualization. In order to give you an idea of how all these things play a role in a Design Studio, these steps
 will be illustrated through an example of a simple electrical circuit domain. In short we will:
 
 * Create a meta-model suitable for modeling electrical circuits
