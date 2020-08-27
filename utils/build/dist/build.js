@@ -89,6 +89,7 @@ var requirejs = require('requirejs'),
             'angular-ui-bootstrap': 'empty:',
             'isis-ui-components': 'empty:',
             'isis-ui-components-templates': 'empty:',
+            util: 'empty:',
         },
         shim: {
             //'jquery-ui': ['jquery'],
