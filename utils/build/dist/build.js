@@ -89,7 +89,6 @@ var requirejs = require('requirejs'),
             'angular-ui-bootstrap': 'empty:',
             'isis-ui-components': 'empty:',
             'isis-ui-components-templates': 'empty:',
-            util: 'empty:',
         },
         shim: {
             //'jquery-ui': ['jquery'],
@@ -109,7 +108,7 @@ var requirejs = require('requirejs'),
         inlineText: true,
         wrap: {
             startFile: path.join(__dirname, '../../../src/client/js/start.js')
-        }
+        },
     },
     cssConfig = {
         optimizeCss: 'standard',
