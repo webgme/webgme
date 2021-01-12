@@ -1,5 +1,25 @@
 # Changelog
 
+## [v2.42.1](https://github.com/webgme/webgme/tree/v2.42.1) (2021-01-11)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.42.1-alpha...v2.42.1)
+
+**Closed issues:**
+
+- create child node using meta type [\#1714](https://github.com/webgme/webgme/issues/1714)
+
+## [v2.42.1-alpha](https://github.com/webgme/webgme/tree/v2.42.1-alpha) (2020-10-17)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.42.0...v2.42.1-alpha)
+
+**Closed issues:**
+
+- Create instance from code [\#1713](https://github.com/webgme/webgme/issues/1713)
+
+**Merged pull requests:**
+
+- Fix typo. [\#1712](https://github.com/webgme/webgme/pull/1712) ([acoglio](https://github.com/acoglio))
+
 ## [v2.42.0](https://github.com/webgme/webgme/tree/v2.42.0) (2020-07-02)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.41.1...v2.42.0)
@@ -1186,10 +1206,6 @@
 - Closes \#1093 Remove trailing newlines in output. [\#1098](https://github.com/webgme/webgme/pull/1098) ([pmeijer](https://github.com/pmeijer))
 - Closes \#1092 Server crashes when wrong panel path sent. [\#1097](https://github.com/webgme/webgme/pull/1097) ([pmeijer](https://github.com/pmeijer))
 
-**Closed issues:**
-
-- Arrays of requirejsPaths not handled correctly when requested from the client. [\#1096](https://github.com/webgme/webgme/issues/1096)
-
 ## [v2.3.0](https://github.com/webgme/webgme/tree/v2.3.0) (2016-08-01)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.2.1...v2.3.0)
@@ -1221,6 +1237,7 @@
 
 **Closed issues:**
 
+- Arrays of requirejsPaths not handled correctly when requested from the client. [\#1096](https://github.com/webgme/webgme/issues/1096)
 - postinstall fails [\#1081](https://github.com/webgme/webgme/issues/1081)
 - executor worker should use streaming unzip [\#1066](https://github.com/webgme/webgme/issues/1066)
 - Failed branch export fails silently [\#1039](https://github.com/webgme/webgme/issues/1039)
@@ -1632,6 +1649,7 @@
 
 **Implemented enhancements:**
 
+- Autorouter simple routes too generously [\#730](https://github.com/webgme/webgme/issues/730)
 - BlobClient getObjectAsString and getObjectAsJSON methods. [\#798](https://github.com/webgme/webgme/issues/798)
 - Using zip file for testing seed fails [\#795](https://github.com/webgme/webgme/issues/795)
 - Expose getHistory on project classes. [\#793](https://github.com/webgme/webgme/issues/793)
@@ -1689,7 +1707,6 @@
 
 **Implemented enhancements:**
 
-- Autorouter simple routes too generously [\#730](https://github.com/webgme/webgme/issues/730)
 - AutoRouter Replay Download Button [\#728](https://github.com/webgme/webgme/issues/728)
 - Smooth Connection Updates [\#725](https://github.com/webgme/webgme/issues/725)
 - Load a branch by clicking a branch tag [\#750](https://github.com/webgme/webgme/issues/750)
@@ -1757,7 +1774,6 @@
 **Closed issues:**
 
 - Uncaught exception when switching between projects. [\#664](https://github.com/webgme/webgme/issues/664)
-- Abstract models cannot be moved. [\#629](https://github.com/webgme/webgme/issues/629)
 - Plugin should be enabled by node type [\#720](https://github.com/webgme/webgme/issues/720)
 - Introduce tags [\#712](https://github.com/webgme/webgme/issues/712)
 
@@ -1881,6 +1897,7 @@
 
 **Closed issues:**
 
+- Abstract models cannot be moved. [\#629](https://github.com/webgme/webgme/issues/629)
 - AddOn Generator Tests [\#641](https://github.com/webgme/webgme/issues/641)
 
 **Merged pull requests:**
@@ -1962,7 +1979,7 @@
 - Browser crashes due autorouter [\#412](https://github.com/webgme/webgme/issues/412)
 - Context menu throws an error [\#373](https://github.com/webgme/webgme/issues/373)
 - Clean up executor upon server shutdown [\#323](https://github.com/webgme/webgme/issues/323)
-- Change of attribute type of base do not propagate correctly [\#249](https://github.com/webgme/webgme/issues/249)
+- Make sure META nodes are unique in GMEModelStatistics [\#294](https://github.com/webgme/webgme/issues/294)
 - openProject should create nonexistent project [\#61](https://github.com/webgme/webgme/issues/61)
 - Crosscut view missing events [\#55](https://github.com/webgme/webgme/issues/55)
 - Enable line settings in Meta editor [\#45](https://github.com/webgme/webgme/issues/45)
@@ -2420,14 +2437,12 @@
 - Add links to version numbers in the footer. [\#266](https://github.com/webgme/webgme/pull/266) ([lattmann](https://github.com/lattmann))
 - Closes \#248 cli opencontext [\#262](https://github.com/webgme/webgme/pull/262) ([pmeijer](https://github.com/pmeijer))
 - Expand root in ObjectBrowser after load. Using setTimeout. [\#261](https://github.com/webgme/webgme/pull/261) ([lattmann](https://github.com/lattmann))
-- Closes \#251 opencontext [\#259](https://github.com/webgme/webgme/pull/259) ([pmeijer](https://github.com/pmeijer))
 - Update to the latest node package, where possible. [\#257](https://github.com/webgme/webgme/pull/257) ([lattmann](https://github.com/lattmann))
-- Closes \#225 upgrade superagent 0.18.2 to 0.21.0 [\#253](https://github.com/webgme/webgme/pull/253) ([lattmann](https://github.com/lattmann))
 
 **Fixed bugs:**
 
-- Make sure META nodes are unique in GMEModelStatistics [\#294](https://github.com/webgme/webgme/issues/294)
 - Double click on a connection adds custom routing point. Autorouter \(ConnectionRouteManager3\) fails to draw the connection [\#288](https://github.com/webgme/webgme/issues/288)
+- Change of attribute type of base do not propagate correctly [\#249](https://github.com/webgme/webgme/issues/249)
 - Use attribute values as they are [\#308](https://github.com/webgme/webgme/issues/308)
 - Custom Path Point Ordering [\#306](https://github.com/webgme/webgme/issues/306)
 - All decorators not always downloaded at start up. [\#304](https://github.com/webgme/webgme/issues/304)
@@ -2484,10 +2499,6 @@
 
 - \#163 fix project repository create branch safari bug [\#256](https://github.com/webgme/webgme/pull/256) ([lattmann](https://github.com/lattmann))
 
-**Closed issues:**
-
-- Ctrl + mouse scroll causes Browser to zoom, distorts WebGME objects [\#33](https://github.com/webgme/webgme/issues/33)
-
 ## [v0.8.1](https://github.com/webgme/webgme/tree/v0.8.1) (2015-03-16)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v0.8.0...v0.8.1)
@@ -2535,6 +2546,7 @@
 - Issue/196 test middleware [\#199](https://github.com/webgme/webgme/pull/199) ([pmeijer](https://github.com/pmeijer))
 - Issue/192 coreplugins [\#194](https://github.com/webgme/webgme/pull/194) ([pmeijer](https://github.com/pmeijer))
 - Autorouter style fixes [\#188](https://github.com/webgme/webgme/pull/188) ([brollb](https://github.com/brollb))
+- Issue/177 usermanager [\#180](https://github.com/webgme/webgme/pull/180) ([ksmyth](https://github.com/ksmyth))
 
 **Fixed bugs:**
 
@@ -2553,6 +2565,7 @@
 - \#93 context menu scrolls in both directions [\#208](https://github.com/webgme/webgme/pull/208) ([lattmann](https://github.com/lattmann))
 - \#88 meta editor rm and add all attributes on change [\#207](https://github.com/webgme/webgme/pull/207) ([lattmann](https://github.com/lattmann))
 - Issue/94 tree browser keys [\#206](https://github.com/webgme/webgme/pull/206) ([lattmann](https://github.com/lattmann))
+- Fixes issue \#186 \(cannot read property 'id' of undefined\) [\#203](https://github.com/webgme/webgme/pull/203) ([brollb](https://github.com/brollb))
 - Fix creating project under auth. Fixes \#198 [\#201](https://github.com/webgme/webgme/pull/201) ([ksmyth](https://github.com/ksmyth))
 
 **Closed issues:**
@@ -2723,6 +2736,7 @@
 - FCO deletion only prohibited in the root, not in models [\#72](https://github.com/webgme/webgme/issues/72)
 - Import dialog redesign [\#71](https://github.com/webgme/webgme/issues/71)
 - Connection not working correctly [\#69](https://github.com/webgme/webgme/issues/69)
+- Ctrl + mouse scroll causes Browser to zoom, distorts WebGME objects [\#33](https://github.com/webgme/webgme/issues/33)
 - Tree auto-expand on project open [\#18](https://github.com/webgme/webgme/issues/18)
 
 **Merged pull requests:**
