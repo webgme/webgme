@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\client",
+    "\\src\\client\\decorators",
+    "\\src\\client\\decorators\\MetaDecorator",
+    "\\src\\client\\decorators\\MetaDecorator\\DiagramDesigner",
+    "\\src\\client\\decorators\\MetaDecorator\\DiagramDesigner\\templates",
+    "\\src\\client\\js",
+    "\\src\\client\\js\\Utils"
+  ],
+  "SelectedNode": "\\src\\client\\decorators\\MetaDecorator\\DiagramDesigner\\AttributeDetailsDialog.js",
+  "PreviewInSolutionExplorer": false
+}
