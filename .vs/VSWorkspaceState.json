@@ -3,13 +3,14 @@
     "",
     "\\src",
     "\\src\\client",
-    "\\src\\client\\decorators",
-    "\\src\\client\\decorators\\MetaDecorator",
-    "\\src\\client\\decorators\\MetaDecorator\\DiagramDesigner",
-    "\\src\\client\\decorators\\MetaDecorator\\DiagramDesigner\\templates",
     "\\src\\client\\js",
-    "\\src\\client\\js\\Utils"
+    "\\src\\client\\js\\LayoutManager",
+    "\\src\\client\\js\\PanelBase",
+    "\\src\\client\\js\\Panels",
+    "\\src\\client\\js\\Panels\\Grid",
+    "\\src\\client\\js\\Panels\\Header",
+    "\\src\\client\\js\\Panels\\PropertyEditor"
   ],
-  "SelectedNode": "\\src\\client\\decorators\\MetaDecorator\\DiagramDesigner\\AttributeDetailsDialog.js",
+  "SelectedNode": "\\src\\client\\js\\PanelBase\\PanelBaseWithHeader.js",
   "PreviewInSolutionExplorer": false
 }

@@ -181,6 +181,11 @@ define([
                 attrDesc = {
                     name: self._inputName.val(),
                     description: self._description.val(),
+
+                    // New extention
+                    unit: self._unit.val().split('\n'),
+                    category: self._category.val().split('\n'),
+
                     type: self._inputType.val(),
                     defaultValue: self._inputDefaultValue.val(),
                     isEnum: self._cbEnum.is(':checked'),
@@ -347,6 +352,11 @@ define([
 
         this._inputName = this._el.find('#inputName').first();
         this._description = this._el.find('#description').first();
+
+        // New extention
+        this._unit = this._el.find('#unit').first();
+        this._category = this._el.find('#category').first();
+
         this._inputType = this._el.find('#inputType').first();
 
         // Default value controls
