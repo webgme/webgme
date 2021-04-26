@@ -15,18 +15,12 @@
     {
       "id": "ObjectBrowserPanel",
       "panel": "ObjectBrowser/ObjectBrowserPanel",
-      "container": "east",
+      "container": "west",
       "DEBUG_ONLY": false
     },
     {
       "id": "VisualizerPanel",
       "panel": "Visualizer/VisualizerPanel",
-      "container": "west",
-      "DEBUG_ONLY": false
-    },
-    {
-      "id": "PartBrowserPanel",
-      "panel": "PartBrowser/PartBrowserPanel",
       "container": "west",
       "DEBUG_ONLY": false
     },
