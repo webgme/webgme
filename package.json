@@ -34,7 +34,7 @@
     "chai": "^4.2.0",
     "jscs": "^3.0.7",
     "jshint": "^2.12.0",
-    "karma": "^3.1.4",
+    "karma": "^6.3.16",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.2",
