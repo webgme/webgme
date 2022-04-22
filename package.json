@@ -25,9 +25,10 @@
   "dependencies": {
     "bower": "1.8.14",
     "q": "1.5.1",
-    "requirejs": "2.3.6",
-    "webgme-engine": "2.26.0",
-    "webgme-user-management-page": "^0.6.0"
+    "require-uncached": "1.0.3",
+    "requirejs": "2.3.5",
+    "webgme-engine": "webgme/webgme-engine#azure",
+    "webgme-user-management-page": "webgme/user-management-page#azure"
   },
   "devDependencies": {
     "chai": "^4.3.8",
@@ -43,7 +44,9 @@
     "karma-mocha-reporter": "^2.2.5",
     "karma-requirejs": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
-    "mocha": "^6.0.0"
+    "mocha": "^5.2.0",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2"
   },
   "main": "webgme",
   "typings": "typings/webgme.d.ts",
