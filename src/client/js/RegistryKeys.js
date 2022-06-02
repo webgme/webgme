@@ -30,6 +30,7 @@ define([], function () {
         LINE_LABEL_X_OFFSET: 'lineLabelXOffset',
         LINE_LABEL_Y_OFFSET: 'lineLabelYOffset',
         BOX_DECORATION: 'boxDecoration',
+        HIDE: 'hide',
 
         //TODO maybe we should harmonize with project registry
         VALID_PLUGINS: 'validPlugins', //space separated list of valid plugins for the project

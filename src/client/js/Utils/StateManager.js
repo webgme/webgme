@@ -160,6 +160,18 @@ define([
 
             getLayout: function () {
                 return this.get(CONSTANTS.STATE_LAYOUT);
+            },
+
+            setShowHiddenElements: function (trueOrFalse) {
+                this.set(CONSTANTS.STATE_SHOW_HIDDEN, trueOrFalse);
+            },
+
+            getShowHiddenElements: function () {
+                return this.get(CONSTANTS.STATE_SHOW_HIDDEN);
+            },
+
+            toggleShowHiddenElements: function () {
+                this.set(CONSTANTS.STATE_SHOW_HIDDEN, !this.get(CONSTANTS.STATE_SHOW_HIDDEN));
             }
         }),
         _initialize = function () {

@@ -75,6 +75,29 @@ define([
                 }
             }
 
+            WebGMEGlobal.State.on('change', (model, options) => {
+                console.log(model, options);
+                if (model.changed[DiagramDesignerWidgetConstants.__CONSTANTS.STATE_SHOW_HIDDEN]) {
+                    console.log('showhidden changed', model);
+                }
+            });
+            this.toolbarItems.btnToggleShowHidden = toolbar.addButton({
+                title: 'Only show non-hidden elements',
+                icon: 'glyphicon glyphicon-eye-close',
+                clickFn: function () {
+                    // $($(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).children('i')[0]).css('background-color','#A5AFBE');
+                    if($(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).attr('style')) {
+                        $(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).removeAttr('style');
+                        $(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).attr('title', 'Only show non-hidden elements');
+                    } else {
+                        $(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).attr('style', 'background-color:#A5AFBE;');
+                        $(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).attr('title', 'Show hidden elements as well');
+                    }
+                    WebGMEGlobal.State.toggleShowHiddenElements();
+                }
+            });
+            WebGMEGlobal.State.setShowHiddenElements(true);
+
             if (DEBUG === true) {
                 //progress text in toolbar for debug only
                 this.toolbarItems.progressText = toolbar.addLabel();

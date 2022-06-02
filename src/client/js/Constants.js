@@ -95,6 +95,8 @@ define([
 
         STATE_LAYOUT: 'layout',
 
+        STATE_SHOW_HIDDEN: 'showHidden',
+
         /* ASPECTS */
         ASPECT_ALL: 'All',
 

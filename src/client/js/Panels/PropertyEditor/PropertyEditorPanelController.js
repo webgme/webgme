@@ -66,7 +66,8 @@ define(['js/logger',
             REGISTRY_KEYS.LINE_LABEL_PLACEMENT,
             REGISTRY_KEYS.LINE_LABEL_X_OFFSET,
             REGISTRY_KEYS.LINE_LABEL_Y_OFFSET,
-            REGISTRY_KEYS.REPLACEABLE
+            REGISTRY_KEYS.REPLACEABLE,
+            REGISTRY_KEYS.HIDE,
         ],
         LINE_REG_KEYS = [
             REGISTRY_KEYS.BOX_DECORATION,
@@ -658,6 +659,11 @@ define(['js/logger',
                             }
                         }
                     } else if (key === REGISTRY_KEYS.BOX_DECORATION) {
+                        repKey = LINE_SUB_GROUP + '.' + key;
+                        dst[repKey] = dst[extKey];
+                        dst[repKey].value = !!dst[extKey].value;
+                        dst[repKey].valueType = 'boolean';
+                    } else if (key === REGISTRY_KEYS.HIDE) {
                         repKey = LINE_SUB_GROUP + '.' + key;
                         dst[repKey] = dst[extKey];
                         dst[repKey].value = !!dst[extKey].value;
