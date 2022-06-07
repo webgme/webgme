@@ -135,6 +135,8 @@ define([
                 WebGMEGlobal.State.registerLayout(initialThingsToDo.layoutToLoad || config.layout,
                     {suppressHistoryUpdate: true});
 
+                WebGMEGlobal.State.setShowHiddenElements(true);
+                
                 WebGMEHistory.initialize();
 
                 GMEConcepts.initialize(client);

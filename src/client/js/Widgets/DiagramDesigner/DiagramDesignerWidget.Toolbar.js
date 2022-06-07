@@ -75,12 +75,6 @@ define([
                 }
             }
 
-            WebGMEGlobal.State.on('change', (model, options) => {
-                console.log(model, options);
-                if (model.changed[DiagramDesignerWidgetConstants.__CONSTANTS.STATE_SHOW_HIDDEN]) {
-                    console.log('showhidden changed', model);
-                }
-            });
             this.toolbarItems.btnToggleShowHidden = toolbar.addButton({
                 title: 'Only show non-hidden elements',
                 icon: 'glyphicon glyphicon-eye-close',
@@ -96,7 +90,11 @@ define([
                     WebGMEGlobal.State.toggleShowHiddenElements();
                 }
             });
-            WebGMEGlobal.State.setShowHiddenElements(true);
+
+            if (WebGMEGlobal.State.getShowHiddenElements() !== true) {
+                $(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).attr('style', 'background-color:#A5AFBE;');
+                $(self.toolbarItems.btnToggleShowHidden.el.children('a')[0]).attr('title', 'Show hidden elements as well');
+            }
 
             if (DEBUG === true) {
                 //progress text in toolbar for debug only

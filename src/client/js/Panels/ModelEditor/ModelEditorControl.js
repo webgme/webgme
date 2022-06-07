@@ -65,6 +65,15 @@ define(['js/logger',
 
         this._selfPatterns = {};
 
+        this._hiddenNodes = {};
+        this._showHidden = true;
+        WebGMEGlobal.State.on('change', (model, options) => {
+            if (model.changed.hasOwnProperty(CONSTANTS.STATE_SHOW_HIDDEN) && 
+                model.changed[CONSTANTS.STATE_SHOW_HIDDEN] !== this._showHidden) {
+                this._onShowHiddenChange(model.changed[CONSTANTS.STATE_SHOW_HIDDEN]);
+            }
+        });
+
         // Alias just in case someone is extending this visualizers
         this._GMEID2ComponentID = this._GmeID2ComponentID = {};
         this._ComponentID2GMEID = this._ComponentID2GmeID = {};
@@ -74,6 +83,8 @@ define(['js/logger',
         //TODO: experiemtnal only, remove!!!
         this.___SLOW_CONN = false;
 
+        //listing of hidden elements
+        this._HiddenElementGMEID = this._HiddenElementGMEID = {};
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {id: null, children: [], parentId: null};
 
@@ -235,6 +246,7 @@ define(['js/logger',
             objDescriptor.id = nodeObj.getId();
             objDescriptor.name = nodeObj.getFullyQualifiedName();
             objDescriptor.parentId = nodeObj.getParentId();
+            objDescriptor.hidden = nodeObj.getRegistry(REGISTRY_KEYS.HIDE) === true;
 
             if (nodeObj.isLibraryRoot()) {
                 //this means that a library root will not be visualized on our modelEditor
@@ -645,6 +657,13 @@ define(['js/logger',
         //we are interested in the load of sub_components of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
             if (objD) {
+                if(objD.hidden) {
+                    this._HiddenElementGMEID[gmeID] = objD;
+                    if(!WebGMEGlobal.State.getShowHiddenElements()) {
+                        return;
+                    } 
+                }
+
                 if (objD.parentId === this.currentNodeInfo.id) {
                     objDesc = _.extend({}, objD);
                     this._GMEID2ComponentID[gmeID] = [];
@@ -725,6 +744,22 @@ define(['js/logger',
             this._updateAspects();
         } else {
             if (objDesc) {
+                if (objDesc.hidden) {
+                    //becomes hidden
+                    this._HiddenElementGMEID[gmeID] = objDesc;
+                    if(!WebGMEGlobal.State.getShowHiddenElements() && 
+                    this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
+                        this._onUnload(gmeID, true);
+                        return;
+                    }
+                } else if(this._HiddenElementGMEID[gmeID] && 
+                    !objDesc.hidden && 
+                    !WebGMEGlobal.State.getShowHiddenElements()) {
+                    //becomes visible
+                    delete this._HiddenElementGMEID[gmeID];
+                    this._onLoad(gmeID,objDesc);
+                    return;
+                }
                 if (objDesc.parentId === this.currentNodeInfo.id) {
                     if (objDesc.kind === 'MODEL' || objDesc[REGISTRY_KEYS.BOX_DECORATION]) {
                         if (this._GMEID2ComponentID[gmeID]) {
@@ -829,7 +864,7 @@ define(['js/logger',
         });
     };
 
-    ModelEditorControl.prototype._onUnload = function (gmeID) {
+    ModelEditorControl.prototype._onUnload = function (gmeID, onlyFromScreen) {
         var componentID,
             len,
             getDecoratorTerritoryQueries,
@@ -853,6 +888,16 @@ define(['js/logger',
                 }
             }
         };
+
+        if(this._HiddenElementGMEID[gmeID] && onlyFromScreen !== true) {
+            delete this._HiddenElementGMEID[gmeID];
+            if(!WebGMEGlobal.State.getShowHiddenElements() &&
+                gmeID !== this.currentNodeInfo.id &&
+                !this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
+                //it was not shown anyways
+                return;
+            }
+        }
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been removed from territoy --> most likely deleted...
@@ -1262,6 +1307,25 @@ define(['js/logger',
 
     ModelEditorControl.getComponentId = function () {
         return 'GenericUIModelEditorControl';
+    };
+
+    //handling show_hidden toggle
+    ModelEditorControl.prototype._onShowHiddenChange = function (newShowHiddenValue) {
+        this._showHidden = newShowHiddenValue;
+        if(this._showHidden){
+            Object.keys(this._HiddenElementGMEID).forEach((gmeID) =>{
+                if(this._HiddenElementGMEID.hasOwnProperty(gmeID)) {
+                    this._onLoad(gmeID, this._HiddenElementGMEID[gmeID]);
+                }
+            });
+            this._handleDecoratorNotification();
+        } else {
+            Object.keys(this._HiddenElementGMEID).forEach((gmeID) =>{
+                if(this._HiddenElementGMEID.hasOwnProperty(gmeID)) {
+                    this._onUnload(gmeID, true);
+                }
+            });
+        }
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
