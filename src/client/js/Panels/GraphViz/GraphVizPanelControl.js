@@ -3,6 +3,7 @@
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
  * @author nabana / https://github.com/nabana
+ * @author brollb / https://github.com/brollb
  */
 
 define(['js/logger',
@@ -57,6 +58,18 @@ define(['js/logger',
 
         this._graphVizWidget.onNodeDblClick = function (id) {
             WebGMEGlobal.State.registerActiveObject(id);
+        };
+
+        this._graphVizWidget.onExtendMenuItems = (nodeId, menuItems) => {
+            return this.onExtendMenuItems(nodeId, menuItems);
+        };
+
+        this._graphVizWidget.deleteNode = nodeId => {
+            this._client.deleteNode(nodeId);
+        };
+
+        this._graphVizWidget.setName = (nodeId, name) => {
+            this._client.setAttribute(nodeId, 'name', name);
         };
 
         this._graphVizWidget.onNodeClose = function (id) {
@@ -353,6 +366,34 @@ define(['js/logger',
         connBtn.hide();
 
         return toolbarEl;
+    };
+
+    GraphVizControl.prototype.onExtendMenuItems = function (nodeId, menuItems) {
+        const node = this._client.getNode(nodeId);
+        const childIds = Object.keys((node && node.getValidChildrenTypesDetailed()) || {});
+        if (childIds.length > 0) {
+            const childMenuItems = {};
+            const validChildren = childIds.forEach(id => {
+                const node = this._client.getNode(id);
+                childMenuItems[id] = {
+                    name: node.getAttribute('name'),
+                    callback: () => {
+                        const params = {
+                            parentId: nodeId,
+                            baseId: id,
+                        };
+                        this._client.createNode(params);
+                    },
+                };
+            });
+
+            menuItems.createNode = {
+                name: 'Create child',
+                icon: 'add',
+                items: childMenuItems,
+            };
+        }
+        return menuItems;
     };
 
 
