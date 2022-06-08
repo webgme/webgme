@@ -80,15 +80,6 @@ define([
         const nodeData = $trigger[0].__data__;
         const nodeId = nodeData.id;
         const menuItems = {
-            renameNode: {
-                name: 'Rename',
-                callback: () => {
-                    // TODO: replace this with a better alternative
-                    const name = prompt(`Please enter a new name for ${nodeData.name}`);
-                    this.setName(nodeId, name);
-                },
-                icon: 'edit',
-            },
             deleteNode: {
                 name: 'Delete',
                 icon: 'delete',

@@ -68,10 +68,6 @@ define(['js/logger',
             this._client.deleteNode(nodeId);
         };
 
-        this._graphVizWidget.setName = (nodeId, name) => {
-            this._client.setAttribute(nodeId, 'name', name);
-        };
-
         this._graphVizWidget.onNodeClose = function (id) {
             var deleteRecursive,
                 node,
