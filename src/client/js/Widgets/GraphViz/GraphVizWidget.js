@@ -3,13 +3,15 @@
 
 /**
  * @author rkereskenyi / https://github.com/rkereskenyi
+ * @author brollb / https://github.com/brollb
  */
 
 define([
     'js/logger',
-    'js/Widgets/GraphViz/GraphVizWidget.Zoom',
+    './GraphVizWidget.Zoom',
     'js/Utils/ComponentSettings',
     'd3',
+    'jquery-contextMenu',
     'css!./styles/GraphVizWidget.css'
 ], function (Logger, GraphVizWidgetZoom, ComponentSettings) {
     'use strict';
@@ -60,12 +62,33 @@ define([
         this._resizeD3Tree(width, height);
 
         this._svg = this.__svg.append('g').attr('transform', 'translate(' + MARGIN + ',' + MARGIN + ')');
+        this._el.contextMenu({
+            selector: 'g.node',
+            build: $trigger => ({
+                items: this._createContextMenu($trigger),
+            })
+        });
 
         this._el.on('dblclick', function (event) {
             event.stopPropagation();
             event.preventDefault();
             self.onBackgroundDblClick();
         });
+    };
+
+    GraphVizWidget.prototype._createContextMenu = function ($trigger) {
+        const nodeData = $trigger[0].__data__;
+        const nodeId = nodeData.id;
+        const menuItems = {
+            deleteNode: {
+                name: 'Delete',
+                icon: 'delete',
+                callback: () => this.deleteNode(nodeId)
+            },
+        };
+        this.onExtendMenuItems(nodeId, menuItems);
+
+        return menuItems;
     };
 
     GraphVizWidget.prototype.onWidgetContainerResize = function (width, height) {
@@ -393,6 +416,9 @@ define([
     GraphVizWidget.prototype.destroy = function () {
         this.__svg.remove();
         this.__svg = undefined;
+    };
+
+    GraphVizWidget.prototype.onExtendMenuItems = function (/*nodeId, menuItems*/) {
     };
 
     GraphVizWidget.prototype.onActivate = function () {
