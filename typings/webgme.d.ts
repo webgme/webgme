@@ -2850,7 +2850,7 @@ declare namespace GmeCommon {
     export type Path = string;
 
     export type DataObject = Core.Node;
-    export type Buffer = GLbyte[];
+    export type Buffer = Int8Array;
     export type Payload = string | Buffer | Buffer[];
     export type Content = DataObject | Buffer | Buffer[];
     export type ContentString = string;
