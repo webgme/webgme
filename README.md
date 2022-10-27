@@ -21,7 +21,7 @@ WebGME provides a variety of extension points for you to customize your applicat
 ### Dependencies
 #### Server
  - [NodeJS](https://nodejs.org/) (version >= 4, CI tests are performed on versions 8.x, 10.x and LTS is recommended).
- - [MongoDB](https://www.mongodb.com/) (version >= 2.6).
+ - [MongoDB](https://www.mongodb.com/) (2.6 <= version <= 4.x).
  - [Git](https://git-scm.com) (must be available in PATH).
  - [Redis](https://redis.io/) Note that this is only needed if you intend on running [multiple webgme nodes](https://github.com/webgme/webgme/wiki/Multiple-Nodes) behind a reverse proxy.
 
