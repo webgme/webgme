@@ -44,7 +44,11 @@ You can always try out webgme at our public deployment at [webgme.org](https://w
 
 2. For webgme developers, clone this repo.
  * install packages with npm `npm install`
- * launch mongod locally
+ * launch mongod locally, e.g.
+```
+docker run --name my-mongo -d -p 27017:27017 mongo:4.4
+```
+ 
  * start the server `npm start`
 
 After the webgme server is up and there are no error messages in the console. Open a valid webgme address in the browser. The default is `http://127.0.0.1:8888/`, you should see all valid addresses in the console where you started webgme.
