@@ -11,8 +11,9 @@ define([
     'js/Controls/DropDownMenu',
     'js/Controls/PopoverBox',
     'js/Dialogs/Merge/MergeDialog',
+    'js/Utils/ComponentSettings',
     'js/Constants'
-], function (Logger, DropDownMenu, PopoverBox, MergeDialog, CONSTANTS) {
+], function (Logger, DropDownMenu, PopoverBox, MergeDialog, ComponentSettings, CONSTANTS) {
 
     'use strict';
 
@@ -24,9 +25,23 @@ define([
         ITEM_VALUE_DOWNLOAD_ERROR = 'downloadError',
         ITEM_VALUE_DOWNLOAD_COMMIT_QUEUE = 'downloadCommitQueue';
 
+    function _getDefaultConfig() {
+        return {
+            autoFollowBrancWhenOutOfSync: true
+        };
+    }
+
+    function _getComponentId() {
+        return 'GenericUIBranchStatus';
+    }
+
+    function _getConfig() {
+        return ComponentSettings.resolveWithWebGMEGlobal(_getDefaultConfig(), _getComponentId());
+    }
+
     BranchStatusWidget = function (containerEl, client) {
         this._logger = Logger.create('gme:Widgets:BranchStatusWidget', WebGMEGlobal.gmeConfig.client.log);
-
+        this._config = _getConfig();
         this._client = client;
         this._el = containerEl;
         this._eventData = null;
@@ -218,6 +233,26 @@ define([
         this._ddBranchStatus.clear();
         this._outOfSync = true;
         if (this._client.isConnected()) {
+            if (this._config.autoFollowBrancWhenOutOfSync) {
+                $.notify({
+                    icon: 'fa fa-share-alt fa-rotate-90',
+                    message: 'Ooops! Looks like someone is chaning the model concurretly .. ' +
+                    'your last change(s) were dropped. Check branch history for details.'
+                }, {
+                    delay: 10000,
+                    hideDuration: 0,
+                    type: 'warning',
+                    offset: {
+                        x: 20,
+                        y: 37
+                    }
+                });
+
+                this._ddBranchStatus.onItemClicked(ITEM_VALUE_FOLLOW);
+
+                return;
+            }
+
             this._ddBranchStatus.addItem({
                 text: 'Create a branch with local changes.',
                 value: ITEM_VALUE_FORK
