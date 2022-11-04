@@ -27,7 +27,7 @@ define([
 
     function _getDefaultConfig() {
         return {
-            autoFollowBrancWhenOutOfSync: false
+            autoFollowBranchWhenOutOfSync: false
         };
     }
 
@@ -233,7 +233,7 @@ define([
         this._ddBranchStatus.clear();
         this._outOfSync = true;
         if (this._client.isConnected()) {
-            if (this._config.autoFollowBrancWhenOutOfSync && this._client.getCommitQueue().length === 1) {
+            if (this._config.autoFollowBranchWhenOutOfSync && this._client.getCommitQueue().length === 1) {
                 $.notify({
                     icon: 'fa fa-share-alt fa-rotate-90',
                     message: 'Ooops! Looks like someone is chaning the model concurretly .. ' +

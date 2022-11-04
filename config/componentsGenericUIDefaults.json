@@ -205,6 +205,6 @@
     "useRunningPluginsDrawer": true
   },
   "GenericUIBranchStatus": {
-    "autoFollowBrancWhenOutOfSync": false
+    "autoFollowBranchWhenOutOfSync": false
   }
 }
