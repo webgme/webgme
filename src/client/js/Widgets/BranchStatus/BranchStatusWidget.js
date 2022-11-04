@@ -27,7 +27,7 @@ define([
 
     function _getDefaultConfig() {
         return {
-            autoFollowBrancWhenOutOfSync: true
+            autoFollowBrancWhenOutOfSync: false
         };
     }
 
