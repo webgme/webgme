@@ -233,11 +233,11 @@ define([
         this._ddBranchStatus.clear();
         this._outOfSync = true;
         if (this._client.isConnected()) {
-            if (this._config.autoFollowBrancWhenOutOfSync) {
+            if (this._config.autoFollowBrancWhenOutOfSync && this._client.getCommitQueue().length === 1) {
                 $.notify({
                     icon: 'fa fa-share-alt fa-rotate-90',
                     message: 'Ooops! Looks like someone is chaning the model concurretly .. ' +
-                    'your last change(s) were dropped. Check branch history for details.'
+                    'Your last change was dropped, check branch history for details.'
                 }, {
                     delay: 10000,
                     hideDuration: 0,
