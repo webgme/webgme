@@ -203,5 +203,8 @@
   },
   "GenericUIPluginNotification": {
     "useRunningPluginsDrawer": true
+  },
+  "GenericUIBranchStatus": {
+    "autoFollowBranchWhenOutOfSync": false
   }
 }
