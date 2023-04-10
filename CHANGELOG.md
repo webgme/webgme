@@ -1,5 +1,37 @@
 # Changelog
 
+## [v2.43.0](https://github.com/webgme/webgme/tree/v2.43.0) (2023-04-10)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.42.1...v2.43.0)
+
+**Implemented enhancements:**
+
+- Edit models from the GraphViz visualizer [\#1748](https://github.com/webgme/webgme/issues/1748)
+- Bump webgme-engine to 2.25.3 [\#1771](https://github.com/webgme/webgme/pull/1771) ([pmeijer](https://github.com/pmeijer))
+- Add Option for BranchStatusWidget to automatically follow remote at concurrent edits [\#1761](https://github.com/webgme/webgme/pull/1761) ([pmeijer](https://github.com/pmeijer))
+- Add support for node creation, deletion, rename in GraphViz. Close \#1748 [\#1749](https://github.com/webgme/webgme/pull/1749) ([brollb](https://github.com/brollb))
+
+**Fixed bugs:**
+
+- Error TS2304: Cannot find name 'GLbyte' in webgme.d.ts [\#1758](https://github.com/webgme/webgme/issues/1758)
+- Replace `GLbyte[]` with `Int8Array` in typings. Fix \#1758 [\#1760](https://github.com/webgme/webgme/pull/1760) ([umesh-timalsina](https://github.com/umesh-timalsina))
+
+**Closed issues:**
+
+- Nginx proxy path prefix [\#1757](https://github.com/webgme/webgme/issues/1757)
+- Would you please create a new docker image version? [\#1755](https://github.com/webgme/webgme/issues/1755)
+- Cannot export project or model [\#1753](https://github.com/webgme/webgme/issues/1753)
+- cannot open https://webgme.org/ [\#1747](https://github.com/webgme/webgme/issues/1747)
+- Connection to webgme.org is refused  [\#1745](https://github.com/webgme/webgme/issues/1745)
+- Question: How to run multiple interpreters on the server? [\#1741](https://github.com/webgme/webgme/issues/1741)
+- How to collect data from the active node's children in a custom visualizer Widget? [\#1733](https://github.com/webgme/webgme/issues/1733)
+- GMENode information not consistent across visualizers/panels [\#1721](https://github.com/webgme/webgme/issues/1721)
+- Api for changing the preferences of an object ? [\#1705](https://github.com/webgme/webgme/issues/1705)
+
+**Merged pull requests:**
+
+- Year update to 2022 [\#1765](https://github.com/webgme/webgme/pull/1765) ([pmeijer](https://github.com/pmeijer))
+
 ## [v2.42.1](https://github.com/webgme/webgme/tree/v2.42.1) (2021-01-11)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.42.1-alpha...v2.42.1)
