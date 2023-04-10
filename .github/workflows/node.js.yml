@@ -1,0 +1,37 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Run Tests
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    name: testing
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [16, 18]
+        mongodb-version: [4.4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Use Node.js {{ matrix.node }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Start MongoDB ${{ matrix.mongodb-version }}
+        uses: supercharge/mongodb-github-action@1.3.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+      - name: Chrome
+        uses: browser-actions/setup-chrome@latest
+      - name: NPM install
+        run: npm install 
+      - name: karma test
+        run: Xvfb :99 & export DISPLAY=:99 && node ./node_modules/karma/bin/karma start karma.conf.js --browsers Chrome --single-run
+      - name: Mocha tests
+        run: node ./node_modules/mocha/bin/mocha --recursive test
