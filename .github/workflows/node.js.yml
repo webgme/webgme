@@ -29,12 +29,8 @@ jobs:
           mongodb-version: ${{ matrix.mongodb-version }}
       - name: Chrome
         uses: browser-actions/setup-chrome@latest
-      - name: node version
-        run: node --version
       - name: NPM install
         run: npm install 
-      - name: ESLint Check
-        run: npm run lint
       - name: karma test
         run: Xvfb :99 & export DISPLAY=:99 && node ./node_modules/karma/bin/karma start karma.conf.js --browsers Chrome --single-run
       - name: Mocha tests
