@@ -66,8 +66,10 @@ define([
      * @param {function(PluginResult|boolean)} callback - If canceled from dialog returns with false.
      */
     InterpreterManager.prototype.configureAndRun = function (metadata, callback) {
+        //FIXME needs proper documentation
+        metadata['__context'] = metadata['__context'] || {};
         var self = this,
-            context = self._client.getCurrentPluginContext(metadata.id),
+            context = self._client.getCurrentPluginContext(metadata.id, metadata['__context'].activeNodeId, metadata['__context'].activeSelectionIds),
             globalOptions = this.getGlobalOptions(metadata, {namespace: context.managerConfig.namespace}),
             configDialog;
 
