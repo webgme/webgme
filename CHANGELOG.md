@@ -1,5 +1,24 @@
 # Changelog
 
+## [v2.44.0](https://github.com/webgme/webgme/tree/v2.44.0) (2023-09-01)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.43.0...v2.44.0)
+
+**Implemented enhancements:**
+
+- Bump user-management-page to v0.6.0 [\#1780](https://github.com/webgme/webgme/pull/1780) ([pmeijer](https://github.com/pmeijer))
+- webgme-engine v2.26.0 and node\_modules bump [\#1776](https://github.com/webgme/webgme/pull/1776) ([pmeijer](https://github.com/pmeijer))
+- Add missing typescript fn declaration for the Client [\#1775](https://github.com/webgme/webgme/pull/1775) ([brollb](https://github.com/brollb))
+
+**Merged pull requests:**
+
+- Bump qs from 6.5.1 to 6.5.3 [\#1782](https://github.com/webgme/webgme/pull/1782) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump follow-redirects from 1.6.1 to 1.15.2 [\#1779](https://github.com/webgme/webgme/pull/1779) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump nodemailer from 6.4.17 to 6.9.4 [\#1778](https://github.com/webgme/webgme/pull/1778) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump i from 0.3.6 to 0.3.7 [\#1738](https://github.com/webgme/webgme/pull/1738) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump pug from 3.0.0 to 3.0.2 [\#1724](https://github.com/webgme/webgme/pull/1724) ([dependabot[bot]](https://github.com/apps/dependabot))
+- Bump pug-code-gen from 3.0.1 to 3.0.2 [\#1723](https://github.com/webgme/webgme/pull/1723) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v2.43.0](https://github.com/webgme/webgme/tree/v2.43.0) (2023-04-10)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.42.1...v2.43.0)
