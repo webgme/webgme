@@ -24,8 +24,6 @@ config.client.errorReporting = {
 
 config.client.allowUserDefinedSVG = true;
 config.visualization.extraCss = [];
-config.plugin.allowServerExecution = true;
-config.authentication.enable = true;
 
 // The webgme-engine does not populate any of these
 config.visualization.svgDirs = [path.join(__dirname, '../src/client/assets/DecoratorSVG')];
