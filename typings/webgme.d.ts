@@ -337,8 +337,28 @@ declare namespace Gme {
 
         setPointerMeta(metaNodeId: GmeCommon.NodeId, newPointerName: string, meta: Gme.PointerMeta): void;
 
+        /**
+         * Creates a new core instance using the state of the client and loads the root node.
+         */
+        getCoreInstance(
+          options: CoreInstanceOptions,
+          callback: (err: Error, result: CoreInstanceResult) => void | Promise<void>
+        ): void;
+
     }
 
+  
+    interface CoreInstanceOptions {
+      commitHash:GmeCommon.MetadataHash;
+      logger: Global.GmeLogger;
+    }
+
+    interface CoreInstanceResult {
+      core: GmeClasses.Core;
+      commitHash:GmeCommon.MetadataHash;
+      rootNode: Core.Node;
+      project: GmeClasses.ProjectInterface;
+    }
 }
 declare const WebGMEGlobal: Global.WebGmeGlobal;
 
