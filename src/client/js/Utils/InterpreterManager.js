@@ -63,10 +63,15 @@ define([
     /**
      *
      * @param {object} metadata - metadata of plugin to be executed.
+     * @param {object} metadata.__context - setting the context programatically.
      * @param {function(PluginResult|boolean)} callback - If canceled from dialog returns with false.
      */
     InterpreterManager.prototype.configureAndRun = function (metadata, callback) {
-        //FIXME needs proper documentation
+        /* InvokePlugin functions do not proceed normally with the popup config
+        * and this function was tied to the standard UI call and therefore not able
+        * to set a context programatically. Now this function can also be used for
+        * calling plugin execution and allowing the standard configuration as well.
+        */
         metadata['__context'] = metadata['__context'] || {};
         var self = this,
             context = self._client.getCurrentPluginContext(metadata.id, metadata['__context'].activeNodeId, metadata['__context'].activeSelectionIds),
