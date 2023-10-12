@@ -36,7 +36,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 
 ### Configuration groups
 
-##### addOn
+#### addOn
 
 - `config.addOn.enable = false`
  - If true enables add-ons.
@@ -47,7 +47,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.addOn.basePaths = ['node_modules/webgme-engine/src/addon/core']`
  - Note, this is handled by [webgme-cli](https://github.com/webgme/webgme-cli). Array of paths to custom add-ons. If you have an add-on at `C:/SomeAddOns/MyAddOn/MyAddOn.js` the path to append would be `C:/SomeAddOns` or a relative path (from the current working directory). N.B. this will also expose any other add-on in that directory, e.g. `C:/SomeAddOns/MyOtherAddOn/MyOtherAddOn.js`.
 
-##### authentication
+#### authentication
 
 - `config.authentication.enable = false`
  - If true certain parts will require that users are authenticated.
@@ -93,13 +93,59 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 (Once the admin exists the password will not be updated at startup.)
 - `config.authentication.publicOrganizations = []`
  - Array of organizations to be created at server startup. New users will be added as members to these organizations. (Note that the guest account will not be added to the organizations.)
+- `config.authentication.encryption.algorithm = aes-256-cbc`
+ - The type of algorithm used for data encryption. To get an idea of what algorithms you can use, check the [nodejs](https://nodejs.org/dist/latest-v12.x/docs/api/crypto.html#crypto_crypto_createcipheriv_algorithm_key_iv_options) descriptions as well as [openSSL](https://www.openssl.org/docs/man1.0.2/man1/ciphers.html).
+- `config.authentication.encryption.key` = './src/server/middleware/auth/EXAMPLE_ENCRYPTION_KEY'`
+ - Key file used for data cipher.
+- `config.authentication.allowPasswordReset = false`
+ - Allows password reset functionality (option to change password without successful login). For maximum security check [mailer](#mailer) options.
+- `config.authentication.allowedResetInterval = 3600000`
+ - The frequency in milliseconds of the allowed reset requests.
+- `config.authentication.resetTimeout = 1200000`
+ - The maximum interval of validity of the reset. This means that the password has to be changed within this interval (otherwise the user has to wait until a new request can be made).
+- `config.authentication.resetUrl = '/profile/reset'`
+ - Location of the reset page where the user should be guided to input the new password. The whole reset procedure can be done with purely REST API calls, but it is usually safer to include an email in the process.
 
-##### bin
+##### azureActiveDirectory
+- `config.authentication.azureActiveDirectory.enable = false`
+ - When set to true, WebGME will try to authenticate users with the configured azure endpoints. It is also going to
+ maintain an additional token in case there is an azure service also configured. Check for further config and deployment info on the [wiki page](https://github.com/webgme/webgme/wiki/Using-Azure-Active-Directory).
+- `config.authentication.azureActiveDirectory.clientId = 'Example_Client_Id'`
+ - The id of the azure app that is configured to cover the WebGME deployment.
+- `config.authentication.azureActiveDirectory.authority = 'Example_authority_URI'`
+ - The URI of the azure endpoint that handles the authentication (usually the org that has the accounts).
+- `config.authentication.azureActiveDirectory.jwksUri = 'https://login.microsoftonline.com/common/discovery/keys'`
+ - The URI where WebGME can ask for the JSON web key sets for AAD issued token verification.
+- `config.authentication.azureActiveDirectory.issuer = 'Example_token_issuer_for_verification'`
+ - The URI of the entity who issued the token - almost the same as the authority, but this one is version sensitive
+ so they cannot share the config value.
+- `config.authentication.azureActiveDirectory.audience = 'Example_audience_for_token_validation'`
+ - The azure application id who was the target of the token. When an accessScope is defined, this id should be
+ the application id of the scope's provider. Without it, it can simply be the WebGME azure application id (clientId).
+- `config.authentication.azureActiveDirectory.clientSecret = 'Example_client_Secret'`
+ - This is the secret that is generated on azure so the web application and the 'WebGME client' can share it for
+ authentication purposes - be sure not to make it public in any way.
+- `config.authentication.azureActiveDirectory.cookieId = 'webgme_aad'`
+ - The cookieId for the access token - if configured.
+- `config.authentication.azureActiveDirectory.redirectUri = 'need to set this temp, would be nice to deduct it'`
+ - The URI where azure should send the post 'response' request once the user gets authenticated. This configuration
+ has to match to one entry in the azure configuration of the WebGME.
+- `config.authentication.azureActiveDirectory.accessScope = null`
+ - If set, it points to an azure service that the users/WebGME components might want to access. The token cookie will
+ only get populated if this field is set. Also, as we only deal with access tokens, fields 
+ `cookieId, jwksUri, issuer, audience` are only used (but also required) if this field is set.
+
+#### api
+
+- `config.api.useEnhancedStarterPage = false`
+ - When set to true, the index page will be returned as a fully featured HTML instead of the plain JSON response.
+
+#### bin
 
 - `config.bin.log = see webgme-engine config.default`
  - Logger settings when running bin scripts.
 
-##### blob
+#### blob
 - `config.blob.compressionLevel = 0`
  - Compression level of DEFLATE (between 0 and 9) to use when serving bundled complex artifacts.
 - `config.blob.type = 'FS'`
@@ -111,7 +157,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.blob.s3 = {}`
  - S3 configuration passed to `aws-sdk` module. See config.default.js for local mock example.
 
-##### client
+#### client
 
 - `config.client.appDir = './src/client'`
  - Directory from where to serve the static files for the webapp. This should only be modified if you are using a custom UI.
@@ -132,17 +178,17 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.client.allowUserDefinedSVG = true`
  - Set to false to disabled injection of user-defined svgs into the DOM.
 
-##### core
+#### core
 
 - `config.core.enableCustomConstraints = false`
  - If true will enable validation (which takes place on the server) of custom constraints defined in the meta nodes.
 
-##### debug
+#### debug
 
 - `config.debug = false`
  - If true will add extra debug messages and also enable experimental Visualizers, (URL equivalent (only on client side) `?debug=true`).
 
-##### executor
+#### executor
 
 - `config.executor.enable = false`
  - If true will enable the executor.
@@ -157,13 +203,13 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.executor.labelJobs = './labelJobs.json'`
  - Path to configuration file for label jobs for the workers.
 
-##### mongo
+#### mongo
 - `config.mongo.uri = 'mongodb://127.0.0.1:27017/multi'`
  - MongoDB connection [uri](http://docs.mongodb.org/manual/reference/connection-string/)
 - `config.mongo.options = see webgme-engine config.default`
  - Options for [MongoClient.connect](https://mongodb.github.io/node-mongodb-native/api-generated/mongoclient.html#connect)
 
-##### plugin
+#### plugin
 - `config.plugin.allowBrowserExecution = true`
  - If true will enable execution of plugins in the browser.
 - `config.plugin.allowServerExecution = false`
@@ -176,7 +222,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  - Time, in milliseconds, results will be stored on the server after they have finished (when invoked via the REST api).
 
 
-##### requirejsPaths
+#### requirejsPaths
 - `config.requirejsPaths = {}`
  - Custom paths that will be added to the `paths` of [requirejs configuration](http://requirejs.org/docs/api.html#config).
  Paths added here will also be served under the given key, i.e. `{myPath: './aPath/aSubPath/'}` will expose files via `<host>/myPath/someFile.js`.
@@ -188,7 +234,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
  to the module defining the router, `mount` where the router will be mounted relative the <host>, `options` an object with setting for the specific router.
  Use the `RestRouterGenerator` plugin to generate a template router (see the generated file for more info).
 
-##### seedProjects
+#### seedProjects
 - `config.seedProjects.enable = true`
  - Enables creation of new projects using seeds.
 - `config.seedProjects.allowDuplication = true`
@@ -212,7 +258,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 }
 ```
 
-##### server
+#### server
 - `config.server.port = 8888`
  - Port the server is hosted from.
 - `config.server.handle = null`
@@ -236,13 +282,13 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.server.behindSecureProxy = false`
  - Indicate if the webgme server is behind a secure proxy (needed for adding correct OG Metadata in index.html).
 
-##### socketIO
+#### socketIO
 - `config.socketIO.clientOptions = see webgme-engine default.config`
  - Options passed to the [socketIO client](https://github.com/socketio/socket.io-client#managerurlstring-optsobject) when connecting to the sever.
 - `config.socketIO.serverOptions = see webgme-engine default.config`
  - Options passed to the [socketIO server](https://github.com/socketio/engine.io#methods-1) when attaching to the server.
 
-##### storage
+#### storage
 - `config.storage.cache = 2000`
  - Number of core-objects stored before emptying cache (server side).
 - `config.storage.clientCache = 2000`
@@ -268,7 +314,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.storage.database.options = '{}'`
  - Options passed to database client (unless mongo is specified, in that case `config.mongo.options` are used).
 
-##### visualization
+#### visualization
 - `config.visualization.decoratorPaths = ['../src/client/decorators']`
  - Array of paths to decorators that should be available.
 - `config.visualization.decoratorToPreload = null`
@@ -286,7 +332,7 @@ To configure the default behaviour of individual components (e.g. plugins, ui-wi
 - `config.visualization.layout.basePaths = ['../src/client/js/Layouts']`
  - Array of base paths for the layouts.
 
-##### webhooks
+#### webhooks
 - `config.webhooks.enable = true`
  - If true will start a webhook-manager from the server.
 - `config.webhooks.manager = 'memory'`
