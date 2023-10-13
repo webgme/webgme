@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.45.0](https://github.com/webgme/webgme/tree/v2.45.0) (2023-10-13)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.44.0...v2.45.0)
+
+**Implemented enhancements:**
+
+- Azure authentication [\#1783](https://github.com/webgme/webgme/pull/1783) ([kecso](https://github.com/kecso))
+
 ## [v2.44.0](https://github.com/webgme/webgme/tree/v2.44.0) (2023-09-01)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.43.0...v2.44.0)
