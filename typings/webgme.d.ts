@@ -17,8 +17,20 @@ declare module "webgme" {
         start(fn: any): void;
         stop(): void;
     }
-    export function addToRequireJsPaths(config: any): void;
-    export function standaloneServer(config: any): void;
+    export interface GmeAuth {
+        unload(): Promise<void>,
+    }
+
+    export interface SafeStorage {
+        openDatabase(): Promise<void>,
+        closeDatabase(): Promise<void>,
+        openProject(data: any): Promise<GmeClasses.ProjectInterface>,
+    }
+    export function addToRequireJsPaths(gmeConfig: any): void;
+    export function standaloneServer(gmeConfig: any): void;
+    export function getGmeAuth(gmeConfig: any): Promise<GmeAuth>;
+    export function getStorage(logger: GmeLogger, gmeConfig: any, gmeAtuh: any): SafeStorage;
+
 }
 
 declare module "blob/BlobMetadata" {
@@ -89,6 +101,8 @@ declare module "plugin/PluginBase" {
     // const pb: GmePlugin.PluginBase;
     export = GmePlugin.PluginBase;
 }
+
+
 
 declare namespace Gme {
 
@@ -3920,7 +3934,6 @@ declare namespace GmeStorage {
         hash: CommitHash;
         status: "SYNCED" | "FORKED" | "CANCELED" | undefined;
     }
-
 }
 
 
