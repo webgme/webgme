@@ -959,6 +959,12 @@ declare namespace GmeClasses {
          */
         getBaseType(node: Core.Node | null): Core.Node | null;
         /** 
+         * Returns the meta-node of the node in question, that is the first base node that is part of the meta. (Aliased getBaseType).
+         * @param node the node in question.
+         * @return the base of the given node or null if there is no such node.
+         */
+        getMetaType(node: Core.Node | null): Core.Node | null;
+        /** 
          * Get the most specific meta nodes;
          * Searches for the closest META node of the 
          * node in question and the direct mixins of that node. 
@@ -2522,6 +2528,9 @@ declare namespace GmePlugin {
         gmeConfig: GmeConfig.GmeConfig;
         isConfigured: boolean;
         logger: Global.GmeLogger;
+
+        commitHash: string;
+        branchName: string;
         /**
          * The resolved META nodes based on the active namespace. Index by the fully qualified meta node names
          * with the namespace stripped off at the start.
