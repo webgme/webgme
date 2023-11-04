@@ -1,5 +1,18 @@
 # Changelog
 
+## [v2.45.1](https://github.com/webgme/webgme/tree/v2.45.1) (2023-11-04)
+
+[Full Changelog](https://github.com/webgme/webgme/compare/v2.45.0...v2.45.1)
+
+**Implemented enhancements:**
+
+- Bump webgme-engine to v2.27.1 [\#1787](https://github.com/webgme/webgme/pull/1787) ([pmeijer](https://github.com/pmeijer))
+- Add a couple missing attributes/methods to types [\#1786](https://github.com/webgme/webgme/pull/1786) ([brollb](https://github.com/brollb))
+
+**Fixed bugs:**
+
+- webgme 2.45.0 python plugin does not run [\#1784](https://github.com/webgme/webgme/issues/1784)
+
 ## [v2.45.0](https://github.com/webgme/webgme/tree/v2.45.0) (2023-10-13)
 
 [Full Changelog](https://github.com/webgme/webgme/compare/v2.44.0...v2.45.0)
