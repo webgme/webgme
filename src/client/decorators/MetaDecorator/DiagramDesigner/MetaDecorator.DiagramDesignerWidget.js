@@ -231,8 +231,12 @@ define([
             newName = '';
 
         if (nodeObj) {
-            // newName = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || '';
             newName = nodeObj.getFullyQualifiedName();
+
+            if (this._metaInfo.selectedLibrary) {
+                // Trim selected library plus additional dot.
+                newName = newName.substring(this._metaInfo.selectedLibrary.length + 1);
+            }
 
             if (this.name !== newName) {
                 this.name = newName;

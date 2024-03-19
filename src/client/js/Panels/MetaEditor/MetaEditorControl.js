@@ -467,7 +467,7 @@ define(['js/logger',
 
             objDesc.decoratorClass = decClass;
             objDesc.control = this;
-            objDesc.metaInfo = {};
+            objDesc.metaInfo = { selectedLibrary: this._selectedLibrary };
             objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
             //each meta specific registry customization will be stored in the MetaContainer node's main META SET
             // (MetaEditorConstants.META_ASPECT_SET_NAME)
@@ -2105,8 +2105,13 @@ define(['js/logger',
         len = metaAspectSheetsRegistry.length;
         for (i = 0; i < len; i += 1) {
             setName = metaAspectSheetsRegistry[i].SetID;
+            const { title } = metaAspectSheetsRegistry[i];
+            const tabInfo = {
+                title,
+                backgroundText: this._selectedLibrary ? `${this._selectedLibrary }.${title}` : title
+            };
 
-            sheetID = this.diagramDesigner.addTab(metaAspectSheetsRegistry[i].title, true, true);
+            sheetID = this.diagramDesigner.addTab(tabInfo, true, true);
 
             this._sheets[sheetID] = setName;
             this._tabIdxToTitle[sheetID] = metaAspectSheetsRegistry[i].title;

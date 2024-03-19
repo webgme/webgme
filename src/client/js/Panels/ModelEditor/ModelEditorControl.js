@@ -1190,7 +1190,12 @@ define(['js/logger',
             this.designerCanvas.addMultipleTabsBegin();
 
             for (i = 0; i < aspects.length; i += 1) {
-                tabID = this.designerCanvas.addTab(aspects[i]);
+                const tabInfo = {
+                    title: aspects[i],
+                    backgroundText: this._selectedLibrary ? `${this._selectedLibrary}.${aspects[i]}` : aspects[i]
+                };
+
+                tabID = this.designerCanvas.addTab(tabInfo);
 
                 this._aspects[tabID] = aspects[i];
 
