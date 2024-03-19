@@ -708,7 +708,7 @@ declare namespace GmeClasses {
          */
         sensitive?: boolean;
         /**
-         * if true, Core {
+         * if true,
          * the query tries to filter out even 
          * more nodes according to the multiplicity rules 
          * (the default value is false, 
