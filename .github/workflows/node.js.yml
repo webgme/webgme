@@ -31,6 +31,8 @@ jobs:
         uses: browser-actions/setup-chrome@latest
       - name: NPM install
         run: npm install 
+      - name: Compile TS types
+        run: npm run compile
       - name: karma test
         run: Xvfb :99 & export DISPLAY=:99 && node ./node_modules/karma/bin/karma start karma.conf.js --browsers Chrome --single-run
       - name: Mocha tests
