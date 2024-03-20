@@ -1681,7 +1681,7 @@ declare namespace GmeClasses {
          * @return a dictionary where every the key of every entry is an absolute path of a set owner node. 
          * The value of each entry is an array with the set names in which the node can be found as a member.
          */
-        isMemberOf(node: Core.Node): object;
+        isMemberOf(node: Core.Node): {[ownerPath: string]: string[]};
         /**
          * Checks if the node is a META node.
          * @param node the node in question.
@@ -2595,10 +2595,10 @@ declare namespace GmeClasses {
          */
         makeCommit: {
             (branchName: string, parents: GmeStorage.CommitHash[],
-                rootHash: Core.ObjectHash, coreObjects: object,
+                rootHash: Core.ObjectHash, coreObjects: Core.GmePersisted,
                 msg: string, callback: GmeCommon.ResultCallback<GmeStorage.CommitResult>): void;
             (branchName: string, parents: GmeStorage.CommitHash[],
-                rootHash: Core.ObjectHash, coreObjects: object,
+                rootHash: Core.ObjectHash, coreObjects: Core.GmePersisted,
                 msg: string): Promise<GmeStorage.CommitResult>;
         }
         /**
@@ -3249,7 +3249,9 @@ declare namespace Core {
         hint?: string;
     }
 
-    export type Node = object;
+    export interface Node {
+        _internal: string;
+    }
 
     /** 
      * Unique SHA-1 hash for the node object.
