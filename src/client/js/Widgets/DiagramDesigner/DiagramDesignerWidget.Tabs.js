@@ -172,11 +172,26 @@ define([
         li.find('a').append(deleteBtn);
     };
 
-    DiagramDesignerWidgetTabs.prototype.addTab = function (title, deletable, renamable) {
+    DiagramDesignerWidgetTabs.prototype.addTab = function (titleOrDesc, deletable, renamable) {
         var self = this,
             li = TAB_LI_BASE.clone();
 
+        let title = '';
+        let backgroundText = '';
+
+        if (typeof titleOrDesc === 'string') {
+            title = titleOrDesc;
+        } else {
+            title = titleOrDesc.title;
+            backgroundText = titleOrDesc.backgroundText;
+        }
+
         li.find('.tab-title').attr('title', title).text(title);
+
+        if (backgroundText) {
+            li.find('.tab-title').data('backgroundText', backgroundText);
+        }
+
         li.data(TAB_ID, this._tabCounter + '');
         this._tabCounter += 1;
 
@@ -268,9 +283,10 @@ define([
                 liToSelect.addClass('active');
                 liToSelect.find('.delete-tab-btn').removeClass('hidden');
                 this._selectedTab = liToSelect.data(TAB_ID);
+                const activeTabTitleEl = this.$ulTabTab.find('li.active').first().find('.tab-title');
+                const backgroundText = activeTabTitleEl.data('backgroundText') || activeTabTitleEl.text();
 
-                this.setBackgroundText(this.$ulTabTab.find('li.active').first().find('.tab-title').text()
-                    .toUpperCase());
+                this.setBackgroundText(backgroundText.toUpperCase());
             }
 
             //select in DropDown
