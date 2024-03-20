@@ -44,7 +44,8 @@
     "karma-mocha-reporter": "^2.2.5",
     "karma-requirejs": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
-    "mocha": "^6.0.0"
+    "mocha": "^6.0.0",
+    "typescript": "^5.4.2"
   },
   "main": "webgme",
   "typings": "typings/webgme.d.ts",
@@ -52,6 +53,7 @@
     "start": "node app.js",
     "prepublishOnly": "node ./utils/prepublish.js",
     "build": "node ./utils/build/dist/build.js",
+    "compile": "tsc -p ./typings",
     "bower": "bower install",
     "postinstall": "node ./utils/postinstall.js",
     "test": "node ./node_modules/mocha/bin/mocha --recursive test",
