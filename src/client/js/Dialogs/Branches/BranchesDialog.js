@@ -11,14 +11,11 @@ define([
     'js/logger',
     'js/Constants',
     'js/Loader/LoaderCircles',
-    'js/Utils/GMEConcepts',
-    'common/storage/util',
     'text!./templates/BranchesDialog.html',
 
     'css!./styles/BranchesDialog.css'
 
-], function (ng, Logger, CONSTANTS, LoaderCircles, GMEConcepts, StorageUtil,
-             branchesDialogTemplate) {
+], function (ng, Logger, CONSTANTS, LoaderCircles, branchesDialogTemplate) {
 
     'use strict';
 
@@ -30,21 +27,24 @@ define([
 
 
     angular.module('gme.ui.branchesDialog', ['isis.ui.simpleDialog']).run(function ($simpleDialog, $templateCache,
-                                                                                    $rootScope) {
+        $rootScope) {
         ngConfirmDialog = $simpleDialog;
 
         rootScope = $rootScope;
 
     });
 
-    BranchesDialog = function (client) {
+    BranchesDialog = function (client, showTags) {
         this._logger = Logger.create('gme:Dialogs:Branches:BranchesDialog', WebGMEGlobal.gmeConfig.client.log);
 
         this._client = client;
+        this._showTags = showTags;
         this._projectId = client.getActiveProjectId();
-        this._selectedBranch = client.getActiveBranchName();
+        this._selectedBranch = showTags ? null : client.getActiveBranchName();
         this._branchNames = [];
         this._branches = {};
+        this._tagNames = [];
+        this._tags = [];
         this._filter = undefined;
         this._ownerId = null; // TODO get this from dropdown list
 
@@ -74,6 +74,7 @@ define([
             }
         };
 
+
         self._client.watchProject(self._projectId, self._branchEventHandling);
 
         this._refreshBranchList();
@@ -83,29 +84,31 @@ define([
         var self = this,
             selectedId = this._selectedBranch;
 
-        function openBranch(branchName) {
-            self._client.selectBranch(branchName, null, function (err) {
-                if (err) {
-                    this._logger.error('unable to open branch', {metadata: {error: err}});
-                }
-                self._selectedBranch = branchName;
-                self._dialog.modal('hide');
-            });
-        }
+        function openBranch(branchOrTagName) {
+            if (self._showTags) {
+                self._client.selectCommit(self._tags[branchOrTagName], (err) => {
+                    if (err) {
+                        self.logger.error(err);
+                    }
 
-        function deleteBranch(branchName) {
-            self._client.deleteBranch(self._projectId, branchName, self._branches[branchName], function (err) {
-                if (err) {
-                    self._logger.error('unable to remove branch', {metadata: {error: err}});
-                }
-            });
+                    self._dialog.modal('hide');
+                });
+            } else {
+                self._client.selectBranch(branchOrTagName, null, function (err) {
+                    if (err) {
+                        this._logger.error('unable to open branch', { metadata: { error: err } });
+                    }
+                    self._selectedBranch = branchOrTagName;
+                    self._dialog.modal('hide');
+                });
+            }
         }
 
         this._dialog = $(branchesDialogTemplate);
 
         //set dialog title
-        this._dialog.find('h3').first().text('Branches of project [' +
-            WebGMEGlobal.getProjectDisplayedNameFromProjectId(this._projectId) + ']');
+        this._dialog.find('h3').first()
+            .text(`${this._showTags? 'Tags' : 'Branches'} of project ${WebGMEGlobal.getProjectDisplayedNameFromProjectId(this._projectId)}`);
         //get controls
         this._el = this._dialog.find('.modal-body').first();
         this._ul = this._el.find('ul').first();
@@ -114,13 +117,12 @@ define([
         this._panelCreateNew = this._dialog.find('.panel-create-new').hide();
 
         this._btnOpen = this._dialog.find('.btn-open');
-        this._btnDelete = this._dialog.find('.btn-delete');
         this._btnRefresh = this._dialog.find('.btn-refresh');
 
         //this._dialog.find('.username').text(this._client.getUserId());
-        this._ownerId =  WebGMEGlobal.userInfo._id; //TODO: Get this from drop-down
+        this._ownerId = WebGMEGlobal.userInfo._id; //TODO: Get this from drop-down
 
-        this._loader = new LoaderCircles({containerElement: this._btnRefresh});
+        this._loader = new LoaderCircles({ containerElement: this._btnRefresh });
         this._loader.setSize(14);
 
         this._dialog.find('.tabContainer').first().groupedAlphabetTabs({
@@ -153,21 +155,11 @@ define([
         });
 
         this._btnOpen.on('click', function (event) {
-
             event.stopPropagation();
             event.preventDefault();
 
             openBranch(selectedId);
         });
-
-        this._btnDelete.on('click', function (event) {
-            event.stopPropagation();
-            event.preventDefault();
-
-            deleteBranch(selectedId);
-
-        });
-
 
         this._btnRefresh.on('click', function (event) {
             self._refreshBranchList();
@@ -180,21 +172,36 @@ define([
     BranchesDialog.prototype._refreshBranchList = function () {
         var self = this;
 
-        self._client.getBranches(self._projectId, function (err, branches) {
-            if (err) {
-                self._logger.error('cannot get branch list:', {metadata: {error: err}});
-                self._branchNames = [];
-            }
+        if (this._showTags) {
+            self._client.getTags(self._projectId, function (err, tags) {
+                if (err) {
+                    self._logger.error('cannot get tags:', { metadata: { error: err } });
+                    self._tagNames = [];
+                }
 
-            self._branches = branches;
-            self._branchNames = Object.keys(branches);
+                self._tags = tags;
+                self._tagNames = Object.keys(tags);
 
-            self._updateBranchList();
-        });
+                self._updateBranchList();
+            });
+        } else {
+            self._client.getBranches(self._projectId, function (err, branches) {
+                if (err) {
+                    self._logger.error('cannot get branch list:', { metadata: { error: err } });
+                    self._branchNames = [];
+                }
+
+                self._branches = branches;
+                self._branchNames = Object.keys(branches);
+
+                self._updateBranchList();
+            });
+        }
     };
 
     BranchesDialog.prototype._updateBranchList = function () {
-        var len = this._branchNames.length,
+        const nameList = this._showTags ? this._tagNames : this._branchNames;
+        var len = nameList.length,
             i,
             li,
             count = 0,
@@ -209,16 +216,16 @@ define([
                 if (this._filter === undefined) {
                     displayBranch = true;
                 } else {
-                    displayBranch = (this._branchNames[i].toUpperCase()[0] >= this._filter[0] &&
-                    this._branchNames[i].toUpperCase()[0] <= this._filter[1]);
+                    displayBranch = (nameList[i].toUpperCase()[0] >= this._filter[0] &&
+                        nameList[i].toUpperCase()[0] <= this._filter[1]);
                 }
 
                 if (displayBranch) {
                     li = LI_BASE.clone();
-                    li.find('a').text(this._branchNames[i]);
-                    li.data(DATA_BRANCH_ID, this._branchNames[i]);
+                    li.find('a').text(nameList[i]);
+                    li.data(DATA_BRANCH_ID, nameList[i]);
 
-                    if (this._branchNames[i] === this._selectedBranch) {
+                    if (nameList[i] === this._selectedBranch) {
                         li.addClass('active');
                     }
 

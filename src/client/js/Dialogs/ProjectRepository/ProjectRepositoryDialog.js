@@ -64,7 +64,7 @@ define(['js/logger',
         this._groupTags = this._selector.find('optgroup.group-tags');
 
         if (typeof options.start === 'string') {
-            options.historyType = 'branch';
+            options.historyType = options.type || 'branch';
             this._selectedValue = options.start;
         } else if (typeof options.start === 'object' && options.start instanceof Array && options.start.length > 0) {
             options.historyType = 'branches';
@@ -75,7 +75,7 @@ define(['js/logger',
             this._selectedValue = '$commits';
         }
 
-        this._populateOptions(options);
+        this._populateOptions();
 
         this._selector.on('change', function () {
             var options = {
