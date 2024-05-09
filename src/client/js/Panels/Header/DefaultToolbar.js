@@ -7,19 +7,11 @@
  */
 
 define([
-    'js/util',
     'js/Constants',
-    'js/Dialogs/Projects/ProjectsDialog',
-    'js/Dialogs/Commit/CommitDialog',
-    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     './PluginToolbar',
     './ConstraintToolbar',
     './MetaRulesToolbar',
-], function (util,
-             CONSTANTS,
-             ProjectsDialog,
-             CommitDialog,
-             ProjectRepositoryDialog,
+], function (CONSTANTS,
              PluginToolbar,
              ConstraintToolBar,
              MetaRulesToolbar) {

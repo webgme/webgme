@@ -11,7 +11,6 @@ define([
     'angular',
     'js/Loader/ProgressNotification',
     'js/Dialogs/Projects/ProjectsDialog',
-    'js/Dialogs/Commit/CommitDialog',
     'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     'js/Dialogs/Branches/BranchesDialog',
@@ -23,20 +22,19 @@ define([
     'js/Utils/ComponentSettings',
     'css!./styles/ProjectNavigatorController.css'
 ], function (Logger,
-             CONSTANTS,
-             ng,
-             ProgressNotification,
-             ProjectsDialog,
-             CommitDialog,
-             MergeDialog,
-             ProjectRepositoryDialog,
-             BranchesDialog,
-             ConfirmDialog,
-             AddCommitsDialog,
-             StorageUtil,
-             exporters,
-             Q,
-             ComponentSettings) {
+    CONSTANTS,
+    ng,
+    ProgressNotification,
+    ProjectsDialog,
+    MergeDialog,
+    ProjectRepositoryDialog,
+    BranchesDialog,
+    ConfirmDialog,
+    AddCommitsDialog,
+    StorageUtil,
+    exporters,
+    Q,
+    ComponentSettings) {
     'use strict';
 
     angular.module('gme.ui.ProjectNavigator', []).run(function () {
@@ -87,9 +85,7 @@ define([
     ProjectNavigatorController.prototype.update = function () {
         this.logger.debug('update');
         // force ui update
-        this.$timeout(function () {
-
-        });
+        this.$timeout(() => { });
     };
 
     ProjectNavigatorController.prototype.initialize = function () {
@@ -133,7 +129,7 @@ define([
                             disabled: WebGMEGlobal.userInfo.canCreate !== true,
                             iconClass: 'glyphicon glyphicon-plus',
                             action: newProject,
-                            actionData: {newType: 'seed'}
+                            actionData: { newType: 'seed' }
                         },
                         {
                             id: 'importProject',
@@ -141,7 +137,7 @@ define([
                             disabled: WebGMEGlobal.userInfo.canCreate !== true,
                             iconClass: 'glyphicon glyphicon-import',
                             action: newProject,
-                            actionData: {newType: 'import'}
+                            actionData: { newType: 'import' }
                         }
                     ]
                 },
@@ -196,7 +192,7 @@ define([
                                 }
                                 self.logger.debug('Got branches before joining room:', Object.keys(branches));
                                 //TODO: Should include rights, for now complete rights are assumed.
-                                self.addProject(data.projectId, null, {modifiedAt: (new Date()).toISOString()}, true,
+                                self.addProject(data.projectId, null, { modifiedAt: (new Date()).toISOString() }, true,
                                     function (err) {
                                         if (err) {
                                             self.logger.error(err);
@@ -207,11 +203,21 @@ define([
                                                 self.logger.error(err);
                                                 return;
                                             }
-                                            self.logger.debug('Got branches after joining room:',
-                                                Object.keys(branches));
+                                            self.logger.debug('Got branches after joining room:', Object.keys(branches));
                                             Object.keys(branches).forEach(function (branchId) {
                                                 self.addBranch(data.projectId, branchId,
-                                                    {branchHash: branches[branchId]});
+                                                    { branchHash: branches[branchId] });
+                                            });
+                                        });
+
+                                        self.gmeClient.getTags(data.projectId, function (err, tags) {
+                                            if (err) {
+                                                self.logger.error(err);
+                                                return;
+                                            }
+                                            self.logger.debug('Got tags after joining room:', Object.keys(tags));
+                                            Object.keys(tags).forEach(function (tagId) {
+                                                self.addTag(data.projectId, tagId, { commitHash: tags[tagId] });
                                             });
                                         });
                                     }
@@ -244,7 +250,7 @@ define([
 
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.PROJECT_OPENED, function (client, projectId) {
             self.logger.debug(CONSTANTS.CLIENT.PROJECT_OPENED, projectId);
-            self.selectProject({projectId: projectId});
+            self.selectProject({ projectId: projectId });
         });
 
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.PROJECT_CLOSED, function (client, projectId) {
@@ -254,7 +260,7 @@ define([
 
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.BRANCH_CHANGED, function (client, branchId) {
             self.logger.debug(CONSTANTS.CLIENT.BRANCH_CHANGED, branchId);
-            self.selectBranch({projectId: self.gmeClient.getActiveProjectId(), branchId: branchId});
+            self.selectBranch({ projectId: self.gmeClient.getActiveProjectId(), branchId: branchId });
         });
 
         self.gmeClient.addEventListener(CONSTANTS.CLIENT.NEW_COMMIT_STATE, function (/*client, data*/) {
@@ -332,7 +338,8 @@ define([
                 asObject: true,
                 rights: true,
                 branches: true,
-                info: true
+                info: true,
+                tags: true,
             };
 
         self.logger.debug('updateProjectList');
@@ -346,7 +353,6 @@ define([
 
         self.gmeClient.getProjects(params, function (err, projectsData) {
             var projectId,
-                branchId,
                 branchPromises = [];
 
             if (err) {
@@ -357,37 +363,39 @@ define([
             function getBranchPromise(projectId, branchId, branchHash) {
                 var deferred = Q.defer();
 
-                self.gmeClient.getCommits(projectId, branchHash, 1, function (err, commits) {
-                    if (err) {
-                        self.logger.error(err);
-                        deferred.resolve({
-                            projectId: projectId,
-                            branchId: branchId,
-                            branchHash: branchHash,
-                            commitObject: null
-                        });
-                    } else if (commits.length !== 1) {
-                        self.logger.error(new Error('Could not get commit object', projectId, branchId, branchHash));
-                        deferred.resolve({
-                            projectId: projectId,
-                            branchId: branchId,
-                            branchHash: branchHash,
-                            commitObject: null
-                        });
-                    } else {
-                        deferred.resolve({
-                            projectId: projectId,
-                            branchId: branchId,
-                            branchHash: branchHash,
-                            commitObject: commits[0]
-                        });
-                    }
+                // Let's not bombard the server just to figure out which branch was lastly edited..
+
+                // self.gmeClient.getCommits(projectId, branchHash, 1, function (err, commits) {
+                //     if (err) {
+                //         self.logger.error(err);
+                deferred.resolve({
+                    projectId: projectId,
+                    branchId: branchId,
+                    branchHash: branchHash,
+                    commitObject: null
                 });
+                //     } else if (commits.length !== 1) {
+                //         self.logger.error(new Error('Could not get commit object', projectId, branchId, branchHash));
+                //         deferred.resolve({
+                //             projectId: projectId,
+                //             branchId: branchId,
+                //             branchHash: branchHash,
+                //             commitObject: null
+                //         });
+                //     } else {
+                //         deferred.resolve({
+                //             projectId: projectId,
+                //             branchId: branchId,
+                //             branchHash: branchHash,
+                //             commitObject: commits[0]
+                //         });
+                //     }
+                // });
 
                 return deferred.promise;
             }
 
-            self.logger.debug('getProjects', projectsData);
+            console.log('getProjects', projectsData);
 
             // clear project list
             self.projects = {};
@@ -397,12 +405,12 @@ define([
 
                     self.addProject(projectId, projectsData[projectId].rights, projectsData[projectId].info, true);
 
-                    for (branchId in projectsData[projectId].branches) {
-                        if (projectsData[projectId].branches.hasOwnProperty(branchId)) {
-                            branchPromises.push(getBranchPromise(projectId, branchId,
-                                projectsData[projectId].branches[branchId]));
-                        }
-                    }
+                    branchPromises = branchPromises.concat(Object.keys(projectsData[projectId].branches)
+                        .map((branchId) => getBranchPromise(projectId, branchId, projectsData[projectId].branches[branchId])));
+
+                    Object.keys(projectsData[projectId].tags).forEach((tagId) => {
+                        self.addTag(projectId, tagId, { commitHash: projectsData[projectId].tags[tagId] }, true);
+                    });
                 }
             }
 
@@ -432,7 +440,7 @@ define([
         var self = this,
             i,
             showHistory,
-            showAllBranches,
+            showAllBranchesOrTags,
             deleteProject,
             selectProject,
             updateProjectList,
@@ -461,7 +469,7 @@ define([
 
         deleteProject = function (data) {
             var deleteProjectModal = new ConfirmDialog();
-            deleteProjectModal.show({deleteItem: projectDisplayedName}, function () {
+            deleteProjectModal.show({ deleteItem: projectDisplayedName }, function () {
                 self.gmeClient.deleteProject(data.projectId, function (err) {
                     if (err) {
                         self.logger.error('Failed deleting project', err);
@@ -476,14 +484,14 @@ define([
             });
         };
 
-        showAllBranches = function (data) {
+        showAllBranchesOrTags = function (data, showTags) {
             var prd;
             if (self.gmeClient.getActiveProjectId() === data.projectId) {
-                prd = new BranchesDialog(self.gmeClient);
+                prd = new BranchesDialog(self.gmeClient, showTags);
                 prd.show();
             } else {
-                self.selectProject({projectId: projectId}, function (err) {
-                    var dialog = new BranchesDialog(self.gmeClient);
+                self.selectProject({ projectId: projectId }, function (err) {
+                    var dialog = new BranchesDialog(self.gmeClient, showTags);
 
                     if (err) {
                         // TODO: handle errors
@@ -511,10 +519,9 @@ define([
             modifiedAt: info.modifiedAt,
             isSelected: false,
             branches: {},
+            tags: {},
             action: selectProject,
-            actionData: {
-                projectId: projectId
-            },
+            actionData: { projectId },
             menu: [
                 {
                     id: 'top',
@@ -525,28 +532,37 @@ define([
                             iconClass: 'glyphicon glyphicon-time',
                             disabled: !rights.read,
                             action: showHistory,
-                            actionData: {
-                                projectId: projectId
-                            }
+                            actionData: { projectId }
                         }
                     ]
                 },
                 {
                     id: 'branches',
                     label: 'Recent branches',
-                    totalItems: 20,
+                    totalItems: 10,
                     items: [],
                     showAllItems: function () {
-                        showAllBranches({projectId: projectId});
+                        showAllBranchesOrTags({ projectId });
+                    }
+                },
+                {
+                    id: 'tags',
+                    label: 'Recent tags',
+                    totalItems: 10,
+                    items: [],
+                    showAllItems: function () {
+                        showAllBranchesOrTags({ projectId }, true);
                     }
                 }
             ],
             _watcher: function (emitter, data) {
                 var currentProject,
                     currentBranch;
+
+                // TODO: Consider modifying storage to also watch for tags (right now tags are only received initially).
                 self.logger.debug('watchProject event', projectId, data);
                 if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_CREATED) {
-                    self.addBranch(projectId, data.branchName, {branchHash: data.newHash});
+                    self.addBranch(projectId, data.branchName, { branchHash: data.newHash });
                 } else if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_DELETED) {
                     self.removeBranch(projectId, data.branchName);
 
@@ -555,10 +571,10 @@ define([
                     if (currentBranch && currentBranch.id === data.branchName && currentProject.id === projectId) {
                         self.gmeClient.selectCommit(self.gmeClient.getActiveCommitHash(), function (err) {
                             if (err) {
-                                self.logger.error('cannot select latest commit', {metadata: {error: err}});
+                                self.logger.error('cannot select latest commit', { metadata: { error: err } });
                             }
                             self.logger.debug('active branch deleted, switched to last viewed commit',
-                                {metadata: {commitHash: self.gmeClient.getActiveCommitHash()}});
+                                { metadata: { commitHash: self.gmeClient.getActiveCommitHash() } });
                         });
                     }
                 } else if (data.etype === CONSTANTS.CLIENT.STORAGE.BRANCH_HASH_UPDATED) {
@@ -569,21 +585,6 @@ define([
             }
         };
 
-        // if (self.config.disableProjectActions === false) {
-        // #1455 Remove delete project item
-        if (false) {
-            self.projects[projectId].menu[0].items.unshift({
-                id: 'deleteProject',
-                label: 'Delete project',
-                iconClass: 'glyphicon glyphicon-remove',
-                disabled: !rights.delete,
-                action: deleteProject,
-                actionData: {
-                    projectId: projectId
-                }
-            });
-        }
-
         self.gmeClient.watchProject(projectId, self.projects[projectId]._watcher, callback);
 
         for (i = 0; i < self.root.menu.length; i += 1) {
@@ -593,7 +594,105 @@ define([
 
                 // convert indexed projects to an array
                 self.root.menu[i].items = self.mapToArray(self.projects, [
-                    {key: 'modifiedAt', reverse: true}, {key: 'id'}]);
+                    { key: 'modifiedAt', reverse: true }, { key: 'id' }]);
+                break;
+            }
+        }
+
+        if (noUpdate === true) {
+
+        } else {
+            self.update();
+        }
+    };
+
+    ProjectNavigatorController.prototype.addTag = function (projectId, tagId, tagInfo, noUpdate) {
+        var self = this,
+            i;
+
+        if (self.projects.hasOwnProperty(projectId) === false) {
+            self.logger.warn('project is not in the list yet: ', projectId);
+            return;
+        }
+
+        if (self.projects[projectId].disabled) {
+            // do not show any tags if the project is disabled
+            return;
+        }
+
+        function exportTag(data) {
+            exporters.exportProject(self.gmeClient, self.logger, {
+                projectId: data.projectId,
+                commitHash: data.commitHash
+            }, true);
+        }
+
+        function selectTag(data) {
+
+            function selectCommit() {
+                self.gmeClient.selectCommit(data.commitHash, (err) => {
+                    if (err) {
+                        self.logger.error(err);
+                    }
+                })
+            }
+
+            if (data.projectId !== self.gmeClient.getActiveProjectId()) {
+                self.gmeClient.selectProject(projectId, null, (err) => {
+                    if (err) {
+                        self.logger.error(err);
+                        return;
+                    }
+
+                    selectCommit();
+                });
+            } else {
+                selectCommit();
+            }
+        }
+
+        // create the new branch structure
+        self.projects[projectId].tags[tagId] = {
+            id: tagId,
+            label: tagId,
+            properties: {
+                commitHash: tagInfo.branchHash
+            },
+            isSelected: false,
+            itemClass: self.config.tagMenuClass,
+            action: selectTag,
+            actionData: {
+                projectId: projectId,
+                commitHash: tagInfo.commitHash
+            },
+            //itemTemplate: 'branch-selector-template',
+            menu: [
+                {
+                    items: [
+                        {
+                            id: 'exportTag',
+                            label: 'Export branch',
+                            iconClass: 'glyphicon glyphicon-export',
+                            action: exportTag,
+                            actionData: {
+                                projectId: projectId,
+                                commitHash: tagInfo.commitHash
+                            }
+                        }
+                    ]
+
+                }
+            ]
+        };
+
+        for (i = 0; i < self.projects[projectId].menu.length; i += 1) {
+
+            // find the tags id in the menu items
+            if (self.projects[projectId].menu[i].id === 'tags') {
+
+                // convert indexed tags to an array
+                self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].tags,
+                    [{ key: 'id', reverse: true }, { key: 'id' }]);
                 break;
             }
         }
@@ -629,7 +728,7 @@ define([
                 projectId: data.projectId,
                 branchId: data.branchId,
                 commitHash: data.projectId === self.gmeClient.getActiveProjectId() &&
-                data.branchId === self.gmeClient.getActiveBranchName() ?
+                    data.branchId === self.gmeClient.getActiveBranchName() ?
                     self.gmeClient.getActiveCommitHash() : data.commitHash
             }, true);
         }
@@ -642,7 +741,7 @@ define([
             var deleteBranchModal = new ConfirmDialog(),
                 deleteItem = WebGMEGlobal.getProjectDisplayedNameFromProjectId(data.projectId) +
                     '  ::  ' + data.branchId;
-            deleteBranchModal.show({deleteItem: deleteItem}, function () {
+            deleteBranchModal.show({ deleteItem: deleteItem }, function () {
                 self.gmeClient.deleteBranch(data.projectId,
                     data.branchId,
                     data.branchInfo.branchHash,
@@ -789,7 +888,7 @@ define([
             label: branchId,
             properties: {
                 commitHash: branchInfo.branchHash,
-                commitObject: branchInfo.commitObject || {time: Date.now()}
+                commitObject: branchInfo.commitObject || { time: Date.now() }
             },
             isSelected: false,
             itemClass: self.config.branchMenuClass,
@@ -817,7 +916,7 @@ define([
                         },
                         {
                             id: 'createBranch',
-                            label: 'Create branch ...',
+                            label: 'Create branch/tag ...',
                             iconClass: 'glyphicon glyphicon-plus',
                             action: showBranchHistory,
                             actionData: {
@@ -859,7 +958,7 @@ define([
 
                 // convert indexed branches to an array
                 self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches,
-                    [{key: 'properties.commitObject.time', reverse: true}, {key: 'id'}]);
+                    [{ key: 'properties.commitObject.time', reverse: true }, { key: 'id' }]);
                 break;
             }
         }
@@ -886,7 +985,7 @@ define([
 
                     // convert indexed projects to an array
                     self.root.menu[i].items = self.mapToArray(self.projects, [
-                        {key: 'modifiedAt', reverse: true}, {key: 'id'}]);
+                        { key: 'modifiedAt', reverse: true }, { key: 'id' }]);
                     break;
                 }
             }
@@ -913,7 +1012,7 @@ define([
 
                     // convert indexed branches to an array
                     self.projects[projectId].menu[i].items = self.mapToArray(self.projects[projectId].branches,
-                        [{key: 'properties.commitObject.time', reverse: true}, {key: 'id'}]);
+                        [{ key: 'properties.commitObject.time', reverse: true }, { key: 'id' }]);
                     break;
                 }
             }
@@ -1194,7 +1293,7 @@ define([
                 maxItemsItem = {
                     id: '...',
                     label: items.length === 1 ? items[i].label : '...',
-                    menu: [{items: []}]
+                    menu: [{ items: [] }]
                 };
 
                 this.$scope.navigator.items.push(maxItemsItem);
@@ -1293,7 +1392,7 @@ define([
             options.start = data.branchId || options.branches;
             prd.show(options);
         } else {
-            self.selectProject({projectId: data.projectId}, function (err) {
+            self.selectProject({ projectId: data.projectId }, function (err) {
                 if (err) {
                     self.logger.error('Could not show history', err);
                     return;
@@ -1323,6 +1422,7 @@ define([
             rootDisplayName: 'GME',
             projectMenuClass: '',
             branchMenuClass: '',
+            tagMenuClass: '',
             nodeItemClass: '',
             rootNode: '',
             byProjectKind: {
