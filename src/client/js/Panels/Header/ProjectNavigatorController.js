@@ -671,7 +671,7 @@ define([
                     items: [
                         {
                             id: 'exportTag',
-                            label: 'Export branch',
+                            label: 'Export tag',
                             iconClass: 'glyphicon glyphicon-export',
                             action: exportTag,
                             actionData: {
