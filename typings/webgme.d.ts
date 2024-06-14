@@ -17,19 +17,135 @@ declare module "webgme" {
         start(fn: any): void;
         stop(): void;
     }
+
     export interface GmeAuth {
         unload(): Promise<void>,
+        connect(): Promise<void>,
+
+        listUsers(query?: object): Promise<GmeUser>,
+        getUser(userId: string, query?: object): Promise<GmeUser>;
+        addUser(userId: string, email: string, password: string, canCreate: boolean, options: any): Promise<GmeUser>;
+        updateUser(userId: string, userData: UserDataUpdate): Promise<GmeUser>;
+        deleteUser(userId: string, force?: boolean): Promise<void>;
+        reEnableUser(userId: string): Promise<GmeUser>;
+
+        listOrganizations(query?: object): Promise<GmeOrgData>;
+        getOrganization(orgId: string, query?: object): Promise<GmeOrgData>;
+        getAdminsInOrganization(origId: string): Promise<string[]>;
+        addOrganization(orgId: string, info: object): Promise<GmeOrgData>;
+        updateOrganizationInfo(orgId: string, info: object): Promise<GmeOrgData>;
+        addUserToOrganization(userId: string, orgId: string): Promise<void>;
+        addUserToOrganization(userId: string, orgId: string): Promise<void>;
+        setAdminForUserInOrganization(userId: string, orgId: string, makeAdmin: boolean): Promise<void>;
+        removeOrganizationByOrgId(origId: string, force?: boolean): Promise<void>;
+        reEnableOrganization(origId: string): Promise<GmeUser>;
+    }
+
+    export interface AccessLevel {
+        read: boolean;
+        write: boolean;
+        delete: boolean;
+    }
+
+    export interface UserData {
+        siteAdmin?: boolean;
+        displayName?: string;
+        data?: object;
+        settings?: object;
+    }
+
+    export interface UserDataCreate extends UserData {
+        aadId?: string;
+        overwrite?: boolean;
+        disabled?: boolean;
+    }
+
+    export interface UserDataUpdate extends UserData {
+        canCreate?: boolean;
+        email?: string;
+        resetHash?: string;
+        lastReset?: string;
+        password?: string;
+    }
+
+    export interface GmeUser extends UserData {
+        _id: string;
+        aadId?: string;
+        disabled: boolean;
+        email: string;
+        data: object;
+        settings: object;
+        orgs: string[];
+        projects: { [projectId: string]: AccessLevel }
+    }
+
+    export interface GmeOrgData {
+        _id: string;
+        info: object;
+        admins: string[];
+        users: string[];
+        projects: { [projectId: string]: AccessLevel }
+    }
+
+
+    export interface UserProject extends GmeClasses.ProjectInterface {
+        projectName: string;
+        projectId: string;
+
+        // Can be used to switch user
+        setUser(username: string): void;
+    }
+
+    export interface ProjectMetadata {
+        _id: string;
+        owner: string;
+        info: ProjectInfo;
+        branches: { [name: string]: string }; // name to commit hash
+    }
+
+    export interface ProjectInfo {
+        kind: string;
+    }
+
+    export interface OpenProjectParams {
+        username?: string;
+        projectId: string;
     }
 
     export interface SafeStorage {
         openDatabase(): Promise<void>,
         closeDatabase(): Promise<void>,
-        openProject(data: any): Promise<GmeClasses.ProjectInterface>,
+        openProject(data: OpenProjectParams): Promise<UserProject>,
+        getProjects(data: any): Promise<ProjectMetadata[]>;
     }
+
     export function addToRequireJsPaths(gmeConfig: any): void;
     export function standaloneServer(gmeConfig: any): void;
     export function getGmeAuth(gmeConfig: any): Promise<GmeAuth>;
     export function getStorage(logger: Global.GmeLogger, gmeConfig: any, gmeAtuh: any): SafeStorage;
+
+    /**
+     * Options passed to middleware initializers by the webgme server.
+     *
+     * `gmeAuth`, `safeStorage` and `workerManager` are not ready to use until the `start` function is called.
+     * (However inside an incoming request they are all ensured to have been initialized.)
+     */
+    export type MiddlewareOptions = {
+        /** Passed by the webgme server. */
+        gmeConfig: GmeConfig.GmeConfig;
+        /** logger */
+        logger: Global.GmeLogger;
+        /** Ensures the user is authenticated. */
+        ensureAuthenticated: Function;
+        /** If authenticated retrieves the userId from the request. */
+        getUserId: (req: Request) => string;
+        /** Authorization module. */
+        gmeAuth: GmeAuth;
+        /** Accesses the storage and emits events (PROJECT_CREATED, COMMIT..). */
+        safeStorage: SafeStorage;
+        /** Spawns and keeps track of "worker" sub-processes. */
+        workerManager: Object;
+    };
 
 }
 
@@ -1687,7 +1803,7 @@ declare namespace GmeClasses {
          * @return a dictionary where every the key of every entry is an absolute path of a set owner node. 
          * The value of each entry is an array with the set names in which the node can be found as a member.
          */
-        isMemberOf(node: Core.Node): {[ownerPath: string]: string[]};
+        isMemberOf(node: Core.Node): { [ownerPath: string]: string[] };
         /**
          * Checks if the node is a META node.
          * @param node the node in question.
@@ -2191,14 +2307,14 @@ declare namespace GmeClasses {
 
     export interface ProjectInterface {
         /**
-            *
-            * @param {string} projectId - Id of project to be opened.
-            * @param {object} storageObjectsAccessor - Exposes loadObject towards the database.
-            * @param {GmeLogger} mainLogger - Logger instance from instantiator.
-            * @param {GmeConfig} gmeConfig
-            * @alias ProjectInterface
-            * @constructor
-            */
+        *
+        * @param {string} projectId - Id of project to be opened.
+        * @param {object} storageObjectsAccessor - Exposes loadObject towards the database.
+        * @param {GmeLogger} mainLogger - Logger instance from instantiator.
+        * @param {GmeConfig} gmeConfig
+        * @alias ProjectInterface
+        * @constructor
+        */
         constructor(projectId: string, storageObjectsAccessor: any, mainLogger: Global.GmeLogger, gmeConfig: GmeConfig.GmeConfig): void;
         /**
          * Unique ID of project, built up by the ownerId and projectName.
@@ -2210,16 +2326,14 @@ declare namespace GmeClasses {
         CONSTANTS: GmeCommon.Dictionary<string>;
         ID_NAME: string;
         logger: Global.GmeLogger;
-        // projectCache: ProjectCache;
 
-        // Functions forwarded to project cache.
         /**
-             * Inserts the given object to project-cache.
-             *
-             * @param {module:Storage~CommitObject|module:Core~ObjectData} obj - Object to be inserted in database.
-             * @param {Object.<module:Core~ObjectHash, module:Core~ObjectData>} [stackedObjects] - When used by the core, inserts between persists are stored here.
-             * @func
-             * @private
+         * Inserts the given object to project-cache.
+         *
+         * @param {module:Storage~CommitObject|module:Core~ObjectData} obj - Object to be inserted in database.
+         * @param {Object.<module:Core~ObjectHash, module:Core~ObjectData>} [stackedObjects] - When used by the core, inserts between persists are stored here.
+         * @func
+         * @private
         */
         insertObject(obj: GmeStorage.CommitObject, stackedObjects: GmeCommon.Dictionary<Core.DataObject>): void;
         /**
@@ -2458,8 +2572,8 @@ declare namespace GmeClasses {
          * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
         getTags: {
-            (callback: GmeCommon.ResultCallback<void>): void;
-            (): Promise<void>;
+            (callback: GmeCommon.ResultCallback<{ [name: string]: GmeStorage.CommitHash }>): void;
+            (): Promise<{ [name: string]: GmeStorage.CommitHash }>;
         };
         /**
          * Retrieves the common ancestor of two commits. If no ancestor exists it will result in an error.
