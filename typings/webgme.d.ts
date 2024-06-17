@@ -138,7 +138,7 @@ declare module "webgme" {
         /** Ensures the user is authenticated. */
         ensureAuthenticated: Function;
         /** If authenticated retrieves the userId from the request. */
-        getUserId: (req: Request) => string;
+        getUserId: (req: any) => string;
         /** Authorization module. */
         gmeAuth: GmeAuth;
         /** Accesses the storage and emits events (PROJECT_CREATED, COMMIT..). */
@@ -2590,147 +2590,36 @@ declare namespace GmeClasses {
             (commitA: GmeStorage.CommitHash, commitB: GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<GmeStorage.CommitHash>): void;
             (commitA: GmeStorage.CommitHash, commitB: GmeStorage.CommitHash): Promise<GmeStorage.CommitHash>;
         };
-    }
-
-
-
-    export class Project {
         /**
-         * Unique ID of project, built up by the ownerId and projectName.
+         * Retrieves the root hash at the provided branch or commit-hash.
+         * @param {string} branchNameOrCommitHash - Name of branch or a commit-hash.
+         * @param {function} [callback] - If provided no promise will be returned.
+         * @param {null|Error} callback.error - The result of the execution.
+         * @param {module:Core~ObjectHash} callback.rootHash - The root hash.
+         *
+         * @return {external:Promise}  On success the promise will be resolved with
+         * {@link module:Core~ObjectHash} <b>rootHash</b>.<br>
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
          */
-        projectId: string;
-
+        getRootHash: {
+            (branchNameOrCommitHash: GmeCommon.Name | GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<Core.ObjectHash>): void;
+            (branchNameOrCommitHash: GmeCommon.Name | GmeStorage.CommitHash): Promise<Core.ObjectHash>;
+        };
         /**
-         * Creates a new branch with head pointing to the provided commit hash.
-         */
-        createBranch: {
-            /** Name of branch to create. */
-            (branchName: string, newHash: GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<GmeStorage.CommitResult>): void;
-            (branchName: string, newHash: GmeStorage.CommitHash,): Promise<GmeStorage.CommitResult>;
-        }
-        /**
-         * Creates a new tag pointing to the provided commit hash.
-         */
-        createTag: {
-            (tagName: string, commitHash: GmeStorage.CommitHash, callback: GmeStorage.ErrorOnlyCallback): void;
-            (tagName: string, commitHash: GmeStorage.CommitHash): Promise<GmeStorage.ErrorOnlyCallback>;
-        }
-        /**
-        * Deletes the given branch.
+         * Retrieves the commit-object at the provided branch or commit-hash.
+         * @param {string} branchNameOrCommitHash - Name of branch or a commit-hash.
+         * @param {function} [callback] - If provided no promise will be returned.
+         * @param {null|Error} callback.error - The result of the execution.
+         * @param {module:Storage~CommitObject} callback.commit - The commit-object.
+         *
+         * @return {external:Promise}  On success the promise will be resolved with
+         * {@link module:Storage~CommitObject} <b>commitObject</b>.<br>
+         * On error the promise will be rejected with {@link Error} <b>error</b>.
         */
-        deleteBranch: {
-            /** Name of branch to delete. */
-            (branchName: string, oldHash: GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<GmeStorage.CommitResult>): void;
-            (branchName: string, oldHash: GmeStorage.CommitHash,): Promise<GmeStorage.CommitResult>;
-        }
-        /**
-         * Deletes the given tag.
-         */
-        deleteTag: {
-            /** Name of tag to delete. */
-            (tagName: string, callback: GmeStorage.ErrorOnlyCallback): void;
-            (tagname: string): Promise<void>;
-        }
-        /**
-         * Retrieves all branches and their current heads within the project.
-         */
-        getBranches: {
-            /** On success the callback will run with Object.module:Storage~CommitHash result. */
-            (callback: GmeCommon.ResultCallback<GmeCommon.Dictionary<GmeStorage.CommitHash>>): void;
-            /** On success the promise will be resolved with Object.module:Storage~CommitHash> result. */
-            (): Promise<GmeCommon.Dictionary<GmeStorage.CommitHash>>;
-        }
-        /**
-         * Retrieves the commit hash for the head of the branch.
-         */
-        getBranchHash: {
-            (branchName: string, callback: GmeStorage.CommitHashCallback): void;
-            (branchName: string): Promise<GmeStorage.CommitHash>;
-        }
-        /**
-         * Retrieves and array of the latest 
-         * (sorted by timestamp) commits for the project. 
-         * If timestamp is given it will get number 
-         * of commits strictly before before. 
-         * If commit hash is specified that 
-         * commit will be included too. 
-         * n.b. due to slight time differences on different machines, 
-         * ancestors may be returned before their descendants. 
-         * Unless looking for 'headless' commits 
-         * 'getHistory' is the preferred method.
-         */
-        getCommits: {
-            (before: number | GmeStorage.CommitHash, number: number, callback: GmeCommon.ResultCallback<GmeStorage.CommitObject>): void;
-            (before: number | GmeStorage.CommitHash, number: number): Promise<GmeStorage.CommitObject>;
-        }
-        /**
-         * Retrieves the Class ancestor of two commits. 
-         * If no ancestor exists it will result in an error.
-         */
-        getClassAncestorCommit: {
-            (commitA: GmeStorage.CommitHash, commitB: GmeStorage.CommitHash, callback: GmeStorage.CommitHashCallback): void;
-            (commitA: GmeStorage.CommitHash, commitB: GmeStorage.CommitHash): Promise<GmeStorage.CommitHash>;
-        }
-        /**
-         * Retrieves an array of commits starting from a branch(es) and/or commitHash(es). 
-         * The result is ordered by the rules (applied in order) 
-         *  1. Descendants are always returned before their ancestors.
-         *  2. By their timestamp.
-         */
-        getHistory: {
-            (start: GmeCommon.ProjectStart, number: number, callback: GmeCommon.ResultCallback<Array<GmeStorage.CommitObject>>): void;
-            (start: GmeCommon.ProjectStart, number: number): Promise<Array<GmeStorage.CommitObject>>;
-        }
-        /**
-         * Retrieves all tags and their commits hashes within the project.
-         */
-        getTags: {
-            (callback: GmeStorage.CommitHashCallback): void;
-            (): Promise<GmeStorage.CommitHash>;
-        }
-
-        loadObject: {
-            /** Hash of object to load. */
-            (key: string, callback: GmeCommon.ResultCallback<GmeStorage.CommitObject>): void;
-            (key: string): Promise<GmeStorage.CommitObject>;
-        }
-        /** 
-         * Collects the objects from the server and pre-loads 
-         * them into the cache making the load of multiple objects faster.
-         * 
-         * @param rootKey Hash of the object at the entry point of the paths.
-         * @param paths List of paths that needs to be pre-loaded.
-         */
-        loadPaths: {
-            (rootKey: string, paths: string[], callback: GmeStorage.ErrorOnlyCallback): void;
-            (rootKey: string, paths: string[]): Promise<GmeStorage.ErrorOnlyCallback>;
-        }
-
-        /**
-         * Makes a commit to data base. 
-         * Based on the root hash and commit message a 
-         * new module:Storage.CommitObject (with returned hash) 
-         * is generated and insert together with the 
-         * core objects to the database on the server.
-         */
-        makeCommit: {
-            (branchName: string, parents: GmeStorage.CommitHash[],
-                rootHash: Core.ObjectHash, coreObjects: Core.GmePersisted,
-                msg: string, callback: GmeCommon.ResultCallback<GmeStorage.CommitResult>): void;
-            (branchName: string, parents: GmeStorage.CommitHash[],
-                rootHash: Core.ObjectHash, coreObjects: Core.GmePersisted,
-                msg: string): Promise<GmeStorage.CommitResult>;
-        }
-        /**
-         * Updates the head of the branch.
-         */
-        setBranchHash: {
-            (branchName: string, newHash: GmeStorage.CommitHash,
-                oldHash: GmeStorage.CommitHash,
-                callback: GmeCommon.ResultCallback<GmeStorage.CommitResult>): void;
-            (branchName: string, newHash: GmeStorage.CommitHash,
-                oldHash: GmeStorage.CommitHash): Promise<GmeStorage.CommitResult>;
-        }
+        getCommitObject: {
+            (branchNameOrCommitHash: GmeCommon.Name | GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<GmeStorage.CommitObject>): void;
+            (branchNameOrCommitHash: GmeCommon.Name | GmeStorage.CommitHash): Promise<GmeStorage.CommitObject>;
+        };
     }
 }
 
@@ -2776,7 +2665,7 @@ declare namespace GmePlugin {
         namespace: string;
         notificationHandlers: any[];
         pluginMetadata: GmeCommon.Metadata;
-        project: GmeClasses.Project;
+        project: GmeClasses.ProjectInterface;
         result: GmeClasses.Result;
         rootNode: Core.Node;
 
