@@ -1968,8 +1968,8 @@ declare namespace GmeClasses {
          * @return 
          */
         loadSubTree: {
-            (node: Core.Node, callback: GmeCommon.ResultCallback<Core.Node>): void;
-            (node: Core.Node): Promise<Core.Node>;
+            (node: Core.Node, callback: GmeCommon.ResultCallback<Core.Node[]>): void;
+            (node: Core.Node): Promise<Core.Node[]>;
         }
         /**
          * TODO
