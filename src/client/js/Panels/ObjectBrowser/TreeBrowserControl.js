@@ -16,13 +16,13 @@ define(['js/logger',
     'js/Dialogs/ImportModel/ImportModelDialog',
     'js/Utils/Exporters'
 ], function (Logger,
-             nodePropertyNames,
-             CONSTANTS,
-             REGISTRY_KEYS,
-             ObjectBrowserControlBase,
-             LibraryManager,
-             ImportModelDialog,
-             exporters) {
+    nodePropertyNames,
+    CONSTANTS,
+    REGISTRY_KEYS,
+    ObjectBrowserControlBase,
+    LibraryManager,
+    ImportModelDialog,
+    exporters) {
     'use strict';
 
     var NODE_PROGRESS_CLASS = 'node-progress',
@@ -97,7 +97,7 @@ define(['js/logger',
 
             // Add the tree-root to the query and update the territory.
             selfPatterns = {};
-            selfPatterns[self._treeRootId] = {children: 1};
+            selfPatterns[self._treeRootId] = { children: 1 };
             client.updateTerritory(selfId, selfPatterns);
         }
 
@@ -258,13 +258,13 @@ define(['js/logger',
                     };
                 }
 
-                treeBrowser.updateNode(parentNode, {icon: self.getIcon(parent, true)});
+                treeBrowser.updateNode(parentNode, { icon: self.getIcon(parent, true) });
 
                 treeBrowser.applyFilters();
             }
 
             //need to expand the territory
-            selfPatterns[nodeId] = {children: 1};
+            selfPatterns[nodeId] = { children: 1 };
             client.updateTerritory(selfId, selfPatterns);
         };
 
@@ -293,7 +293,7 @@ define(['js/logger',
 
                         //and collect the nodeId from territory removal
                         if (selfPatterns[childNodeId]) {
-                            removeFromTerritory.push({nodeid: childNodeId});
+                            removeFromTerritory.push({ nodeid: childNodeId });
                             delete selfPatterns[childNodeId];
                         }
                     }
@@ -303,7 +303,7 @@ define(['js/logger',
             //call the cleanup recursively and mark this node (being closed) as non removable
             // (from local hashmap neither from territory)
             deleteNodeAndChildrenFromLocalHash(nodeId, false);
-            treeBrowser.updateNode(nodes[nodeId].treeNode, {icon: self.getIcon(nodeId)});
+            treeBrowser.updateNode(nodes[nodeId].treeNode, { icon: self.getIcon(nodeId) });
 
             //if there is anything to remove from the territory, do it
             if (removeFromTerritory.length > 0) {
@@ -451,6 +451,7 @@ define(['js/logger',
             if (nodeObj.isLibraryRoot() && !nodeObj.isLibraryElement()) {
                 delete menuItems.exportModel;
                 delete menuItems.importModel;
+                const libraryName = nodeObj.getFullyQualifiedName();
                 menuItems.library = {
                     name: 'Library',
                     items: {
@@ -467,6 +468,21 @@ define(['js/logger',
                                 self._libraryManager.openLibraryOriginInNewWindow(nodeId, true);
                             },
                             icon: false
+                        },
+
+                        assetfull: {
+                            name: 'Export library with assets ..',
+                            callback: function (/*key, options*/) {
+                                exporters.exportLibrary(self._client, self._logger, null, true, libraryName);
+                            },
+                            icon: false
+                        },
+                        assetless: {
+                            name: 'Export library without assets.. ',
+                            callback: function (/*key, options*/) {
+                                exporters.exportLibrary(self._client, self._logger, null, false, libraryName);
+                            },
+                            icon: false
                         }
                     },
                     icon: false
@@ -477,7 +493,6 @@ define(['js/logger',
                     menuItems.library.items.refreshLibrary = {
                         name: 'Update library ...',
                         callback: function (/*key, options*/) {
-                            var libraryName = nodeObj.getFullyQualifiedName();
                             self._libraryManager.update(nodeId);
                         },
                         icon: false
@@ -673,7 +688,7 @@ define(['js/logger',
 
                                         //and collect the nodeId from territory removal
                                         if (selfPatterns[childNodeId]) {
-                                            removeFromTerritory.push({nodeid: childNodeId});
+                                            removeFromTerritory.push({ nodeid: childNodeId });
                                             delete selfPatterns[childNodeId];
                                         }
                                     }
@@ -771,7 +786,7 @@ define(['js/logger',
                             if (objectId !== CONSTANTS.PROJECT_ROOT_ID && selfPatterns[objectId] &&
                                 currentChildren.length === 0) {
 
-                                removeFromTerritory.push({nodeid: objectId});
+                                removeFromTerritory.push({ nodeid: objectId });
                                 delete selfPatterns[objectId];
                             }
 
@@ -918,9 +933,9 @@ define(['js/logger',
     TreeBrowserControl.prototype._createChild = function (nodeId, childId) {
         var client = this._client;
 
-        var params = {parentId: nodeId};
-        params[childId] = {registry: {}};
-        params[childId].registry[REGISTRY_KEYS.POSITION] = {x: 100, y: 100};
+        var params = { parentId: nodeId };
+        params[childId] = { registry: {} };
+        params[childId].registry[REGISTRY_KEYS.POSITION] = { x: 100, y: 100 };
         client.createChildren(params);
     };
 
