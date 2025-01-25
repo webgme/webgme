@@ -27,7 +27,7 @@
     "q": "1.5.1",
     "require-uncached": "1.0.3",
     "requirejs": "2.3.6",
-    "webgme-engine": "2.29.0",
+    "webgme-engine": "webgme/webgme-engine#export-library-as-webgmex",
     "webgme-user-management-page": "^0.6.0"
   },
   "devDependencies": {

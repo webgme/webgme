@@ -12,16 +12,10 @@ define([
 ], function (ProgressNotification, Clipboard, saveToDisk, BlobClient) {
     'use strict';
 
-    function exportProject(client, logger, projectParams, withAssets, callback) {
+    function _exportProjectOrLibrary(client, logger, projectParams, withAssets, libraryName, callback) {
         var progress = ProgressNotification.start('<strong>Exporting </strong> project ...'),
-            bc = new BlobClient({logger: logger.fork('BlobClient')});
-
-        client.exportProjectToFile(
-            projectParams ? projectParams.projectId : client.getActiveProjectId(),
-            projectParams ? projectParams.branchName : client.getActiveBranchName(),
-            projectParams ? projectParams.commitHash : client.getActiveCommitHash(),
-            withAssets,
-            function (err, result) {
+            bc = new BlobClient({ logger: logger.fork('BlobClient') }),
+            cb = function (err, result) {
                 clearInterval(progress.intervalId);
                 if (err) {
                     logger.error('unable to save project', err);
@@ -34,7 +28,7 @@ define([
                     saveToDisk.saveUrlToDisk(bc.getDownloadURL(result.hash));
                     progress.note.update({
                         message: '<strong>Exported </strong> project <a href="' +
-                        bc.getDownloadURL(result.hash) + '" target="_blank">' + result.fileName + '</a>',
+                            bc.getDownloadURL(result.hash) + '" target="_blank">' + result.fileName + '</a>',
                         progress: 100,
                         type: 'success'
                     });
@@ -43,16 +37,38 @@ define([
                 if (typeof callback === 'function') {
                     callback(err);
                 }
-            }
-        );
+            };
+
+        if (libraryName) {
+            client.workerRequests.exportLibraryToFile(
+                projectParams ? projectParams.projectId : client.getActiveProjectId(),
+                projectParams ? projectParams.branchName : client.getActiveBranchName(),
+                projectParams ? projectParams.commitHash : client.getActiveCommitHash(),
+                withAssets,
+                libraryName,
+                cb
+            );
+        } else {
+            client.exportProjectToFile(
+                projectParams ? projectParams.projectId : client.getActiveProjectId(),
+                projectParams ? projectParams.branchName : client.getActiveBranchName(),
+                projectParams ? projectParams.commitHash : client.getActiveCommitHash(),
+                withAssets,
+                cb
+            );
+        }
+    }
+
+    function exportProject(client, logger, projectParams, withAssets, callback) {
+        _exportProjectOrLibrary(client, logger, projectParams, withAssets, undefined, callback);
     }
 
     function exportModels(client, logger, selectedIds, withAssets, callback) {
         var progress = ProgressNotification.start({
-                message: '<strong>Exporting </strong> models ...',
-                useClipboard: true
-            }),
-            bc = new BlobClient({logger: logger.fork('BlobClient')});
+            message: '<strong>Exporting </strong> models ...',
+            useClipboard: true
+        }),
+            bc = new BlobClient({ logger: logger.fork('BlobClient') });
 
         withAssets = withAssets === false ? false : true;
 
@@ -73,7 +89,7 @@ define([
                 } else {
                     progress.note.update({
                         message: '<strong>Exported </strong> models <a href="' +
-                        bc.getDownloadURL(result.hash) + '" target="_blank">' + result.fileName + '</a>',
+                            bc.getDownloadURL(result.hash) + '" target="_blank">' + result.fileName + '</a>',
                         progress: 100,
                         type: 'success',
                         clipboardValue: result.hash
@@ -90,7 +106,8 @@ define([
     }
 
     return {
-        exportProject: exportProject,
-        exportModels: exportModels
+        exportProject,
+        exportLibrary: _exportProjectOrLibrary,
+        exportModels,
     };
 });
