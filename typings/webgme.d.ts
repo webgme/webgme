@@ -2620,6 +2620,12 @@ declare namespace GmeClasses {
             (branchNameOrCommitHash: GmeCommon.Name | GmeStorage.CommitHash, callback: GmeCommon.ResultCallback<GmeStorage.CommitObject>): void;
             (branchNameOrCommitHash: GmeCommon.Name | GmeStorage.CommitHash): Promise<GmeStorage.CommitObject>;
         };
+
+        /**
+         * Return the identity of the current user of this project.
+         * @return {string} the userId
+         */
+        getUserId(): string;
     }
 }
 
