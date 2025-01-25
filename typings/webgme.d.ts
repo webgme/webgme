@@ -2685,9 +2685,9 @@ declare namespace GmePlugin {
          * The ConfigurationStructure defines the configuration for the plugin
          * and will be used to populate the GUI when invoking the plugin from webGME.
          */
-        getConfigStructure(): GmeConfig.ConfigItem[];
-        getCurrentConfig(): GmeConfig.GmeConfig;
-        getDefaultConfig(): GmeConfig.GmeConfig;
+        getConfigStructure(): object[];
+        getCurrentConfig<T>(): T;
+        getDefaultConfig<T>(): T;
         /**
          * Gets the description of the plugin.
          */
