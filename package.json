@@ -3,7 +3,7 @@
   "version": "2.48.0",
   "description": "Web-based Generic Modeling Environment",
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=20.19.0"
   },
   "homepage": "http://github.com/webgme/webgme",
   "keywords": [
@@ -24,11 +24,10 @@
   "license": "MIT",
   "dependencies": {
     "bower": "1.8.14",
-    "q": "1.5.1",
-    "require-uncached": "1.0.3",
-    "requirejs": "2.3.6",
-    "webgme-engine": "2.30.0",
-    "webgme-user-management-page": "^0.6.0"
+    "q": "^1.5.1",
+    "requirejs": "^2.3.6",
+    "webgme-engine": "2.31.0",
+    "webgme-user-management-page": "^0.6.1"
   },
   "devDependencies": {
     "chai": "^4.3.8",

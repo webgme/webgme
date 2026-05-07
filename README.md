@@ -1,5 +1,5 @@
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://opensource.org/licenses/MIT)
-[![Build status](https://img.shields.io/github/actions/workflow/status/webgme/webgme/node.js.yml?branch=master&label=CI&logo=github&style=flat-square)](https://github.com/webgme/webgme/actions/workflows/node.js.yml)
+[![Build status](https://img.shields.io/github/actions/workflow/status/webgme/webgme/node.js.yml?branch=main&label=CI&logo=github&style=flat-square)](https://github.com/webgme/webgme/actions/workflows/node.js.yml)
 [![Version](https://badge.fury.io/js/webgme.svg)](https://www.npmjs.com/package/webgme)
 [![Downloads](http://img.shields.io/npm/dm/webgme.svg?style=flat)](http://img.shields.io/npm/dm/webgme.svg?style=flat)
 
@@ -20,10 +20,10 @@ WebGME provides a variety of extension points for you to customize your applicat
 
 ### Dependencies
 #### Server
- - [NodeJS](https://nodejs.org/) (version >= 14, CI tests are performed on versions 16.x, 18.x and LTS is recommended).
- - [MongoDB](https://www.mongodb.com/) (2.6 <= version).
- - [Git](https://git-scm.com) (must be available in PATH).
- - [Redis](https://redis.io/) Note that this is only needed if you intend on running [multiple webgme nodes](https://github.com/webgme/webgme/wiki/Multiple-Nodes) behind a reverse proxy.
+ - [NodeJS](https://nodejs.org/) (>= 20.19.0, CI tests are performed on versions 22, 24 and LTS is recommended).
+ - [MongoDB](https://www.mongodb.com/) (>= 4.2).
+ - [Git](https://git-scm.com) (must be available in PATH) - this is for installing node_modules and not needed in the runtime env.
+ - [Redis](https://redis.io/) Note that this is only needed if you intend on running [multiple parallel webgme nodes](https://github.com/webgme/webgme/wiki/Multiple-Nodes) behind a reverse proxy.
 
 #### Browser
 We aim to support all the major modern browsers. However we recommend using Chrome for two reasons: manual testing is mostly done using chrome and all performance profiling is done against the [V8 JavaScript Engine](https://en.wikipedia.org/wiki/V8_(JavaScript_engine)).
