@@ -8,6 +8,7 @@ var path = require('path'),
     config = require('webgme-engine/config/config.default');
 
 config.authentication.userManagementPage = require.resolve('webgme-user-management-page');
+// config.authentication.enable = true;
 
 // Overwrite the appDir from webgme-engine (it only provides a dummy app).
 config.client.appDir = path.join(__dirname, '../src/client');
