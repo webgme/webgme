@@ -134,11 +134,11 @@ define([
                 d = new CreateProjectDialog(self._client, val, self._createType,
                     self._logger.fork('CreateProjectDialog'));
 
-                d.show(function (seedType, seedName, seedBranchName, seedCommitHash, blobHash) {
+                d.show(function (seedType, seedName, seedBranchName, seedCommitHash, withHistory) {
                     if (seedType && seedName) {
                         self._dialog.off('hide.bs.modal');
                         self._dialog.modal('hide');
-                        self._createProject(val, seedType, seedName, seedBranchName, seedCommitHash, blobHash);
+                        self._createProject(val, seedType, seedName, seedBranchName, seedCommitHash, withHistory);
                     } else {
                         self._logger.debug('Closed create dialog with arguments', seedType, seedName);
                         if (self._needProject) {
@@ -802,7 +802,8 @@ define([
                                                         type,
                                                         seedName,
                                                         branchName,
-                                                        commitHash) {
+                                                        commitHash,
+                                                        withHistory) {
         var self = this,
             parameters = {
                 type: type,
@@ -844,11 +845,22 @@ define([
             //TODO check the possibility of using url
             self._logger.debug('Importing package: ');
             self._client.importProjectFromFile(projectName, 'master', seedName,
-                self._ownerId, '', function (err, projectId) {
+                self._ownerId, '', withHistory === true, function (err, result) {
+                    var projectId = result;
+
                     if (err) {
                         self._logger.error('Failed to import project package', err);
                         loader.stop();
                     } else {
+                        if (result && typeof result === 'object') {
+                            projectId = result.projectId;
+                            if (result.historyImportNote) {
+                                $.notify({
+                                    message: result.historyImportNote,
+                                    type: 'warning'
+                                });
+                            }
+                        }
                         self._logger.debug('Project package imported');
                         selectNewProject(projectId);
                     }

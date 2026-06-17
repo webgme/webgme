@@ -83,6 +83,7 @@ define(['js/Loader/LoaderCircles',
             self._btnCreateSnapShot.removeClass('activated');
             self._btnDuplicate.removeClass('activated');
             self._btnCreateBlob.removeClass('activated');
+            self._importWithHistoryControl.removeClass('activated');
 
             self._dialog.find('li.tab').each(function () {
                 $(this).removeClass('active');
@@ -99,6 +100,7 @@ define(['js/Loader/LoaderCircles',
             } else if (tabEl.hasClass('blob')) {
                 self._formBlob.addClass('activated');
                 self._btnCreateBlob.addClass('activated');
+                self._importWithHistoryControl.addClass('activated');
             }
         }
 
@@ -115,6 +117,9 @@ define(['js/Loader/LoaderCircles',
         this._btnDuplicate = this._dialog.find('.btn-duplicate');
         this._btnCreateBlob = this._dialog.find('.btn-create-blob');
 
+        this._importWithHistoryControl = this._dialog.find('.import-with-history-control');
+        this._importWithHistorySwitch = this._importWithHistoryControl.find('input.import-with-history');
+
         // Snap-shot selector
         this._selectSnapShot = this._formSnapShot.find('select.snap-shot');
         this._optGroupFile = this._selectSnapShot.find('optgroup.file');
@@ -130,7 +135,7 @@ define(['js/Loader/LoaderCircles',
         this._optGroupDuplicate.children().remove();
         this._selectDuplicate.append(this._optGroupDuplicate);
 
-        this._loader = new LoaderCircles({containerElement: this._dialog});
+        this._loader = new LoaderCircles({containerElement: this._dialog.find('.modal-content')});
 
         this._btnCancel = this._dialog.find('.btn-cancel');
 
@@ -204,7 +209,8 @@ define(['js/Loader/LoaderCircles',
             self._finished = true;
             self._dialog.modal('hide');
             if (self._fnCallback && self.assetWidget.propertyValue) {
-                self._fnCallback(self._blobIsPackage ? 'package' : 'blob', self.assetWidget.propertyValue, null, null);
+                self._fnCallback(self._blobIsPackage ? 'package' : 'blob', self.assetWidget.propertyValue, null, null,
+                    self._importWithHistorySwitch.is(':checked'));
             }
         });
 

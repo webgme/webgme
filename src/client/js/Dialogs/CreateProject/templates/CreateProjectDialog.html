@@ -47,8 +47,9 @@
                     <h5>Import from file
                         <i class="glyphicon glyphicon-info-sign toggle-info-btn blob-info"/>
                     </h5>
-                    <span class="type-description blob-info hidden"> Creates a new project from the uploaded snapshot.
+                    <span class="type-description blob-info hidden">Creates a new project from the uploaded snapshot.
                        The new project will have a single commit and a branch (master) pointing to the commit.
+                       Use <em>With history</em> in the footer to restore branches, tags, and commits from a v2 export.
                      </span>
                     <span class="selection selection-blob">
 
@@ -59,10 +60,17 @@
                 <!--</div>-->
             </div>
             <div class="modal-footer">
+                <div class="import-with-history-control">
+                    <span class="with-history-label">With history</span>
+                    <label class="with-history-switch">
+                        <input type="checkbox" class="import-with-history"/>
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
                 <button class="btn btn-primary btn-create btn-create-snap-shot activated">Create</button>
                 <button class="btn btn-primary btn-create btn-duplicate">Create</button>
                 <button class="btn btn-primary btn-create btn-create-blob">Create</button>
-                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-default btn-cancel" data-dismiss="modal">Cancel</button>
             </div>
         </div>
     </div>

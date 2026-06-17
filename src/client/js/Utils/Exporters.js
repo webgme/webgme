@@ -12,15 +12,21 @@ define([
 ], function (ProgressNotification, Clipboard, saveToDisk, BlobClient) {
     'use strict';
 
-    function exportProject(client, logger, projectParams, withAssets, callback) {
+    function exportProject(client, logger, projectParams, withAssets, withHistory, callback) {
         var progress = ProgressNotification.start('<strong>Exporting </strong> project ...'),
             bc = new BlobClient({logger: logger.fork('BlobClient')});
+
+        if (typeof withHistory === 'function') {
+            callback = withHistory;
+            withHistory = false;
+        }
 
         client.exportProjectToFile(
             projectParams ? projectParams.projectId : client.getActiveProjectId(),
             projectParams ? projectParams.branchName : client.getActiveBranchName(),
             projectParams ? projectParams.commitHash : client.getActiveCommitHash(),
             withAssets,
+            withHistory,
             function (err, result) {
                 clearInterval(progress.intervalId);
                 if (err) {

@@ -1,6 +1,8 @@
 /*
  * @author pmeijer / https://github.com/pmeijer
  */
+div.create-new-project-dialog div.modal-content {
+  position: relative; }
 div.create-new-project-dialog div.modal-content div.modal-header .header-icon {
   height: 24px;
   width: 24px;
@@ -20,10 +22,19 @@ div.create-new-project-dialog div.modal-content div.pre-body {
       text-align: center; }
       div.create-new-project-dialog div.modal-content div.pre-body .tabContainer ul.nav.nav-tabs li.disabled-from-config {
         display: none; }
-div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal {
-  display: none; }
-  div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal.activated {
-    display: inherit; }
+div.create-new-project-dialog div.modal-content div.modal-body {
+  position: relative;
+  min-height: 8em; }
+  div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal {
+    display: none;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+    visibility: hidden; }
+    div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal.activated {
+      display: block;
+      pointer-events: auto;
+      visibility: visible; }
   div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal span.selection .selector {
     display: inline-block;
     width: 100%;
@@ -54,7 +65,62 @@ div.create-new-project-dialog div.modal-content div.modal-body form.form-horizon
     opacity: 0.90; }
     div.create-new-project-dialog div.modal-content div.modal-body form.form-horizontal span.type-description.hidden {
       display: none; }
-div.create-new-project-dialog div.modal-content div.modal-footer button.btn-create {
-  display: none; }
-  div.create-new-project-dialog div.modal-content div.modal-footer button.btn-create.activated {
-    display: inline-block; }
+div.create-new-project-dialog div.modal-content div.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px; }
+  div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control {
+    display: none;
+    align-items: center;
+    margin-right: auto;
+    gap: 10px; }
+    div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control.activated {
+      display: flex; }
+    div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-label {
+      font-size: 13px;
+      font-weight: normal;
+      color: #333;
+      user-select: none; }
+    div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+      margin: 0;
+      cursor: pointer; }
+      div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-switch input.import-with-history {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute; }
+      div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-switch .switch-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        border-radius: 22px;
+        transition: background-color 0.2s; }
+        div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-switch .switch-slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 2px;
+          bottom: 2px;
+          background-color: white;
+          border-radius: 50%;
+          transition: transform 0.2s; }
+      div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-switch input:checked + .switch-slider {
+        background-color: #428bca; }
+      div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-switch input:checked + .switch-slider:before {
+        transform: translateX(22px); }
+      div.create-new-project-dialog div.modal-content div.modal-footer .import-with-history-control .with-history-switch input:focus + .switch-slider {
+        box-shadow: 0 0 1px #428bca; }
+  div.create-new-project-dialog div.modal-content div.modal-footer button.btn-create {
+    display: none; }
+    div.create-new-project-dialog div.modal-content div.modal-footer button.btn-create.activated {
+      display: inline-block; }
