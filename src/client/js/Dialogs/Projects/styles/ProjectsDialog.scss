@@ -206,10 +206,20 @@
                 color: grey;
               }
 
-              .description {
+              .description,
+              .kind {
                 border: none;
                 background-color: transparent;
                 width: 90%;
+              }
+            }
+          }
+        }
+        &.info-displayed {
+          tbody.project-list {
+            tr.project-row {
+              td {
+                font-size: 90%;
               }
             }
           }

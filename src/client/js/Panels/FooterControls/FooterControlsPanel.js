@@ -10,6 +10,7 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/KeyboardManager/KeyboardManagerWidget',
     'js/Widgets/Notification/NotificationWidget',
     'js/Widgets/RunningPluginsDrawerButtonWidget/RunningPluginsDrawerButtonWidget',
+    'js/Widgets/ProjectKind/ProjectKindWidget',
     'js/Utils/ComponentSettings'
 ], function (PanelBase,
              NetworkStatusWidget,
@@ -17,6 +18,7 @@ define(['js/PanelBase/PanelBase',
              KeyboardManagerWidget,
              NotificationWidget,
              RunningPluginsDrawerButtonWidget,
+             ProjectKindWidget,
              ComponentSettings) {
 
     'use strict';
@@ -57,6 +59,10 @@ define(['js/PanelBase/PanelBase',
 
         //add ISIS link
         this.createCredits(navBarInner);
+
+        this._projectKindEl = $('<div class="footer-project-kind inline"></div>');
+        navBarInner.append(this._projectKindEl);
+        this._widgets.push(new ProjectKindWidget(this._projectKindEl, this._client));
 
         //padding from screen right edge
         navBarInner.append(separator.clone());
