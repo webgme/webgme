@@ -88,6 +88,44 @@ define([
         this.$timeout(() => { });
     };
 
+    ProjectNavigatorController.prototype._createExportMenuItem = function (idPrefix, getExportParams, actionData) {
+        var self = this;
+
+        return {
+            id: idPrefix + 'Export',
+            label: 'Export',
+            iconClass: 'glyphicon glyphicon-export',
+            menu: [{
+                items: [
+                    {
+                        id: idPrefix + 'ExportProject',
+                        label: 'project',
+                        action: function (data) {
+                            exporters.exportProject(self.gmeClient, self.logger, getExportParams(data), false);
+                        },
+                        actionData: actionData
+                    },
+                    {
+                        id: idPrefix + 'ExportProjectWithAssets',
+                        label: 'project with assets',
+                        action: function (data) {
+                            exporters.exportProject(self.gmeClient, self.logger, getExportParams(data), true);
+                        },
+                        actionData: actionData
+                    },
+                    {
+                        id: idPrefix + 'ExportProjectWithHistory',
+                        label: 'project with history and assets',
+                        action: function (data) {
+                            exporters.exportProject(self.gmeClient, self.logger, getExportParams(data), true, true);
+                        },
+                        actionData: actionData
+                    }
+                ]
+            }]
+        };
+    };
+
     ProjectNavigatorController.prototype.initialize = function () {
         var self = this,
             newProject,
@@ -620,13 +658,6 @@ define([
             return;
         }
 
-        function exportTag(data) {
-            exporters.exportProject(self.gmeClient, self.logger, {
-                projectId: data.projectId,
-                commitHash: data.commitHash
-            }, true);
-        }
-
         function selectTag(data) {
 
             function selectCommit() {
@@ -669,16 +700,15 @@ define([
             menu: [
                 {
                     items: [
-                        {
-                            id: 'exportTag',
-                            label: 'Export tag',
-                            iconClass: 'glyphicon glyphicon-export',
-                            action: exportTag,
-                            actionData: {
-                                projectId: projectId,
-                                commitHash: tagInfo.commitHash
-                            }
-                        }
+                        self._createExportMenuItem('exportTag', function (data) {
+                            return {
+                                projectId: data.projectId,
+                                commitHash: data.commitHash
+                            };
+                        }, {
+                            projectId: projectId,
+                            commitHash: tagInfo.commitHash
+                        })
                     ]
 
                 }
@@ -721,16 +751,6 @@ define([
         if (self.projects[projectId].disabled) {
             // do not show any branches if the project is disabled
             return;
-        }
-
-        function exportBranch(data) {
-            exporters.exportProject(self.gmeClient, self.logger, {
-                projectId: data.projectId,
-                branchId: data.branchId,
-                commitHash: data.projectId === self.gmeClient.getActiveProjectId() &&
-                    data.branchId === self.gmeClient.getActiveBranchName() ?
-                    self.gmeClient.getActiveCommitHash() : data.commitHash
-            }, true);
         }
 
         function showBranchHistory(data) {
@@ -928,17 +948,19 @@ define([
                         deleteBranchItem,
                         mergeBranchItem,
                         addCommits,
-                        {
-                            id: 'exportBranch',
-                            label: 'Export branch',
-                            iconClass: 'glyphicon glyphicon-export',
-                            action: exportBranch,
-                            actionData: {
-                                projectId: projectId,
-                                branchId: branchId,
-                                commitHash: branchInfo.branchHash
-                            }
-                        }
+                        self._createExportMenuItem('exportBranch', function (data) {
+                            return {
+                                projectId: data.projectId,
+                                branchName: data.branchId,
+                                commitHash: data.projectId === self.gmeClient.getActiveProjectId() &&
+                                    data.branchId === self.gmeClient.getActiveBranchName() ?
+                                    self.gmeClient.getActiveCommitHash() : data.commitHash
+                            };
+                        }, {
+                            projectId: projectId,
+                            branchId: branchId,
+                            commitHash: branchInfo.branchHash
+                        })
                     ]
 
                 }
@@ -1167,21 +1189,15 @@ define([
                     menu: [
                         {
                             items: [
-                                {
-                                    id: 'exportCommit',
-                                    label: 'Export commit',
-                                    iconClass: 'glyphicon glyphicon-export',
-                                    action: function (data) {
-                                        exporters.exportProject(self.gmeClient, self.logger, {
-                                            projectId: data.projectId,
-                                            commitHash: data.commitHash
-                                        }, true);
-                                    },
-                                    actionData: {
-                                        projectId: projectId,
-                                        commitHash: commitHash
-                                    }
-                                }
+                                self._createExportMenuItem('exportCommit', function (data) {
+                                    return {
+                                        projectId: data.projectId,
+                                        commitHash: data.commitHash
+                                    };
+                                }, {
+                                    projectId: projectId,
+                                    commitHash: commitHash
+                                })
                             ]
                         }
 

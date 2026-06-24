@@ -384,20 +384,27 @@ define(['js/logger',
                 }
 
                 menuItems.exportProject = {
-                    name: 'Export project',
+                    name: 'Export',
                     icon: false,
                     items: {
+                        assetless: {
+                            name: 'project',
+                            callback: function (/*key, options*/) {
+                                exporters.exportProject(self._client, self._logger, null, false);
+                            },
+                            icon: false
+                        },
                         assetfull: {
-                            name: 'with assets',
+                            name: 'project with assets',
                             callback: function (/*key, options*/) {
                                 exporters.exportProject(self._client, self._logger, null, true);
                             },
                             icon: false
                         },
-                        assetless: {
-                            name: 'without assets',
+                        assetfullhistory: {
+                            name: 'project with history and assets',
                             callback: function (/*key, options*/) {
-                                exporters.exportProject(self._client, self._logger, null, false);
+                                exporters.exportProject(self._client, self._logger, null, true, true);
                             },
                             icon: false
                         }
