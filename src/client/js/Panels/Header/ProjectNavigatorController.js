@@ -11,6 +11,7 @@ define([
     'angular',
     'js/Loader/ProgressNotification',
     'js/Dialogs/Projects/ProjectsDialog',
+    'js/Dialogs/ProjectInfo/ProjectInfoDialog',
     'js/Dialogs/Merge/MergeDialog',
     'js/Dialogs/ProjectRepository/ProjectRepositoryDialog',
     'js/Dialogs/Branches/BranchesDialog',
@@ -26,6 +27,7 @@ define([
     ng,
     ProgressNotification,
     ProjectsDialog,
+    ProjectInfoDialog,
     MergeDialog,
     ProjectRepositoryDialog,
     BranchesDialog,
@@ -478,6 +480,7 @@ define([
         var self = this,
             i,
             showHistory,
+            showProjectInfo,
             showAllBranchesOrTags,
             deleteProject,
             selectProject,
@@ -503,6 +506,15 @@ define([
 
         showHistory = function (data) {
             self.showHistory(data);
+        };
+
+        showProjectInfo = function (data) {
+            var projectInfoDialog = new ProjectInfoDialog(self.gmeClient);
+            projectInfoDialog.show(data.projectId, {
+                onSaved: function () {
+                    self.updateProjectList();
+                }
+            });
         };
 
         deleteProject = function (data) {
@@ -564,6 +576,14 @@ define([
                 {
                     id: 'top',
                     items: [
+                        {
+                            id: 'projectInfo',
+                            label: 'Project info ...',
+                            iconClass: 'glyphicon glyphicon-cog',
+                            disabled: !rights.read,
+                            action: showProjectInfo,
+                            actionData: { projectId }
+                        },
                         {
                             id: 'showHistory',
                             label: 'Project history ...',

@@ -117,10 +117,13 @@
     .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td.created {
       font-style: italic;
       color: grey; }
-    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td .description {
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td .description,
+    .projects-dialog .modal-content .modal-body table.table.table-projects tbody.project-list tr.project-row td .kind {
       border: none;
       background-color: transparent;
       width: 90%; }
+  .projects-dialog .modal-content .modal-body table.table.table-projects.info-displayed tbody.project-list tr.project-row td {
+    font-size: 90%; }
 .projects-dialog .modal-content .modal-footer button.corner-button {
   margin-top: 0.5ex; }
 .projects-dialog .modal-content .modal-footer ul.dropdown-menu {

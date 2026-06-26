@@ -1,0 +1,23 @@
+.footer-project-kind .project-kind-btn {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footer-project-kind .project-kind-btn.no-kind {
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.navbar-fixed-bottom .navbar-inner .footer-project-kind {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.navbar-fixed-bottom .navbar-inner .footer-project-kind .btn-group {
+  margin-top: 3px;
+  height: 16px;
+}

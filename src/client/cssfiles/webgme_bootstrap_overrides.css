@@ -198,6 +198,7 @@ input[type="submit"].btn.btn-micro {
 .navbar-fixed-bottom .navbar-inner {
     height: 26px;
     min-height: 26px;
+    position: relative;
 }
 
 .navbar-fixed-bottom .navbar-inner .iCheckBox {

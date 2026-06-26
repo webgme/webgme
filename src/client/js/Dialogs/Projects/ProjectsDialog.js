@@ -336,13 +336,13 @@ define([
             if (show) {
                 self._table.find('.extra-info').removeClass('info-hidden');
                 self._table.addClass('info-displayed');
-                elm.removeClass('fa-chevron-left');
-                elm.addClass('fa-chevron-right');
+                elm.removeClass('fa-chevron-right');
+                elm.addClass('fa-chevron-left');
             } else {
                 self._table.find('.extra-info').addClass('info-hidden');
                 self._table.removeClass('info-displayed');
-                elm.removeClass('fa-chevron-right');
-                elm.addClass('fa-chevron-left');
+                elm.removeClass('fa-chevron-left');
+                elm.addClass('fa-chevron-right');
             }
             event.stopPropagation();
             event.preventDefault();
@@ -358,6 +358,8 @@ define([
                 self._sortType = 'owner';
             } else if (elm.hasClass('title-name')) {
                 self._sortType = 'name';
+            } else if (elm.hasClass('title-kind')) {
+                self._sortType = 'kind';
             } else if (elm.hasClass('title-modified')) {
                 self._sortType = 'modified';
             } else if (elm.hasClass('title-viewed')) {
@@ -604,6 +606,7 @@ define([
                     created: createdAt.getTime(),
                     name: projectName.toUpperCase(),
                     owner: owner.toUpperCase(),
+                    kind: (projectData.info.kind || '').toUpperCase(),
                     info: projectData.info.description
                 });
 
@@ -617,6 +620,43 @@ define([
                 $('<td/>').addClass('name').append(span)
                     .append('<span class="name-read-only">[Read-Only]</span>')
                     .appendTo(tblRow);
+
+                // kind
+                span = $('<input/>').addClass('kind')
+                    .val(projectData.info.kind || '')
+                    .prop('placeholder', 'project kind')
+                    .data('projectId', this._projectIds[i])
+                    .data('kind', projectData.info.kind || '')
+                    .prop('disabled', projectData.rights.write !== true)
+                    .focusout(function (/*event*/) {
+                        $(this).val($(this).data('kind'));
+                    })
+                    .keyup(function (event) {
+                        var owner, projectName, projectId, newKind,
+                            uiItem = $(this);
+
+                        if (event.keyCode === 13) {
+                            projectId = $(this).data('projectId');
+                            newKind = $(this).val();
+
+                            if (uiItem.data('kind') !== uiItem.val()) {
+                                projectName = StorageUtil.getProjectNameFromProjectId(projectId);
+                                owner = StorageUtil.getOwnerFromProjectId(projectId);
+                                self._updateProjectInfo(owner, projectName, {kind: newKind},
+                                    function (err) {
+                                        if (err) {
+                                            self._logger.error(err);
+                                            uiItem.val(uiItem.data('kind'));
+                                        } else {
+                                            uiItem.data('kind', newKind);
+                                            uiItem.val(newKind);
+                                        }
+                                        $(uiItem).blur();
+                                    });
+                            }
+                        }
+                    });
+                $('<td/>').addClass('kind').append(span).appendTo(tblRow);
 
                 //info
                 span = $('<input/>').addClass('description')
@@ -639,7 +679,7 @@ define([
                             if (uiItem.data('description') !== uiItem.val()) {
                                 projectName = StorageUtil.getProjectNameFromProjectId(projectId);
                                 owner = StorageUtil.getOwnerFromProjectId(projectId);
-                                self._updateProjectDescription(owner, projectName, newDescription,
+                                self._updateProjectInfo(owner, projectName, {description: newDescription},
                                     function (err) {
                                         if (err) {
                                             self._logger.error(err);
@@ -684,10 +724,10 @@ define([
 
                 if (projectData.rights.delete === true) {
                     iconsEl.append(
-                        $('<i class="glyphicon glyphicon-trash delete-project extra-info info-hidden"/>')
+                        $('<i class="glyphicon glyphicon-trash delete-project"/>')
                             .data('projectId', this._projectIds[i]));
                 } else {
-                    iconsEl.append('<i class="glyphicon glyphicon-lock locked extra-info info-hidden"/>');
+                    iconsEl.append('<i class="glyphicon glyphicon-lock locked"/>');
                 }
 
                 this._tableBody.append(tblRow);
@@ -698,6 +738,13 @@ define([
 
         if (this._table.hasClass('info-displayed')) {
             this._table.find('.extra-info').removeClass('info-hidden');
+            this._tableHead.find('.btn-info-toggle')
+                .removeClass('fa-chevron-right')
+                .addClass('fa-chevron-left');
+        } else {
+            this._tableHead.find('.btn-info-toggle')
+                .removeClass('fa-chevron-left')
+                .addClass('fa-chevron-right');
         }
 
         self._updateFilter();
@@ -786,9 +833,9 @@ define([
         sortedRows.detach().appendTo(this._tableBody);
     };
 
-    ProjectsDialog.prototype._updateProjectDescription = function (owner, projectName, description, callback) {
+    ProjectsDialog.prototype._updateProjectInfo = function (owner, projectName, info, callback) {
         superagent('PATCH', 'api/projects/' + owner + '/' + projectName)
-            .send({description: description})
+            .send(info)
             .end(function (err, res) {
                 if (err || res.status !== 200) {
                     callback(new Error('cannot update project info'));

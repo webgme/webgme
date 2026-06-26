@@ -1,0 +1,57 @@
+.project-info-dialog {
+  .modal-content {
+    .modal-header {
+      .header-icon {
+        height: 28px;
+        width: 28px;
+        margin-right: 1ex;
+        display: inline-block;
+        vertical-align: middle;
+        background-size: 28px 28px;
+      }
+
+      span {
+        font-size: 24px;
+        vertical-align: middle;
+      }
+    }
+
+    .modal-body {
+      fieldset {
+        margin-bottom: 15px;
+
+        legend {
+          font-size: 14px;
+          font-weight: bold;
+          border-bottom: none;
+          margin-bottom: 10px;
+        }
+      }
+
+      .form-control-static {
+        min-height: 20px;
+        padding-top: 7px;
+        margin-bottom: 0;
+      }
+
+      .owner-dropdown {
+        width: 100%;
+
+        .dropdown-toggle {
+          width: 100%;
+          text-align: left;
+
+          .caret {
+            float: right;
+            margin-top: 8px;
+          }
+        }
+      }
+
+      .save-error {
+        margin-top: 10px;
+        margin-bottom: 0;
+      }
+    }
+  }
+}
