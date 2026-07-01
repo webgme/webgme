@@ -26,7 +26,7 @@
     "bower": "1.8.14",
     "q": "^1.5.1",
     "requirejs": "^2.3.6",
-    "webgme-engine": "2.31.0",
+    "webgme-engine": "github:webgme/webgme-engine#main",
     "webgme-user-management-page": "^0.6.1"
   },
   "devDependencies": {
