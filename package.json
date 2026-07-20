@@ -26,15 +26,14 @@
     "bower": "1.8.14",
     "q": "^1.5.1",
     "requirejs": "^2.3.6",
-    "webgme-engine": "github:webgme/webgme-engine#main",
+    "webgme-engine": "2.32.0",
     "webgme-user-management-page": "^0.6.1"
   },
   "devDependencies": {
-    "chai": "^4.3.8",
+    "chai": "^6.2.2",
     "jscs": "^3.0.7",
     "jshint": "^2.12.0",
     "karma": "^6.4.2",
-    "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.2.0",
     "karma-coverage": "^2.2.1",
     "karma-express-http-server": "^0.0.1",
@@ -43,7 +42,7 @@
     "karma-mocha-reporter": "^2.2.5",
     "karma-requirejs": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
-    "mocha": "^6.0.0",
+    "mocha": "^11.7.6",
     "typescript": "^5.4.2"
   },
   "main": "webgme",
@@ -55,8 +54,8 @@
     "compile": "tsc -p ./typings",
     "bower": "bower install",
     "postinstall": "node ./utils/postinstall.js",
-    "test": "node ./node_modules/mocha/bin/mocha --recursive test",
-    "test_ci": "node ./node_modules/mocha/bin/mocha -R dot --timeout 10000 --recursive test",
+    "test": "node ./node_modules/mocha/bin/mocha.js --recursive test",
+    "test_ci": "node ./node_modules/mocha/bin/mocha.js -R dot --timeout 10000 --recursive test",
     "test_cover": "node ./node_modules/istanbul/lib/cli.js --hook-run-in-context cover node_modules/mocha/bin/_mocha -- -R spec --timeout 10000 --recursive test",
     "test_browser": "node ./node_modules/karma/bin/karma start karma.conf.js --browsers Firefox --single-run --no-auto-watch",
     "tsdocs": "typedoc --out typed_docs --mode modules --includeDeclarations --target ES6 --exclude node_modules ./typings"

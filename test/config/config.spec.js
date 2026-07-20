@@ -7,8 +7,9 @@
 describe.skip('configuration and components', function () {
     'use strict';
 
-    var __should = require('chai').should(),
-        expect = require('chai').expect,
+    var testFixture = require('../_globals.js'),
+        __should = testFixture.should,
+        expect = testFixture.expect,
         oldNodeEnv = process.env.NODE_ENV || '',
         oldCwd = process.cwd(),
         path = require('path'),
