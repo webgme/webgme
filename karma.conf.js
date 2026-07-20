@@ -110,11 +110,14 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'requirejs', 'chai'],
+        // chai globals come from karma-chai-setup.mjs (chai 5+ dropped the UMD chai.js build)
+        frameworks: ['mocha', 'requirejs'],
 
 
         // list of files / patterns to load in the browser
         files: [
+            {pattern: 'node_modules/chai/index.js', included: false, served: true, type: 'module'},
+            {pattern: 'karma-chai-setup.mjs', included: true, type: 'module'},
             // {pattern: 'src/**/*.js', included: false}, // THIS IS SLOW: SPECIFY EXPLICITLY WHAT WE NEED.
             {pattern: 'src/client/js/**/*.js', included: false},
 
